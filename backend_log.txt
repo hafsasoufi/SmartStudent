@@ -1,0 +1,399 @@
+C:\Users\merye\Downloads\projet_pfa\page-not-found\.venv\Lib\site-packages\langchain\chat_models\__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+C:\Users\merye\Downloads\projet_pfa\page-not-found\.venv\Lib\site-packages\langchain_core\_api\deprecation.py:117: LangChainDeprecationWarning: The class `langchain_community.chat_models.openai.ChatOpenAI` was deprecated in langchain-community 0.0.10 and will be removed in 0.2.0. An updated version of the class exists in the langchain-openai package and should be used instead. To use it run `pip install -U langchain-openai` and import as `from langchain_openai import ChatOpenAI`.
+  warn_deprecated(
+C:\Users\merye\Downloads\projet_pfa\page-not-found\.venv\Lib\site-packages\langchain\chat_models\__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+INFO:     Started server process [17712]
+INFO:     Waiting for application startup.
+2026-05-19 12:33:03,044 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:03,044 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-05-19 12:33:03,044 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_profiles")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("messages")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("memories")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("documents")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("exams")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("events")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("plans")
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-19 12:33:03,050 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine SELECT count(*) AS count_1 
+FROM (SELECT events.id AS events_id, events.title AS events_title, events.description AS events_description, events.event_type AS events_event_type, events.start_date AS events_start_date, events.end_date AS events_end_date, events.location AS events_location, events.is_public AS events_is_public, events.created_at AS events_created_at, events.updated_at AS events_updated_at 
+FROM events) AS anon_1
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [generated in 0.00020s] ()
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine INSERT INTO events (title, description, event_type, start_date, end_date, location, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [generated in 0.00051s (insertmanyvalues) 1/5 (ordered; batch not supported)] ('Conférence IA & LLMs', 'Présentation des dernières avancées en intelligence artificielle et grands modèles de langage.', 'conference', '2026-05-22 10:33:03.081845', None, 'Amphithéâtre A', 1, '2026-05-19 10:33:03.081845', '2026-05-19 10:33:03.081845')
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine INSERT INTO events (title, description, event_type, start_date, end_date, location, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [insertmanyvalues 2/5 (ordered; batch not supported)] ('Journée Portes Ouvertes', "Découvrez les filières et projets de fin d'études.", 'event', '2026-05-26 10:33:03.081845', None, 'Hall principal', 1, '2026-05-19 10:33:03.081845', '2026-05-19 10:33:03.081845')
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine INSERT INTO events (title, description, event_type, start_date, end_date, location, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [insertmanyvalues 3/5 (ordered; batch not supported)] ('Workshop Flutter', 'Atelier pratique : créer une application mobile Flutter de A à Z.', 'workshop', '2026-05-29 10:33:03.081845', None, 'Salle TP3', 1, '2026-05-19 10:33:03.081845', '2026-05-19 10:33:03.081845')
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine INSERT INTO events (title, description, event_type, start_date, end_date, location, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [insertmanyvalues 4/5 (ordered; batch not supported)] ('Deadline projet PFA', "Remise du rapport d'avancement.", 'deadline', '2026-06-02 10:33:03.081845', None, None, 1, '2026-05-19 10:33:03.081845', '2026-05-19 10:33:03.081845')
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine INSERT INTO events (title, description, event_type, start_date, end_date, location, is_public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+2026-05-19 12:33:03,081 INFO sqlalchemy.engine.Engine [insertmanyvalues 5/5 (ordered; batch not supported)] ('Forum Entreprises', 'Rencontrez 50+ recruteurs pour stages et emplois.', 'event', '2026-06-09 10:33:03.081845', None, 'Centre de conférences', 1, '2026-05-19 10:33:03.081845', '2026-05-19 10:33:03.081845')
+2026-05-19 12:33:03,097 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-05-19 12:33:28,847 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:28,849 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:28,849 INFO sqlalchemy.engine.Engine [generated in 0.00043s] ('meryemreguigue.99@gmail.com', 1, 0)
+INFO:     127.0.0.1:56688 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-05-19 12:33:28,915 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:33:28,955 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:28,955 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:28,955 INFO sqlalchemy.engine.Engine [generated in 0.00026s] (6, 1, 0)
+2026-05-19 12:33:28,965 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.description AS events_description, events.event_type AS events_event_type, events.start_date AS events_start_date, events.end_date AS events_end_date, events.location AS events_location, events.is_public AS events_is_public, events.created_at AS events_created_at, events.updated_at AS events_updated_at 
+FROM events 
+WHERE events.is_public = 1 ORDER BY events.start_date
+2026-05-19 12:33:28,965 INFO sqlalchemy.engine.Engine [generated in 0.00039s] ()
+INFO:     127.0.0.1:56688 - "GET /api/campus/events HTTP/1.1" 200 OK
+2026-05-19 12:33:28,965 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:56688 - "POST /api/planning/tasks HTTP/1.1" 400 Bad Request
+2026-05-19 12:33:29,099 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:29,099 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:29,099 INFO sqlalchemy.engine.Engine [cached since 0.1385s ago] (6, 1, 0)
+2026-05-19 12:33:29,099 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.user_id = ? ORDER BY plans.due_date
+2026-05-19 12:33:29,099 INFO sqlalchemy.engine.Engine [generated in 0.00026s] (6,)
+INFO:     127.0.0.1:56688 - "GET /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:33:29,104 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:33:29,226 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:29,226 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:29,226 INFO sqlalchemy.engine.Engine [cached since 0.2676s ago] (6, 1, 0)
+2026-05-19 12:33:29,233 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ? ORDER BY exams.created_at DESC
+2026-05-19 12:33:29,233 INFO sqlalchemy.engine.Engine [generated in 0.00039s] (6,)
+INFO:     127.0.0.1:56688 - "GET /api/exams/history HTTP/1.1" 200 OK
+2026-05-19 12:33:29,233 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine [cached since 0.2811s ago] (6, 1, 0)
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ?
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine [generated in 0.00041s] (6,)
+INFO:     127.0.0.1:56688 - "GET /api/exams/stats HTTP/1.1" 200 OK
+2026-05-19 12:33:29,240 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:33:52,156 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:52,156 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:52,156 INFO sqlalchemy.engine.Engine [cached since 23.3s ago] ('meryemreguigue.99@gmail.com', 1, 0)
+INFO:     127.0.0.1:56690 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-05-19 12:33:52,224 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:56690 - "POST /api/planning/tasks HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:56690 - "POST /api/planning/tasks HTTP/1.1" 400 Bad Request
+2026-05-19 12:33:52,577 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:33:52,577 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:33:52,577 INFO sqlalchemy.engine.Engine [cached since 23.62s ago] (6, 1, 0)
+2026-05-19 12:33:52,580 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.user_id = ? ORDER BY plans.due_date
+2026-05-19 12:33:52,582 INFO sqlalchemy.engine.Engine [cached since 23.48s ago] (6,)
+INFO:     127.0.0.1:56690 - "GET /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:33:52,585 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:09,987 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:09,987 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:09,987 INFO sqlalchemy.engine.Engine [cached since 41.14s ago] ('meryemreguigue.99@gmail.com', 1, 0)
+INFO:     127.0.0.1:56694 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-05-19 12:34:10,058 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:12,121 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:12,122 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:12,122 INFO sqlalchemy.engine.Engine [cached since 43.16s ago] (6, 1, 0)
+2026-05-19 12:34:12,128 INFO sqlalchemy.engine.Engine INSERT INTO plans (user_id, title, description, category, due_date, priority, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-05-19 12:34:12,129 INFO sqlalchemy.engine.Engine [generated in 0.00136s] (6, 'Preparer soutenance PFA', 'Finaliser rapport et slides', 'exam', '2026-06-10 10:00:00.000000', 4, 'pending', '2026-05-19 10:34:12.128725', '2026-05-19 10:34:12.128725')
+2026-05-19 12:34:12,133 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:34:12,136 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:12,148 INFO sqlalchemy.engine.Engine SELECT plans.id, plans.user_id, plans.title, plans.description, plans.category, plans.due_date, plans.priority, plans.status, plans.created_at, plans.updated_at 
+FROM plans 
+WHERE plans.id = ?
+2026-05-19 12:34:12,148 INFO sqlalchemy.engine.Engine [generated in 0.00054s] (1,)
+INFO:     127.0.0.1:56696 - "POST /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:34:12,151 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:14,192 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:14,193 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:14,193 INFO sqlalchemy.engine.Engine [cached since 45.23s ago] (6, 1, 0)
+2026-05-19 12:34:14,196 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.user_id = ? ORDER BY plans.due_date
+2026-05-19 12:34:14,196 INFO sqlalchemy.engine.Engine [cached since 45.09s ago] (6,)
+INFO:     127.0.0.1:56698 - "GET /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:34:14,199 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:43,605 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:43,605 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:43,605 INFO sqlalchemy.engine.Engine [cached since 74.76s ago] ('meryemreguigue.99@gmail.com', 1, 0)
+INFO:     127.0.0.1:56702 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-05-19 12:34:43,676 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:45,727 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:45,727 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:45,727 INFO sqlalchemy.engine.Engine [cached since 76.77s ago] (6, 1, 0)
+2026-05-19 12:34:45,727 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.id = ? AND plans.user_id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:45,727 INFO sqlalchemy.engine.Engine [generated in 0.00066s] (1, 6, 1, 0)
+2026-05-19 12:34:45,737 INFO sqlalchemy.engine.Engine UPDATE plans SET status=?, updated_at=? WHERE plans.id = ?
+2026-05-19 12:34:45,737 INFO sqlalchemy.engine.Engine [generated in 0.00073s] ('completed', '2026-05-19 10:34:45.736867', 1)
+2026-05-19 12:34:45,787 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:34:45,798 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:45,798 INFO sqlalchemy.engine.Engine SELECT plans.id, plans.user_id, plans.title, plans.description, plans.category, plans.due_date, plans.priority, plans.status, plans.created_at, plans.updated_at 
+FROM plans 
+WHERE plans.id = ?
+2026-05-19 12:34:45,798 INFO sqlalchemy.engine.Engine [cached since 33.65s ago] (1,)
+INFO:     127.0.0.1:56704 - "PUT /api/planning/tasks/1 HTTP/1.1" 200 OK
+2026-05-19 12:34:45,802 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:47,844 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:47,844 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:47,844 INFO sqlalchemy.engine.Engine [cached since 78.88s ago] (6, 1, 0)
+LLM error in agir node: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-05-19 12:34:52,753 INFO sqlalchemy.engine.Engine INSERT INTO exams (user_id, title, subject, questions, score, total_points, status, created_at, updated_at, started_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-05-19 12:34:52,754 INFO sqlalchemy.engine.Engine [generated in 0.00126s] (6, 'Quiz Algorithmique — easy', 'Algorithmique', '[{"question": "Quelle est la complexit\\u00e9 d\'un tri \\u00e0 bulles dans le pire cas ?", "options": ["A. O(n)", "B. O(n log n)", "C. O(n\\u00b2)", ... (483 characters truncated) ... uilibr\\u00e9", "D. Arbre avec couleurs"], "answer": "B. Gauche < N\\u0153ud < Droite", "explanation": "Propri\\u00e9t\\u00e9 fondamentale du BST."}]', None, 3, 'in_progress', '2026-05-19 10:34:52.747441', '2026-05-19 10:34:52.747441', '2026-05-19 10:34:52.747441', None)
+2026-05-19 12:34:52,758 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:34:52,768 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:52,770 INFO sqlalchemy.engine.Engine SELECT exams.id, exams.user_id, exams.title, exams.subject, exams.questions, exams.answers, exams.score, exams.total_points, exams.status, exams.created_at, exams.updated_at, exams.started_at, exams.completed_at 
+FROM exams 
+WHERE exams.id = ?
+2026-05-19 12:34:52,770 INFO sqlalchemy.engine.Engine [generated in 0.00084s] (1,)
+INFO:     127.0.0.1:56706 - "POST /api/exams/generate HTTP/1.1" 200 OK
+2026-05-19 12:34:52,779 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:54,823 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:54,823 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:54,825 INFO sqlalchemy.engine.Engine [cached since 85.86s ago] (6, 1, 0)
+2026-05-19 12:34:54,825 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.id = ? AND exams.user_id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:54,825 INFO sqlalchemy.engine.Engine [generated in 0.00099s] (1, 6, 1, 0)
+2026-05-19 12:34:54,837 INFO sqlalchemy.engine.Engine UPDATE exams SET answers=?, score=?, status=?, updated_at=?, completed_at=? WHERE exams.id = ?
+2026-05-19 12:34:54,837 INFO sqlalchemy.engine.Engine [generated in 0.00103s] ('["C. O(n\\u00b2)", "B. Pile", "B. Gauche < N\\u0153ud < Droite"]', 3, 'completed', '2026-05-19 10:34:54.837318', '2026-05-19 10:34:54.835540', 1)
+2026-05-19 12:34:54,888 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:56709 - "POST /api/exams/1/submit HTTP/1.1" 200 OK
+2026-05-19 12:34:56,935 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:56,935 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:56,935 INFO sqlalchemy.engine.Engine [cached since 87.98s ago] (6, 1, 0)
+2026-05-19 12:34:56,935 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ?
+2026-05-19 12:34:56,935 INFO sqlalchemy.engine.Engine [cached since 87.7s ago] (6,)
+INFO:     127.0.0.1:56711 - "GET /api/exams/stats HTTP/1.1" 200 OK
+2026-05-19 12:34:56,950 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:34:59,003 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:34:59,009 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:34:59,009 INFO sqlalchemy.engine.Engine [cached since 90.05s ago] (6, 1, 0)
+2026-05-19 12:34:59,009 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ? ORDER BY exams.created_at DESC
+2026-05-19 12:34:59,009 INFO sqlalchemy.engine.Engine [cached since 89.78s ago] (6,)
+INFO:     127.0.0.1:56713 - "GET /api/exams/history HTTP/1.1" 200 OK
+2026-05-19 12:34:59,019 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:57402 - "GET /api/planning/tasks HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:57403 - "POST /api/planning/tasks HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:57404 - "GET /api/planning/tasks HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:63078 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63083 - "GET /health HTTP/1.1" 200 OK
+2026-05-19 12:49:52,186 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:49:52,192 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:49:52,192 INFO sqlalchemy.engine.Engine [cached since 983.3s ago] ('meryemreguigue.99@gmail.com', 1, 0)
+INFO:     127.0.0.1:63085 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-05-19 12:49:52,250 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:49:54,298 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:49:54,298 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:49:54,298 INFO sqlalchemy.engine.Engine [cached since 985.3s ago] (6, 1, 0)
+2026-05-19 12:49:54,298 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.description AS events_description, events.event_type AS events_event_type, events.start_date AS events_start_date, events.end_date AS events_end_date, events.location AS events_location, events.is_public AS events_is_public, events.created_at AS events_created_at, events.updated_at AS events_updated_at 
+FROM events 
+WHERE events.is_public = 1 ORDER BY events.start_date
+2026-05-19 12:49:54,311 INFO sqlalchemy.engine.Engine [cached since 985.3s ago] ()
+INFO:     127.0.0.1:63087 - "GET /api/campus/events HTTP/1.1" 200 OK
+2026-05-19 12:49:54,314 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:49:56,365 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:49:56,365 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:49:56,365 INFO sqlalchemy.engine.Engine [cached since 987.4s ago] (6, 1, 0)
+2026-05-19 12:49:56,365 INFO sqlalchemy.engine.Engine INSERT INTO plans (user_id, title, description, category, due_date, priority, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-05-19 12:49:56,365 INFO sqlalchemy.engine.Engine [cached since 944.2s ago] (6, 'Test tâche vérification', None, 'study', '2026-06-20 10:00:00.000000', 2, 'pending', '2026-05-19 10:49:56.365617', '2026-05-19 10:49:56.365617')
+2026-05-19 12:49:56,420 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:49:56,431 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:49:56,431 INFO sqlalchemy.engine.Engine SELECT plans.id, plans.user_id, plans.title, plans.description, plans.category, plans.due_date, plans.priority, plans.status, plans.created_at, plans.updated_at 
+FROM plans 
+WHERE plans.id = ?
+2026-05-19 12:49:56,431 INFO sqlalchemy.engine.Engine [cached since 944.3s ago] (2,)
+INFO:     127.0.0.1:63089 - "POST /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:49:56,431 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:49:58,478 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:49:58,478 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:49:58,478 INFO sqlalchemy.engine.Engine [cached since 989.5s ago] (6, 1, 0)
+2026-05-19 12:49:58,478 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.user_id = ? ORDER BY plans.due_date
+2026-05-19 12:49:58,478 INFO sqlalchemy.engine.Engine [cached since 989.4s ago] (6,)
+INFO:     127.0.0.1:63091 - "GET /api/planning/tasks HTTP/1.1" 200 OK
+2026-05-19 12:49:58,495 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:50:00,548 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:00,549 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:00,549 INFO sqlalchemy.engine.Engine [cached since 991.6s ago] (6, 1, 0)
+2026-05-19 12:50:00,553 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.id = ? AND plans.user_id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:00,554 INFO sqlalchemy.engine.Engine [cached since 914.8s ago] (2, 6, 1, 0)
+2026-05-19 12:50:00,556 INFO sqlalchemy.engine.Engine UPDATE plans SET status=?, updated_at=? WHERE plans.id = ?
+2026-05-19 12:50:00,556 INFO sqlalchemy.engine.Engine [cached since 914.8s ago] ('completed', '2026-05-19 10:50:00.556101', 2)
+2026-05-19 12:50:00,604 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:50:00,612 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:00,612 INFO sqlalchemy.engine.Engine SELECT plans.id, plans.user_id, plans.title, plans.description, plans.category, plans.due_date, plans.priority, plans.status, plans.created_at, plans.updated_at 
+FROM plans 
+WHERE plans.id = ?
+2026-05-19 12:50:00,612 INFO sqlalchemy.engine.Engine [cached since 948.5s ago] (2,)
+INFO:     127.0.0.1:63093 - "PUT /api/planning/tasks/2 HTTP/1.1" 200 OK
+2026-05-19 12:50:00,612 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:50:02,662 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:02,668 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:02,668 INFO sqlalchemy.engine.Engine [cached since 993.7s ago] (6, 1, 0)
+2026-05-19 12:50:02,668 INFO sqlalchemy.engine.Engine SELECT plans.id AS plans_id, plans.user_id AS plans_user_id, plans.title AS plans_title, plans.description AS plans_description, plans.category AS plans_category, plans.due_date AS plans_due_date, plans.priority AS plans_priority, plans.status AS plans_status, plans.created_at AS plans_created_at, plans.updated_at AS plans_updated_at 
+FROM plans 
+WHERE plans.id = ? AND plans.user_id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:02,668 INFO sqlalchemy.engine.Engine [cached since 916.9s ago] (2, 6, 1, 0)
+2026-05-19 12:50:02,678 INFO sqlalchemy.engine.Engine DELETE FROM plans WHERE plans.id = ?
+2026-05-19 12:50:02,678 INFO sqlalchemy.engine.Engine [generated in 0.00079s] (2,)
+2026-05-19 12:50:02,725 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63095 - "DELETE /api/planning/tasks/2 HTTP/1.1" 200 OK
+2026-05-19 12:50:04,769 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:04,769 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:04,769 INFO sqlalchemy.engine.Engine [cached since 995.8s ago] (6, 1, 0)
+LLM error in agir node: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2026-05-19 12:50:09,926 INFO sqlalchemy.engine.Engine INSERT INTO exams (user_id, title, subject, questions, score, total_points, status, created_at, updated_at, started_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-05-19 12:50:09,926 INFO sqlalchemy.engine.Engine [cached since 917.2s ago] (6, 'Quiz Algorithmique — easy', 'Algorithmique', '[{"question": "Quelle est la complexit\\u00e9 d\'un tri \\u00e0 bulles dans le pire cas ?", "options": ["A. O(n)", "B. O(n log n)", "C. O(n\\u00b2)", ... (483 characters truncated) ... uilibr\\u00e9", "D. Arbre avec couleurs"], "answer": "B. Gauche < N\\u0153ud < Droite", "explanation": "Propri\\u00e9t\\u00e9 fondamentale du BST."}]', None, 3, 'in_progress', '2026-05-19 10:50:09.925276', '2026-05-19 10:50:09.925276', '2026-05-19 10:50:09.920172', None)
+2026-05-19 12:50:09,973 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-19 12:50:09,977 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:09,981 INFO sqlalchemy.engine.Engine SELECT exams.id, exams.user_id, exams.title, exams.subject, exams.questions, exams.answers, exams.score, exams.total_points, exams.status, exams.created_at, exams.updated_at, exams.started_at, exams.completed_at 
+FROM exams 
+WHERE exams.id = ?
+2026-05-19 12:50:09,981 INFO sqlalchemy.engine.Engine [cached since 917.2s ago] (2,)
+INFO:     127.0.0.1:63097 - "POST /api/exams/generate HTTP/1.1" 200 OK
+2026-05-19 12:50:09,981 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine [cached since 1003s ago] (6, 1, 0)
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.id = ? AND exams.user_id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine [cached since 917.2s ago] (2, 6, 1, 0)
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine UPDATE exams SET answers=?, score=?, status=?, updated_at=?, completed_at=? WHERE exams.id = ?
+2026-05-19 12:50:12,028 INFO sqlalchemy.engine.Engine [cached since 917.2s ago] ('["C. O(n\\u00b2)", "B. Pile", "B. Gauche < N\\u0153ud < Droite"]', 3, 'completed', '2026-05-19 10:50:12.028941', '2026-05-19 10:50:12.028941', 2)
+2026-05-19 12:50:12,046 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63100 - "POST /api/exams/2/submit HTTP/1.1" 200 OK
+2026-05-19 12:50:14,094 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:14,094 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:14,094 INFO sqlalchemy.engine.Engine [cached since 1005s ago] (6, 1, 0)
+2026-05-19 12:50:14,100 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ? ORDER BY exams.created_at DESC
+2026-05-19 12:50:14,100 INFO sqlalchemy.engine.Engine [cached since 1005s ago] (6,)
+INFO:     127.0.0.1:63102 - "GET /api/exams/history HTTP/1.1" 200 OK
+2026-05-19 12:50:14,107 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-19 12:50:16,149 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-19 12:50:16,149 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.username AS users_username, users.full_name AS users_full_name, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.is_admin AS users_is_admin, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = ?
+ LIMIT ? OFFSET ?
+2026-05-19 12:50:16,149 INFO sqlalchemy.engine.Engine [cached since 1007s ago] (6, 1, 0)
+2026-05-19 12:50:16,156 INFO sqlalchemy.engine.Engine SELECT exams.id AS exams_id, exams.user_id AS exams_user_id, exams.title AS exams_title, exams.subject AS exams_subject, exams.questions AS exams_questions, exams.answers AS exams_answers, exams.score AS exams_score, exams.total_points AS exams_total_points, exams.status AS exams_status, exams.created_at AS exams_created_at, exams.updated_at AS exams_updated_at, exams.started_at AS exams_started_at, exams.completed_at AS exams_completed_at 
+FROM exams 
+WHERE exams.user_id = ?
+2026-05-19 12:50:16,156 INFO sqlalchemy.engine.Engine [cached since 1007s ago] (6,)
+INFO:     127.0.0.1:63104 - "GET /api/exams/stats HTTP/1.1" 200 OK
+2026-05-19 12:50:16,162 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:50856 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50856 - "GET /openapi.json HTTP/1.1" 200 OK

@@ -1,0 +1,129 @@
+2026-05-24 00:16:34,678 [INFO] ============================================================
+2026-05-24 00:16:34,679 [INFO]   SETUP RAG — SmartStudent ENIAD
+2026-05-24 00:16:34,679 [INFO] ============================================================
+2026-05-24 00:16:49,753 [INFO] 
+[1/4] Initialisation ChromaDB + Sentence Transformers...
+2026-05-24 00:16:49,934 [INFO] No device provided, using cpu
+2026-05-24 00:17:00,910 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:03,397 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:04,840 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:06,186 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:06,191 [INFO] Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-05-24 00:17:07,106 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:07,107 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-05-24 00:17:07,545 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:07,816 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:10,348 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+2026-05-24 00:17:10,605 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:15,106 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:15,296 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:15,468 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:15,655 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+2026-05-24 00:17:15,847 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:17:15,916 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+2026-05-24 00:17:16,569 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-05-24 00:17:16,906 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-05-24 00:18:26,996 [WARNING] '_ssl.c:993: The handshake operation timed out' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json
+2026-05-24 00:18:27,000 [WARNING] Retrying in 1s [Retry 1/5].
+2026-05-24 00:19:29,970 [WARNING] 'The read operation timed out' thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json
+2026-05-24 00:19:29,979 [WARNING] Retrying in 2s [Retry 2/5].
+2026-05-24 00:19:33,425 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-05-24 00:19:34,994 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-05-24 00:19:35,504 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:19:35,576 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-05-24 00:19:35,866 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:19:36,197 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+2026-05-24 00:19:37,026 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:19:37,425 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+2026-05-24 00:19:38,275 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:19:38,695 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-05-24 00:19:40,585 [INFO] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-05-24 00:19:40,766 [INFO] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-05-24 00:19:41,534 [INFO] HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-05-24 00:19:41,595 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+2026-05-24 00:19:41,777 [INFO] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+2026-05-24 00:19:41,907 [INFO] RAG prêt — 0 documents indexés
+2026-05-24 00:19:41,910 [INFO]   Documents actuels : 0
+2026-05-24 00:19:41,910 [INFO]   Reset de la collection...
+2026-05-24 00:19:41,935 [INFO] Collection RAG réinitialisée
+2026-05-24 00:19:41,940 [INFO] 
+[2/4] Indexation de la base de connaissances statique...
+2026-05-24 00:19:43,479 [INFO]   Base de connaissances : 21 chunks indexés
+2026-05-24 00:19:43,480 [INFO] 
+[3/4] Téléchargement et indexation des PDFs ENIAD...
+2026-05-24 00:19:43,480 [INFO]   Téléchargement : Emploi du temps EPSI 1ère année S1 Automne 2025-2026
+2026-05-24 00:19:50,134 [INFO]   OK — 40 chunks indexés (25394 chars)
+2026-05-24 00:19:50,434 [INFO]   Téléchargement : Emploi du temps IA 1ère année ingénieur S5 Automne 2025-2026
+2026-05-24 00:19:55,943 [INFO]   OK — 27 chunks indexés (17114 chars)
+2026-05-24 00:19:56,245 [INFO]   Téléchargement : Emploi du temps GINF 1ère année ingénieur S5 Automne 2025-2026
+2026-05-24 00:20:01,522 [INFO]   OK — 27 chunks indexés (17528 chars)
+2026-05-24 00:20:01,823 [INFO]   Téléchargement : Emploi du temps IRSI 1ère année ingénieur S5 Automne 2025-2026
+2026-05-24 00:20:03,825 [INFO]   OK — 9 chunks indexés (5651 chars)
+2026-05-24 00:20:04,125 [INFO]   Téléchargement : Emploi du temps ROC 1ère année ingénieur S5 Automne 2025-2026
+2026-05-24 00:20:06,953 [INFO]   OK — 9 chunks indexés (5668 chars)
+2026-05-24 00:20:07,253 [INFO]   Téléchargement : Emploi du temps IA 2ème année ingénieur S7 Automne 2025-2026
+2026-05-24 00:20:10,333 [INFO]   OK — 17 chunks indexés (10423 chars)
+2026-05-24 00:20:10,634 [INFO]   Téléchargement : Emploi du temps GINF 2ème année ingénieur S7 Automne 2025-2026
+2026-05-24 00:20:14,952 [INFO]   OK — 17 chunks indexés (10651 chars)
+2026-05-24 00:20:15,253 [INFO]   Téléchargement : Emploi du temps IRSI 2ème année ingénieur S7 Automne 2025-2026
+2026-05-24 00:20:17,293 [INFO]   OK — 9 chunks indexés (5252 chars)
+2026-05-24 00:20:17,595 [INFO]   Téléchargement : Emploi du temps ROC 2ème année ingénieur S7 Automne 2025-2026
+2026-05-24 00:20:20,434 [INFO]   OK — 9 chunks indexés (5377 chars)
+2026-05-24 00:20:20,735 [INFO]   Téléchargement : Emploi du temps IA 3ème année ingénieur S9 Automne 2025-2026
+2026-05-24 00:20:23,037 [INFO]   OK — 8 chunks indexés (4873 chars)
+2026-05-24 00:20:23,338 [INFO]   Téléchargement : Emploi du temps GINF 3ème année ingénieur S9 Automne 2025-2026
+2026-05-24 00:20:26,049 [INFO]   OK — 8 chunks indexés (5200 chars)
+2026-05-24 00:20:26,351 [INFO]   Téléchargement : Emploi du temps IRSI 3ème année ingénieur S9 Automne 2025-2026
+2026-05-24 00:20:28,621 [INFO]   OK — 8 chunks indexés (4766 chars)
+2026-05-24 00:20:28,922 [INFO]   Téléchargement : Emploi du temps ROC 3ème année ingénieur S9 Automne 2025-2026
+2026-05-24 00:20:31,817 [INFO]   OK — 8 chunks indexés (5116 chars)
+2026-05-24 00:20:32,119 [INFO]   Téléchargement : Répartition groupes TD/TP EPSI S1 Automne 2025-2026 groupe A
+2026-05-24 00:20:33,953 [INFO]   OK — 7 chunks indexés (4025 chars)
+2026-05-24 00:20:34,255 [INFO]   Téléchargement : Répartition groupes TD/TP EPSI S1 Automne 2025-2026 groupe B
+2026-05-24 00:20:35,666 [INFO]   OK — 7 chunks indexés (4123 chars)
+2026-05-24 00:20:35,967 [INFO]   Téléchargement : Répartition groupes TD/TP EPSI S1 Automne 2025-2026 groupe C
+2026-05-24 00:20:38,324 [INFO]   OK — 7 chunks indexés (3925 chars)
+2026-05-24 00:20:38,625 [INFO]   Téléchargement : Emploi du temps EPSI 1ère année S2 Printemps 2025-2026
+2026-05-24 00:20:40,738 [INFO]   OK — 3 chunks indexés (1929 chars)
+2026-05-24 00:20:41,039 [INFO]   Téléchargement : Emploi du temps IA 1ère année ingénieur S6 Printemps 2025-2026
+2026-05-24 00:20:44,366 [INFO]   OK — 8 chunks indexés (5135 chars)
+2026-05-24 00:20:44,668 [INFO]   Téléchargement : Emploi du temps GINF 1ère année ingénieur S6 Printemps 2025-2026
+2026-05-24 00:20:47,418 [INFO]   OK — 9 chunks indexés (5321 chars)
+2026-05-24 00:20:47,720 [INFO]   Téléchargement : Emploi du temps IRSI 1ère année ingénieur S6 Printemps 2025-2026
+2026-05-24 00:20:50,003 [INFO]   OK — 4 chunks indexés (2516 chars)
+2026-05-24 00:20:50,304 [INFO]   Téléchargement : Emploi du temps ROC 1ère année ingénieur S6 Printemps 2025-2026
+2026-05-24 00:20:53,171 [INFO]   OK — 5 chunks indexés (2687 chars)
+2026-05-24 00:20:53,537 [INFO]   Téléchargement : Emploi du temps IA 2ème année ingénieur S8 Printemps 2025-2026
+2026-05-24 00:20:57,459 [INFO]   OK — 8 chunks indexés (4671 chars)
+2026-05-24 00:20:57,761 [INFO]   Téléchargement : Emploi du temps GINF 2ème année ingénieur S8 Printemps 2025-2026
+2026-05-24 00:20:59,748 [WARNING] Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+2026-05-24 00:21:00,591 [WARNING] Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+2026-05-24 00:21:02,437 [INFO]   OK — 7 chunks indexés (4461 chars)
+2026-05-24 00:21:02,739 [INFO]   Téléchargement : Emploi du temps IRSI 2ème année ingénieur S8 Printemps 2025-2026
+2026-05-24 00:21:04,800 [WARNING] Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+2026-05-24 00:21:06,333 [INFO]   OK — 4 chunks indexés (2252 chars)
+2026-05-24 00:21:06,634 [INFO]   Téléchargement : Emploi du temps ROC 2ème année ingénieur S8 Printemps 2025-2026
+2026-05-24 00:21:08,544 [WARNING] Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+2026-05-24 00:21:09,819 [INFO]   OK — 4 chunks indexés (2426 chars)
+2026-05-24 00:21:10,120 [INFO]   Téléchargement : Répartition groupes TD/TP EPSI S2 Printemps 2025-2026
+2026-05-24 00:21:17,312 [INFO]   OK — 19 chunks indexés (12115 chars)
+2026-05-24 00:21:17,614 [INFO]   Téléchargement : Répartition groupes TD/TP IA S6 Printemps 2025-2026
+2026-05-24 00:21:21,441 [INFO]   OK — 8 chunks indexés (5089 chars)
+2026-05-24 00:21:21,742 [INFO]   Téléchargement : Répartition groupes TD/TP GINF S6 Printemps 2025-2026
+2026-05-24 00:21:25,820 [INFO]   OK — 8 chunks indexés (5107 chars)
+2026-05-24 00:21:26,121 [INFO]   Téléchargement : Planning examens fin semestres S5 & S7 Automne 2025-2026 (Janvier 2026)
+2026-05-24 00:21:38,243 [INFO]   OK — 40 chunks indexés (25687 chars)
+2026-05-24 00:21:38,544 [INFO]   Téléchargement : Convention de stage officielle ENIAD
+2026-05-24 00:21:41,109 [INFO]   OK — 8 chunks indexés (4859 chars)
+2026-05-24 00:21:41,410 [INFO] 
+[4/4] Terminé !
+2026-05-24 00:21:41,454 [INFO]   Base de connaissances : 21 chunks
+2026-05-24 00:21:41,454 [INFO]   PDFs ENIAD           : 352 chunks
+2026-05-24 00:21:41,457 [INFO]   TOTAL                : 373 documents indexés
+2026-05-24 00:21:41,457 [INFO] 
+[TEST] Requête de test : 'emploi du temps IA semestre 5'
+2026-05-24 00:21:41,486 [INFO]   Score 0.56 — Emploi du temps EPSI 1ère année S1 Automne 2025-2026
+2026-05-24 00:21:41,486 [INFO]   Score 0.55 — Emploi du temps ROC 1ère année ingénieur S6 Printemps 2025-2026
+2026-05-24 00:21:41,487 [INFO] 
+  RAG opérationnel ! Lance le backend normalement.
+2026-05-24 00:21:41,487 [INFO] ============================================================

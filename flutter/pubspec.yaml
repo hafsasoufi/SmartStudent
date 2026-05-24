@@ -1,0 +1,55 @@
+name: smartstudent
+description: "SmartStudent - AI-powered student assistant mobile app"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  riverpod: ^2.4.0
+  flutter_riverpod: ^2.4.0
+  riverpod_generator: ^2.3.0
+
+  # HTTP Client
+  dio: ^5.3.0
+
+  # Local Storage
+  hive: ^2.2.0
+  hive_flutter: ^1.1.0
+
+  # Notifications
+  firebase_core: ^2.24.0
+
+  # Localization
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+
+  # UI Components
+  smooth_page_indicator: ^1.1.0
+  animate_do: ^3.0.0
+  flutter_svg: ^2.0.0
+  icons_plus: ^4.0.0
+
+  # Navigation
+  go_router: ^12.0.0
+
+  # Networking
+  connectivity_plus: ^5.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.3.0
+
+flutter:
+  uses-material-design: true
