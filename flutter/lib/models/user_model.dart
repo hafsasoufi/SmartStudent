@@ -3,6 +3,8 @@ class User {
   final String email;
   final String username;
   final String fullName;
+  final String? firstName;
+  final String? lastName;
   final bool isActive;
   final DateTime createdAt;
 
@@ -11,6 +13,8 @@ class User {
     required this.email,
     required this.username,
     required this.fullName,
+    this.firstName,
+    this.lastName,
     required this.isActive,
     required this.createdAt,
   });
@@ -20,7 +24,9 @@ class User {
       id: json['id'] as int,
       email: json['email'] as String,
       username: json['username'] as String,
-      fullName: json['full_name'] as String,
+      fullName: json['full_name'] as String? ?? '',
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -32,10 +38,14 @@ class User {
       'email': email,
       'username': username,
       'full_name': fullName,
+      'first_name': firstName,
+      'last_name': lastName,
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  String get displayName => fullName.isNotEmpty ? fullName : username;
 }
 
 class UserProfile {
@@ -47,6 +57,7 @@ class UserProfile {
   final String? university;
   final String? major;
   final int? year;
+  final String? studentCardId;
   final String language;
   final String timezone;
 
@@ -59,6 +70,7 @@ class UserProfile {
     this.university,
     this.major,
     this.year,
+    this.studentCardId,
     this.language = 'en',
     this.timezone = 'UTC',
   });
@@ -73,6 +85,7 @@ class UserProfile {
       university: json['university'] as String?,
       major: json['major'] as String?,
       year: json['year'] as int?,
+      studentCardId: json['student_card_id'] as String?,
       language: json['language'] as String? ?? 'en',
       timezone: json['timezone'] as String? ?? 'UTC',
     );
@@ -88,6 +101,7 @@ class UserProfile {
       'university': university,
       'major': major,
       'year': year,
+      'student_card_id': studentCardId,
       'language': language,
       'timezone': timezone,
     };

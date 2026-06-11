@@ -5,15 +5,16 @@ class AppConfig {
   // API Configuration
   // The client tries several common local endpoints until one works.
   static const List<String> apiBaseUrls = [
-    'http://172.20.10.2:8000/api',    // PC IP (current hotspot network)
+    'http://localhost:8000/api',      // USB (adb reverse) — PRIORITAIRE
+    'http://127.0.0.1:8000/api',      // USB (adb reverse) — fallback
+    'http://192.168.1.106:8000/api',  // PC WiFi (réseau actuel)
+    'http://172.20.10.2:8000/api',    // PC IP (hotspot network)
     'http://192.168.8.135:8000/api',  // PC WiFi IP (home/office network)
     'http://192.168.137.1:8000/api',  // PC hotspot IP (Windows Mobile Hotspot)
-    'http://localhost:8000/api',      // USB (adb reverse)
-    'http://127.0.0.1:8000/api',      // USB (adb reverse)
     'http://10.0.2.2:8000/api',       // Android emulator
     'http://10.30.29.176:8000/api',   // PC IP (old university WiFi)
   ];
-  static const String apiTimeout = '5'; // seconds per URL attempt
+  static const String apiTimeout = '15'; // seconds per URL attempt (regular endpoints)
   
   // Feature Flags
   static const bool enableOfflineMode = true;

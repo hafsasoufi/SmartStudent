@@ -51,10 +51,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String username,
     required String password,
     required String fullName,
+    String? firstName,
+    String? lastName,
+    String? studentCardId,
+    String? fieldOfStudy,
+    int? academicYear,
   }) async {
     print('📝 AuthNotifier: Starting registration for $email');
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       print('📝 AuthNotifier: Calling apiService.register()');
       final response = await apiService.register(
@@ -62,6 +67,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         username: username,
         password: password,
         fullName: fullName,
+        firstName: firstName,
+        lastName: lastName,
+        studentCardId: studentCardId,
+        fieldOfStudy: fieldOfStudy,
+        academicYear: academicYear,
       );
       
       print('📝 AuthNotifier: Got response: ${response.keys}');

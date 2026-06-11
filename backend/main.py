@@ -8,7 +8,7 @@ import asyncio
 
 from backend.config import get_settings
 from backend.database import get_db, init_db, close_db
-from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory
+from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory, AdminRequest, Complaint
 from backend.schemas import (
     UserRegister, UserLogin, UserResponse, TokenResponse,
     UserProfileUpdate, UserProfileResponse, ChatRequest, ChatResponse,
@@ -103,33 +103,46 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
             detail="Email or username already registered"
         )
     
+    # Derive first/last from full_name if not provided separately
+    first_name = user_data.first_name or (user_data.full_name.split()[0] if user_data.full_name else None)
+    last_name  = user_data.last_name  or (" ".join(user_data.full_name.split()[1:]) if user_data.full_name and len(user_data.full_name.split()) > 1 else None)
+
     # Create new user
     db_user = User(
         email=user_data.email,
         username=user_data.username,
         full_name=user_data.full_name,
+        first_name=first_name,
+        last_name=last_name,
         hashed_password=hash_password(user_data.password)
     )
     db.add(db_user)
     db.flush()
-    
-    # Create user profile
-    db_profile = UserProfile(user_id=db_user.id)
+
+    # Create user profile with academic data
+    db_profile = UserProfile(
+        user_id=db_user.id,
+        student_card_id=user_data.student_card_id,
+        major=user_data.field_of_study,
+        year=user_data.academic_year,
+    )
     db.add(db_profile)
     db.commit()
     db.refresh(db_user)
-    
-    # Generate tokens
-    access_token = create_access_token(
+
+    # Generate tokens enriched with student context
+    _token_kwargs = dict(
         user_id=db_user.id,
         username=db_user.username,
-        email=db_user.email
+        email=db_user.email,
+        first_name=first_name,
+        last_name=last_name,
+        student_card_id=user_data.student_card_id,
+        field_of_study=user_data.field_of_study,
+        academic_year=user_data.academic_year,
     )
-    refresh_token = create_refresh_token(
-        user_id=db_user.id,
-        username=db_user.username,
-        email=db_user.email
-    )
+    access_token = create_access_token(**_token_kwargs)
+    refresh_token = create_refresh_token(**_token_kwargs)
     
     return TokenResponse(
         access_token=access_token,
@@ -158,18 +171,21 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
             detail="User account is disabled"
         )
     
-    # Generate tokens
-    access_token = create_access_token(
+    # Fetch profile to enrich JWT with student context
+    _profile = db.query(UserProfile).filter(UserProfile.user_id == db_user.id).first()
+    _token_kwargs = dict(
         user_id=db_user.id,
         username=db_user.username,
-        email=db_user.email
+        email=db_user.email,
+        first_name=db_user.first_name,
+        last_name=db_user.last_name,
+        student_card_id=getattr(_profile, "student_card_id", None),
+        field_of_study=getattr(_profile, "major", None),
+        academic_year=getattr(_profile, "year", None),
     )
-    refresh_token = create_refresh_token(
-        user_id=db_user.id,
-        username=db_user.username,
-        email=db_user.email
-    )
-    
+    access_token = create_access_token(**_token_kwargs)
+    refresh_token = create_refresh_token(**_token_kwargs)
+
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -195,7 +211,17 @@ async def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)):
         user = db.query(User).filter(User.id == user_id).first()
         if not user or not user.is_active:
             raise HTTPException(status_code=401, detail="User not found or inactive")
-        new_access = create_access_token(user_id=user.id, username=user.username, email=user.email)
+        _profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        new_access = create_access_token(
+            user_id=user.id,
+            username=user.username,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            student_card_id=getattr(_profile, "student_card_id", None),
+            field_of_study=getattr(_profile, "major", None),
+            academic_year=getattr(_profile, "year", None),
+        )
         return {
             "access_token": new_access,
             "token_type": "bearer",
@@ -382,6 +408,7 @@ async def chat(
     # Build rich user context
     user_context = {
         "user_id": user.id,
+        "conversation_id": request.conversation_id or f"user_{user.id}",
         "username": user.username,
         "full_name": user.full_name,
         "email": user.email,
@@ -728,41 +755,275 @@ async def rag_search(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/admin/ask", tags=["Admin RAG"])
+@app.post("/api/admin/ask", tags=["Admin"])
 async def admin_ask(
     request: Request,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
-    """Question directe à l'Agent Admin avec contexte RAG ENIAD."""
+    """Invoke le LangGraph AdminAgent complet (FAQ + doc + suivi + reclamation)."""
     user = await get_current_user(authorization, db)
     body = await request.json()
     question = body.get("question", "")
+    conversation_id = body.get("conversation_id", f"admin_{user.id}")
     if not question:
         raise HTTPException(status_code=400, detail="question required")
 
     try:
-        from backend.services.rag_service import get_rag_service
-        rag = get_rag_service()
-        rag_context = rag.build_context(question, n_results=4) if rag.is_ready else ""
-
-        from backend.agents.orchestrator import LangGraphOrchestrator
-        orchestrator = LangGraphOrchestrator()
-        result = await orchestrator.process_message(
-            user_message=question,
-            user_context={
-                "full_name": getattr(user, "full_name", ""),
-                "username": getattr(user, "username", ""),
-                "force_agent": "admin",
-            },
-        )
-        return {
-            "question": question,
-            "answer": result.get("response", ""),
-            "agent": result.get("agent_name", "Agent Admin"),
-            "rag_used": bool(rag_context),
-            "rag_document_count": rag.document_count if rag.is_ready else 0,
+        from backend.agents.admin_agent import get_admin_agent
+        profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        user_context = {
+            "user_id":         user.id,
+            "full_name":       user.full_name or user.username,
+            "first_name":      user.first_name or (user.full_name or "").split()[0],
+            "last_name":       user.last_name  or (" ".join((user.full_name or "").split()[1:]) or ""),
+            "username":        user.username,
+            "email":           user.email,
+            "student_card_id": getattr(profile, "student_card_id", None) or "",
+            "major":           getattr(profile, "major", None) or "Genie Informatique",
+            "year":            getattr(profile, "year", None) or 3,
+            "university":      getattr(profile, "university", None) or "ENIAD Bechar",
+            "phone":           getattr(profile, "phone", None) or "",
         }
+        agent = get_admin_agent()
+        result = await agent.process(
+            user_message=question,
+            user_id=user.id,
+            user_context=user_context,
+            conversation_id=str(conversation_id),
+        )
+
+        # Attach real PDF bytes when a document was generated
+        pdf_base64 = None
+        doc_id = result.get("doc_id")
+        if doc_id:
+            try:
+                import base64 as _b64
+                from backend.agents.documents_agent import get_documents_agent
+                path = get_documents_agent().get_path(doc_id)
+                if path:
+                    with open(path, "rb") as _f:
+                        pdf_base64 = _b64.b64encode(_f.read()).decode("utf-8")
+            except Exception as _pdf_err:
+                logger.warning(f"Could not attach PDF to agent response: {_pdf_err}")
+
+        return {
+            "question":   question,
+            "response":   result.get("response", ""),
+            "doc_id":     doc_id,
+            "pdf_base64": pdf_base64,
+            "request_id": result.get("request_id"),
+            "ticket_id":  result.get("ticket_id"),
+            "agent":      "Agent Admin ReAct LangGraph",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Demandes administratives ──────────────────────────────────────────────────
+
+class _AdminRequestCreate(_PydanticBaseModel):
+    request_type: str
+    description: Optional[str] = None
+
+@app.post("/api/admin/requests", tags=["Admin"])
+async def create_admin_request(
+    body: _AdminRequestCreate,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Crée une demande administrative et génère le PDF si possible."""
+    user = await get_current_user(authorization, db)
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+
+    doc_id = None
+    try:
+        from backend.agents.documents_agent import get_documents_agent
+        user_data = {
+            "full_name": user.full_name or user.username,
+            "student_id": str(user.id),
+            "major": getattr(profile, "major", None) or "Genie Informatique",
+            "year": getattr(profile, "year", None) or 3,
+            "description": body.description or "",
+        }
+        doc_id, _ = get_documents_agent().generate(body.request_type, user_data)
+    except Exception:
+        pass
+
+    import uuid as _uuid2
+    req = AdminRequest(
+        id=str(_uuid2.uuid4()),
+        user_id=user.id,
+        request_type=body.request_type,
+        status="validated" if doc_id else "pending",
+        description=body.description,
+        doc_id=doc_id,
+    )
+    db.add(req)
+    db.commit()
+    db.refresh(req)
+
+    return {
+        "id": req.id,
+        "request_type": req.request_type,
+        "status": req.status,
+        "doc_id": req.doc_id,
+        "created_at": req.created_at.isoformat(),
+    }
+
+@app.get("/api/admin/requests", tags=["Admin"])
+async def list_admin_requests(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Liste toutes les demandes administratives de l'étudiant connecté."""
+    user = await get_current_user(authorization, db)
+    items = (
+        db.query(AdminRequest)
+        .filter(AdminRequest.user_id == user.id)
+        .order_by(AdminRequest.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    return [
+        {
+            "id": r.id, "request_type": r.request_type, "status": r.status,
+            "doc_id": r.doc_id, "description": r.description,
+            "created_at": r.created_at.isoformat(),
+        }
+        for r in items
+    ]
+
+@app.get("/api/admin/requests/{request_id}", tags=["Admin"])
+async def get_admin_request(
+    request_id: str,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    user = await get_current_user(authorization, db)
+    req = db.query(AdminRequest).filter(
+        AdminRequest.id == request_id, AdminRequest.user_id == user.id
+    ).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    return {
+        "id": req.id, "request_type": req.request_type, "status": req.status,
+        "doc_id": req.doc_id, "description": req.description,
+        "created_at": req.created_at.isoformat(),
+    }
+
+
+# ── Réclamations ──────────────────────────────────────────────────────────────
+
+class _ComplaintCreate(_PydanticBaseModel):
+    category: str
+    description: str
+
+@app.post("/api/admin/complaints", tags=["Admin"])
+async def create_complaint(
+    body: _ComplaintCreate,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Crée un ticket de réclamation avec numéro unique."""
+    user = await get_current_user(authorization, db)
+    count = db.query(Complaint).count() + 1
+    ticket_id = f"COMP-{datetime.utcnow().year}-{count:05d}"
+    complaint = Complaint(
+        id=ticket_id,
+        user_id=user.id,
+        category=body.category,
+        description=body.description,
+        status="open",
+    )
+    db.add(complaint)
+    db.commit()
+    return {
+        "id": ticket_id, "category": body.category,
+        "status": "open", "created_at": complaint.created_at.isoformat(),
+    }
+
+@app.get("/api/admin/complaints", tags=["Admin"])
+async def list_complaints(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    user = await get_current_user(authorization, db)
+    items = (
+        db.query(Complaint)
+        .filter(Complaint.user_id == user.id)
+        .order_by(Complaint.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    return [
+        {
+            "id": c.id, "category": c.category, "description": c.description,
+            "status": c.status, "created_at": c.created_at.isoformat(),
+        }
+        for c in items
+    ]
+
+# ==================== DOCUMENTS ROUTES ====================
+
+import base64 as _base64
+
+class _DocumentRequest(_PydanticBaseModel):
+    doc_type: str
+    description: Optional[str] = None
+
+@app.post("/api/documents/generate", tags=["Documents"])
+async def generate_document(
+    req: _DocumentRequest,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Generate a PDF administrative document for the authenticated user."""
+    user = await get_current_user(authorization, db)
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+
+    user_data = {
+        "full_name": user.full_name or user.username,
+        "student_id": user.id,
+        "major": (getattr(profile, "major", None) or "Genie Informatique") if profile else "Genie Informatique",
+        "year": (getattr(profile, "year", None) or 3) if profile else 3,
+        "description": req.description or "",
+    }
+
+    try:
+        from backend.agents.documents_agent import get_documents_agent
+        agent = get_documents_agent()
+        doc_id, pdf_bytes = agent.generate(req.doc_type, user_data)
+        pdf_b64 = _base64.b64encode(pdf_bytes).decode("utf-8")
+        return {
+            "doc_id": doc_id,
+            "doc_type": req.doc_type,
+            "pdf_base64": pdf_b64,
+            "generated_at": datetime.utcnow().isoformat(),
+            "message": "Document genere avec succes",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur generation PDF: {str(e)}")
+
+@app.get("/api/documents/download/{doc_id}", tags=["Documents"])
+async def download_document(
+    doc_id: str,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Download a previously generated PDF document."""
+    await get_current_user(authorization, db)
+    try:
+        from backend.agents.documents_agent import get_documents_agent
+        from fastapi.responses import FileResponse
+        agent = get_documents_agent()
+        path = agent.get_path(doc_id)
+        if not path:
+            raise HTTPException(status_code=404, detail="Document not found or expired")
+        filename = f"document_{doc_id[:8]}.pdf"
+        return FileResponse(path, media_type="application/pdf", filename=filename)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -44,11 +44,17 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: list = [
         "http://localhost",
-        "http://localhost:8000",
         "http://localhost:3000",
-        "http://10.0.2.2:8000",  # Android emulator
-        "http://192.168.1.106:8000",  # Physical device on LAN
-        "http://192.168.1.106:3000",  # Next.js on LAN
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+        "http://10.0.2.2:8000",
+        "http://172.20.10.2:8000",
+        "http://192.168.8.135:8000",
+        "http://192.168.137.1:8000",
     ]
     
     class Config:

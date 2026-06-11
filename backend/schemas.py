@@ -8,6 +8,11 @@ class UserRegister(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
     full_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    student_card_id: Optional[str] = None
+    field_of_study: Optional[str] = None
+    academic_year: Optional[int] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -18,9 +23,11 @@ class UserResponse(BaseModel):
     email: str
     username: str
     full_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     is_active: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -41,6 +48,7 @@ class UserProfileUpdate(BaseModel):
     year: Optional[int] = None
     language: Optional[str] = None
     preferences: Optional[dict] = {}
+    student_card_id: Optional[str] = None
 
 class UserProfileResponse(BaseModel):
     id: int
@@ -50,10 +58,11 @@ class UserProfileResponse(BaseModel):
     university: Optional[str]
     major: Optional[str]
     year: Optional[int]
+    student_card_id: Optional[str] = None
     language: str
     timezone: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

@@ -21,7 +21,8 @@ class ApiService {
   static List<String> _determineApiBaseUrls() {
     if (kIsWeb) {
       return [
-        AppConfig.apiBaseUrls[2], // Your PC IP for web builds
+        AppConfig.apiBaseUrls[3], // localhost:8000 for web (same machine)
+        AppConfig.apiBaseUrls[4], // 127.0.0.1:8000 fallback
       ];
     }
 
@@ -150,6 +151,11 @@ class ApiService {
     required String username,
     required String password,
     required String fullName,
+    String? firstName,
+    String? lastName,
+    String? studentCardId,
+    String? fieldOfStudy,
+    int? academicYear,
   }) async {
     try {
       print('📝 ApiService.register: Building request payload');
@@ -158,6 +164,11 @@ class ApiService {
         'username': username,
         'password': password,
         'full_name': fullName,
+        if (firstName != null && firstName.isNotEmpty) 'first_name': firstName,
+        if (lastName  != null && lastName.isNotEmpty)  'last_name': lastName,
+        if (studentCardId != null && studentCardId.isNotEmpty) 'student_card_id': studentCardId,
+        if (fieldOfStudy  != null && fieldOfStudy.isNotEmpty)  'field_of_study': fieldOfStudy,
+        if (academicYear  != null) 'academic_year': academicYear,
       };
       print('📝 ApiService.register: Payload = $payload');
       
@@ -352,6 +363,92 @@ class ApiService {
         'answers': answers,
       }));
       return r.data;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  // ── Admin Agent endpoints ─────────────────────────────────────────────────
+  Future<Map<String, dynamic>> askAdminAgent({
+    required String question,
+    String? conversationId,
+  }) async {
+    // LangGraph ReAct agent needs up to 90s (LLM + tools + LLM again)
+    const _agentTimeout = Duration(seconds: 90);
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/admin/ask',
+        data: {
+          'question': question,
+          if (conversationId != null) 'conversation_id': conversationId,
+        },
+        options: Options(
+          receiveTimeout: _agentTimeout,
+          sendTimeout: _agentTimeout,
+        ),
+      ));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> createAdminRequest({
+    required String requestType,
+    String? description,
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/admin/requests', data: {
+        'request_type': requestType,
+        if (description != null) 'description': description,
+      }));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<dynamic>> getAdminRequests() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/admin/requests'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> createComplaint({
+    required String category,
+    required String description,
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/admin/complaints', data: {
+        'category': category,
+        'description': description,
+      }));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<dynamic>> getComplaints() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/admin/complaints'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  // ── Documents endpoints ───────────────────────────────────────────────────
+  Future<Map<String, dynamic>> generateDocument({
+    required String docType,
+    String? description,
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/documents/generate', data: {
+        'doc_type': docType,
+        if (description != null && description.isNotEmpty) 'description': description,
+      }));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<int>> downloadDocumentBytes(String docId) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get(
+        '/documents/download/$docId',
+        options: Options(responseType: ResponseType.bytes),
+      ));
+      return (r.data as List).cast<int>();
     } on DioException catch (e) { throw _handleError(e); }
   }
 

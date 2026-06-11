@@ -1,533 +1,606 @@
 """
-LangGraph-style Orchestrator — Architecture Agentique
-Implémente le cycle : Percevoir → Planifier → Agir → Observer → Répondre
-via un graphe d'états explicite (StateGraph pattern).
+LangGraph Orchestrator — SmartStudent
+Architecture multi-agents orchestree par un vrai StateGraph LangGraph compile.
+
+Graphe :
+  START
+    |
+    v
+ percevoir  (analyse intention + mots-cles)
+    |
+    v
+ planifier  (selectionne l'agent, LLM routing si ambigu)
+    |
+    v
+  agir  <---------+  (appel LLM agent specialise)
+    |              |
+    v              | needs_retry
+ observer ---------+
+    |
+    v (quality OK)
+ repondre
+    |
+    v
+   END
 """
 
-from typing import Dict, List, Any, Optional, Literal
-from dataclasses import dataclass, field
-from enum import Enum
-import json
+from __future__ import annotations
 
-try:
-    from langchain_openai import ChatOpenAI
-    _OPENAI_AVAILABLE = True
-except ImportError:
-    _OPENAI_AVAILABLE = False
-    ChatOpenAI = None
+import json
+import logging
+from typing import Annotated, Any, Dict, List, Literal, Optional, TypedDict
+
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+logger = logging.getLogger(__name__)
 
 try:
     from langchain_groq import ChatGroq
     _GROQ_AVAILABLE = True
 except ImportError:
     _GROQ_AVAILABLE = False
-    ChatGroq = None
+    ChatGroq = None  # type: ignore
 
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+try:
+    from langchain_openai import ChatOpenAI
+    _OPENAI_AVAILABLE = True
+except ImportError:
+    _OPENAI_AVAILABLE = False
+    ChatOpenAI = None  # type: ignore
+
 from backend.config import get_settings
 
 settings = get_settings()
 
 
-# ── État du graphe ─────────────────────────────────────────────────────────────
+# ── LLM singleton ──────────────────────────────────────────────────────────────
 
-@dataclass
-class AgentState:
-    """
-    État partagé entre tous les noeuds du graphe.
-    Chaque noeud lit et enrichit cet état.
-    """
-    # Entrée
-    user_message: str = ""
-    conversation_history: List[Dict[str, str]] = field(default_factory=list)
-    user_context: Dict[str, Any] = field(default_factory=dict)
+_llm = None
 
+
+def get_llm():
+    global _llm
+    if _llm is not None:
+        return _llm
+
+    groq_key = getattr(settings, "GROQ_API_KEY", None)
+    if _GROQ_AVAILABLE and groq_key and groq_key not in ("", "your-groq-api-key"):
+        try:
+            _llm = ChatGroq(
+                api_key=groq_key,
+                model="llama-3.3-70b-versatile",
+                temperature=0.7,
+            )
+            logger.info("LLM: Groq llama-3.3-70b-versatile")
+            return _llm
+        except Exception as e:
+            logger.warning(f"Groq init failed: {e}")
+
+    openai_key = getattr(settings, "OPENAI_API_KEY", None)
+    if _OPENAI_AVAILABLE and openai_key:
+        _llm = ChatOpenAI(
+            api_key=openai_key,
+            model=getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
+            temperature=0.7,
+        )
+        logger.info("LLM: OpenAI")
+        return _llm
+
+    raise RuntimeError(
+        "Aucun LLM disponible. Configurez GROQ_API_KEY ou OPENAI_API_KEY dans .env"
+    )
+
+
+# ── Configuration des 6 agents ─────────────────────────────────────────────────
+
+AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
+    "admin": {
+        "name": "Agent Administratif",
+        "keywords": [
+            "faq", "document", "procedure", "regle", "formulaire", "attestation",
+            "inscription", "administratif", "emploi du temps", "horaire", "eniad",
+            "filiere", "convention", "stage admin", "bourse", "scolarite", "semestre",
+            "calendrier examen", "campus",
+        ],
+        "prompt": (
+            "Tu es l'Agent Administratif de SmartStudent a l'ENIAD.\n"
+            "Tu aides les etudiants avec : FAQ institutionnelles, procedures "
+            "administratives, generation de documents, reglement interieur.\n"
+            "Sois precis, clair et oriente l'etudiant vers les bons services."
+        ),
+    },
+    "planning": {
+        "name": "Agent Planning",
+        "keywords": [
+            "planning", "deadline", "date", "devoir", "emploi du temps",
+            "rappel", "semaine", "planifier", "organiser", "tache",
+        ],
+        "prompt": (
+            "Tu es l'Agent Planning de SmartStudent.\n"
+            "Tu aides avec : gestion du temps, deadlines, emploi du temps, "
+            "organisation des revisions, rappels intelligents.\n"
+            "Donne des conseils pratiques et structures."
+        ),
+    },
+    "exams": {
+        "name": "Agent Examens",
+        "keywords": [
+            "examen", "quiz", "test", "revision", "note", "qcm",
+            "exercice", "controle", "score", "evaluat",
+        ],
+        "prompt": (
+            "Tu es l'Agent Examens de SmartStudent.\n"
+            "Tu aides avec : preparation aux examens, quiz generatifs, "
+            "strategies de revision, feedback adaptatif, suivi de progression.\n"
+            "Sois encourageant et pedagogue."
+        ),
+    },
+    "orientation": {
+        "name": "Agent Orientation",
+        "keywords": [
+            "stage", "emploi", "cv", "lettre", "metier", "carriere",
+            "professionnel", "orientation", "entreprise", "job",
+        ],
+        "prompt": (
+            "Tu es l'Agent Orientation de SmartStudent.\n"
+            "Tu aides avec : conseils carriere, redaction CV/LM, "
+            "recherche de stages, orientation professionnelle.\n"
+            "Sois inspirant et donne des conseils concrets."
+        ),
+    },
+    "campus": {
+        "name": "Agent Campus",
+        "keywords": [
+            "evenement", "club", "association", "campus", "activite",
+            "groupe", "sport", "sortie", "conference", "workshop",
+        ],
+        "prompt": (
+            "Tu es l'Agent Campus de SmartStudent.\n"
+            "Tu informes sur : evenements campus, clubs, associations, "
+            "activites parascolaires, formation de groupes de travail.\n"
+            "Sois enthousiaste et cree du lien social."
+        ),
+    },
+    "wellbeing": {
+        "name": "Agent Bien-etre",
+        "keywords": [
+            "stress", "anxiete", "sante", "bien-etre", "fatigue",
+            "motivation", "aide", "soutien", "depression", "mental",
+        ],
+        "prompt": (
+            "Tu es l'Agent Bien-etre de SmartStudent.\n"
+            "Tu soutiens avec : gestion du stress, sante mentale, motivation, "
+            "equilibre vie etudiante, ressources d'aide psychologique.\n"
+            "Sois empathique, bienveillant et oriente vers des professionnels si necessaire."
+        ),
+    },
+}
+
+
+# ── Etat partage du graphe (TypedDict LangGraph) ──────────────────────────────
+
+class SmartStudentState(TypedDict, total=False):
+    # Conversation — gere automatiquement par add_messages (LangGraph)
+    messages: Annotated[list, add_messages]
+    # Contexte utilisateur (profil, memoires long terme)
+    user_context: Dict[str, Any]
     # Noeud PERCEVOIR
-    intent: str = ""
-    intent_confidence: float = 0.0
-    keywords_detected: List[str] = field(default_factory=list)
-
+    intent: str
+    intent_confidence: float
+    keywords_detected: List[str]
     # Noeud PLANIFIER
-    selected_agent: str = "admin"
-    plan: str = ""
-    sub_tasks: List[str] = field(default_factory=list)
-
+    selected_agent: str
+    plan: str
     # Noeud AGIR
-    agent_response: str = ""
-    action_taken: str = ""
-
+    agent_response: str
+    iteration_count: int
+    error: Optional[str]
     # Noeud OBSERVER
-    response_quality: float = 0.0
-    needs_retry: bool = False
-    iteration_count: int = 0
-    max_iterations: int = 2
-    observation_notes: str = ""
-
-    # Noeud RÉPONDRE
-    final_response: str = ""
-    agent_name: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-    # Contrôle du graphe
-    current_node: str = "percevoir"
-    error: Optional[str] = None
+    response_quality: float
+    needs_retry: bool
+    # Noeud REPONDRE
+    final_response: str
+    agent_name: str
+    metadata: Dict[str, Any]
 
 
-# ── Nœuds du graphe ────────────────────────────────────────────────────────────
+# ── Noeud 1 : PERCEVOIR ────────────────────────────────────────────────────────
 
-class GraphNodes:
-    """Implémentation des 5 noeuds du cycle agentique."""
+def percevoir(state: SmartStudentState) -> dict:
+    """Analyse le dernier message et extrait l'intention + l'agent cible."""
+    # Recuprer le dernier message humain
+    user_message = _last_human_message(state)
+    uc = state.get("user_context") or {}
 
-    AGENTS_CONFIG = {
-        "admin": {
-            "name": "Agent Administratif",
-            "keywords": ["faq", "document", "procedure", "regle", "formulaire",
-                         "attestation", "inscription", "administratif", "guide",
-                         "emploi du temps", "horaire", "eniad", "filiere", "convention",
-                         "stage", "bourse", "scolarite", "semestre", "examen date",
-                         "planning examen", "calendrier examen", "campus"],
-            "prompt": """Tu es l'Agent Administratif de SmartStudent.
-Tu aides les étudiants avec : FAQ institutionnelles, procédures administratives,
-génération de documents, règlement intérieur.
-Sois précis, clair et oriente l'étudiant vers les bons services si nécessaire."""
-        },
-        "planning": {
-            "name": "Agent Planning",
-            "keywords": ["calendrier", "planning", "deadline", "date", "devoir",
-                         "emploi du temps", "rappel", "semaine", "planifier", "organiser"],
-            "prompt": """Tu es l'Agent Planning de SmartStudent.
-Tu aides les étudiants avec : gestion du temps, deadlines, emploi du temps,
-organisation des révisions, rappels intelligents.
-Donne des conseils pratiques et structurés."""
-        },
-        "exams": {
-            "name": "Agent Examens",
-            "keywords": ["examen", "quiz", "test", "revision", "note", "qcm",
-                         "exercice", "controle", "score", "evaluat"],
-            "prompt": """Tu es l'Agent Examens de SmartStudent.
-Tu aides les étudiants avec : préparation aux examens, quiz génératifs,
-stratégies de révision, feedback adaptatif, suivi de progression.
-Sois encourageant et pédagogue."""
-        },
-        "orientation": {
-            "name": "Agent Orientation",
-            "keywords": ["stage", "emploi", "cv", "lettre", "metier", "carriere",
-                         "professionnel", "orientation", "entreprise", "job"],
-            "prompt": """Tu es l'Agent Orientation de SmartStudent.
-Tu aides les étudiants avec : conseils carrière, rédaction CV/LM,
-recherche de stages, orientation professionnelle.
-Sois inspirant et donne des conseils concrets."""
-        },
-        "campus": {
-            "name": "Agent Campus",
-            "keywords": ["evenement", "club", "association", "campus", "activite",
-                         "groupe", "sport", "sortie", "conference", "workshop"],
-            "prompt": """Tu es l'Agent Campus de SmartStudent.
-Tu informes les étudiants sur : événements campus, clubs, associations,
-activités parascolaires, formation de groupes de travail.
-Sois enthousiaste et crée du lien social."""
-        },
-        "wellbeing": {
-            "name": "Agent Bien-être",
-            "keywords": ["stress", "anxiete", "sante", "bien-etre", "fatigue",
-                         "motivation", "aide", "soutien", "depression", "mental"],
-            "prompt": """Tu es l'Agent Bien-être de SmartStudent.
-Tu soutiens les étudiants sur : gestion du stress, santé mentale, motivation,
-équilibre vie étudiante, ressources d'aide psychologique.
-Sois empathique, bienveillant et oriente vers des professionnels si nécessaire."""
+    # force_agent permet de bypasser le routage (ex: onglet admin)
+    force = uc.get("force_agent")
+    if force and force in AGENTS_CONFIG:
+        return {
+            "intent": f"force_{force}",
+            "intent_confidence": 1.0,
+            "keywords_detected": [],
+            "selected_agent": force,
+        }
+
+    msg_lower = user_message.lower()
+    scores: Dict[str, int] = {}
+    detected: Dict[str, List[str]] = {}
+    for agent_id, cfg in AGENTS_CONFIG.items():
+        matched = [kw for kw in cfg["keywords"] if kw in msg_lower]
+        scores[agent_id] = len(matched)
+        detected[agent_id] = matched
+
+    best_agent = max(scores, key=lambda k: scores[k])
+    best_score = scores[best_agent]
+
+    if best_score >= 2:
+        intent = f"demande_{best_agent}_precise"
+        confidence = min(0.5 + best_score * 0.15, 0.95)
+    elif best_score == 1:
+        intent = f"demande_{best_agent}"
+        confidence = 0.6
+    else:
+        intent = "demande_generale"
+        confidence = 0.4
+        best_agent = "admin"
+
+    all_kw = [kw for kws in detected.values() for kw in kws]
+    return {
+        "intent": intent,
+        "intent_confidence": confidence,
+        "keywords_detected": all_kw,
+        "selected_agent": best_agent,
+    }
+
+
+# ── Noeud 2 : PLANIFIER ────────────────────────────────────────────────────────
+
+def planifier(state: SmartStudentState) -> dict:
+    """Confirme l'agent selectionne. Si ambigu, utilise le LLM pour router."""
+    confidence = state.get("intent_confidence") or 0.0
+    agent_id = state.get("selected_agent") or "admin"
+    intent = state.get("intent") or ""
+
+    # Routage direct si confiance elevee ou force_agent
+    if confidence >= 0.6 or intent.startswith("force_"):
+        cfg_name = AGENTS_CONFIG.get(agent_id, AGENTS_CONFIG["admin"])["name"]
+        return {
+            "selected_agent": agent_id,
+            "plan": f"Routage direct -> {cfg_name}",
+        }
+
+    # Routage LLM pour les cas ambigus
+    user_message = _last_human_message(state)
+    agents_desc = "\n".join(
+        f"- {aid}: {cfg['name']} ({', '.join(cfg['keywords'][:3])})"
+        for aid, cfg in AGENTS_CONFIG.items()
+    )
+    prompt = (
+        f"Tu es le routeur de SmartStudent.\nAgents disponibles:\n{agents_desc}\n\n"
+        f"Message etudiant: \"{user_message}\"\n\n"
+        'Reponds UNIQUEMENT avec: {"agent": "<id>", "raison": "<raison>"}'
+    )
+    try:
+        resp = get_llm().invoke([HumanMessage(content=prompt)])
+        result = json.loads(resp.content.strip())
+        selected = result.get("agent", "admin")
+        if selected not in AGENTS_CONFIG:
+            selected = "admin"
+        return {"selected_agent": selected, "plan": result.get("raison", "Routage LLM")}
+    except Exception:
+        return {"selected_agent": "admin", "plan": "Routage par defaut"}
+
+
+# ── Noeud 3 : AGIR ─────────────────────────────────────────────────────────────
+
+def agir(state: SmartStudentState) -> dict:
+    """Appelle l'agent specialise (LLM) avec le systeme prompt personnalise."""
+    agent_id = state.get("selected_agent") or "admin"
+    cfg = AGENTS_CONFIG.get(agent_id, AGENTS_CONFIG["admin"])
+    iteration = state.get("iteration_count") or 0
+
+    # --- Construction du prompt systeme ---
+    system_prompt = cfg["prompt"]
+    uc = state.get("user_context") or {}
+
+    # Personnalisation par profil etudiant
+    name = uc.get("full_name") or uc.get("username") or "l'etudiant(e)"
+    system_prompt += f"\n\nTu parles a {name}"
+    if uc.get("major"):
+        system_prompt += f", en {uc['major']}"
+    if uc.get("year"):
+        system_prompt += f", annee {uc['year']}"
+    system_prompt += "."
+
+    # Injection memoire long terme
+    memories: List[Dict] = uc.get("memories") or []
+    if memories:
+        mem_lines = "\n".join(
+            f"- [{m.get('category', 'info')}] {m.get('content', '')}"
+            for m in memories[:8]
+        )
+        system_prompt += (
+            "\n\nMEMOIRE LONG TERME (informations persistantes sur cet etudiant) :\n"
+            + mem_lines
+            + "\nUtilise ces informations pour personnaliser ta reponse."
+        )
+
+    # Injection RAG pour l'agent admin
+    if agent_id == "admin":
+        try:
+            from backend.services.rag_service import get_rag_service
+            rag = get_rag_service()
+            user_msg = _last_human_message(state)
+            if rag.is_ready and user_msg:
+                rag_ctx = rag.build_context(user_msg, n_results=4)
+                if rag_ctx:
+                    system_prompt += (
+                        "\n\nCONTEXTE DOCUMENTAIRE ENIAD :\n"
+                        + rag_ctx
+                        + "\nBase ta reponse sur ces documents officiels."
+                    )
+        except Exception:
+            pass
+
+    # --- Construction des messages LangChain ---
+    lc_messages = [SystemMessage(content=system_prompt)]
+    # Inclure les 6 derniers messages de la conversation (contexte multi-tours)
+    for msg in (state.get("messages") or [])[-6:]:
+        if isinstance(msg, (HumanMessage, AIMessage, SystemMessage)):
+            lc_messages.append(msg)
+
+    # Assurer que le dernier message humain est present
+    if not any(isinstance(m, HumanMessage) for m in lc_messages[1:]):
+        user_msg = _last_human_message(state)
+        if user_msg:
+            lc_messages.append(HumanMessage(content=user_msg))
+
+    try:
+        response = get_llm().invoke(lc_messages)
+        return {
+            "agent_response": response.content,
+            "iteration_count": iteration + 1,
+            "messages": [AIMessage(content=response.content, name=cfg["name"])],
+            "error": None,
+        }
+    except Exception as e:
+        err = str(e)
+        logger.error(f"LLM error in agir node: {err}")
+        if "quota" in err.lower() or "insufficient" in err.lower():
+            fallback = "Service IA temporairement indisponible (quota). Reessayez plus tard."
+        elif "api" in err.lower() and "key" in err.lower():
+            fallback = "Cle API non configuree ou invalide."
+        else:
+            fallback = "Difficulte technique. Veuillez reessayer."
+        return {
+            "agent_response": fallback,
+            "iteration_count": iteration + 1,
+            "error": err,
+        }
+
+
+# ── Noeud 4 : OBSERVER ────────────────────────────────────────────────────────
+
+def observer(state: SmartStudentState) -> dict:
+    """Evalue la qualite de la reponse et decide si retry necessaire."""
+    response = state.get("agent_response") or ""
+    iteration = state.get("iteration_count") or 0
+    error = state.get("error")
+
+    quality = 1.0
+    if len(response) < 30:
+        quality -= 0.4
+    if error:
+        quality -= 0.5
+    if any(p in response.lower() for p in ["je ne sais pas", "i don't know", "erreur technique"]):
+        quality -= 0.2
+    if len(response) > 100:
+        quality += 0.1
+    quality = max(0.0, min(quality, 1.0))
+
+    # Retry si qualite insuffisante ET moins de 2 iterations
+    needs_retry = quality < 0.5 and iteration < 2
+
+    return {"response_quality": quality, "needs_retry": needs_retry}
+
+
+# ── Noeud 5 : REPONDRE ────────────────────────────────────────────────────────
+
+def repondre(state: SmartStudentState) -> dict:
+    """Formate et retourne la reponse finale enrichie de metadonnees."""
+    agent_id = state.get("selected_agent") or "admin"
+    cfg = AGENTS_CONFIG.get(agent_id, AGENTS_CONFIG["admin"])
+    groq_key = getattr(settings, "GROQ_API_KEY", "")
+    model = (
+        "llama-3.3-70b-versatile"
+        if groq_key and groq_key not in ("", "your-groq-api-key")
+        else getattr(settings, "OPENAI_MODEL", "gpt-4o-mini")
+    )
+    return {
+        "final_response": state.get("agent_response") or "",
+        "agent_name": cfg["name"],
+        "metadata": {
+            "model": model,
+            "agent_id": agent_id,
+            "agent_name": cfg["name"],
+            "intent": state.get("intent") or "",
+            "intent_confidence": round(state.get("intent_confidence") or 0.0, 2),
+            "keywords": state.get("keywords_detected") or [],
+            "plan": state.get("plan") or "",
+            "iterations": state.get("iteration_count") or 0,
+            "response_quality": round(state.get("response_quality") or 0.0, 2),
+            "graph": "LangGraph StateGraph",
         },
     }
 
-    def __init__(self, llm):
-        self.llm = llm
 
-    # ── PERCEVOIR ──────────────────────────────────────────────────────────────
-    def percevoir(self, state: AgentState) -> AgentState:
-        """
-        Noeud 1 : Analyse le message entrant.
-        Extrait l'intention et les mots-clés détectés.
-        """
-        message_lower = state.user_message.lower()
+# ── Arete conditionnelle ───────────────────────────────────────────────────────
 
-        # Calcul du score pour chaque agent
-        scores: Dict[str, int] = {}
-        detected: Dict[str, List[str]] = {}
-
-        for agent_id, config in self.AGENTS_CONFIG.items():
-            matched = [kw for kw in config["keywords"] if kw in message_lower]
-            scores[agent_id] = len(matched)
-            detected[agent_id] = matched
-
-        best_agent = max(scores, key=scores.get)
-        best_score = scores[best_agent]
-
-        # Détection de la langue
-        lang = state.user_context.get("language", "fr")
-
-        # Catégorisation de l'intention
-        if best_score >= 2:
-            intent = f"demande_{best_agent}_precise"
-            confidence = min(0.5 + best_score * 0.15, 0.95)
-        elif best_score == 1:
-            intent = f"demande_{best_agent}"
-            confidence = 0.6
-        else:
-            intent = "demande_generale"
-            confidence = 0.4
-            best_agent = "admin"
-
-        all_kw = [kw for kws in detected.values() for kw in kws]
-
-        state.intent = intent
-        state.intent_confidence = confidence
-        state.keywords_detected = all_kw
-        state.current_node = "planifier"
-        return state
-
-    # ── PLANIFIER ──────────────────────────────────────────────────────────────
-    def planifier(self, state: AgentState) -> AgentState:
-        """
-        Noeud 2 : Sélectionne l'agent et planifie la réponse.
-        Utilise le LLM pour un routage intelligent si l'intention est ambiguë.
-        """
-        # Si confiance élevée → routage direct
-        if state.intent_confidence >= 0.6:
-            agent_id = state.intent.replace("demande_", "").replace("_precise", "")
-            agent_id = agent_id if agent_id in self.AGENTS_CONFIG else "admin"
-            state.selected_agent = agent_id
-            state.plan = f"Traitement direct par {self.AGENTS_CONFIG[agent_id]['name']}"
-            state.sub_tasks = [f"Répondre à: {state.user_message[:80]}"]
-        else:
-            # Routage LLM pour les cas ambigus
-            agents_desc = "\n".join(
-                f"- {aid}: {cfg['name']} ({', '.join(cfg['keywords'][:4])})"
-                for aid, cfg in self.AGENTS_CONFIG.items()
-            )
-            routing_prompt = f"""Tu es le routeur de SmartStudent.
-Agents disponibles:
-{agents_desc}
-
-Message de l'étudiant: "{state.user_message}"
-
-Réponds UNIQUEMENT avec un objet JSON sur une seule ligne:
-{{"agent": "<id_agent>", "raison": "<courte raison>"}}"""
-
-            try:
-                resp = self.llm.invoke([HumanMessage(content=routing_prompt)])
-                result = json.loads(resp.content.strip())
-                state.selected_agent = result.get("agent", "admin")
-                state.plan = result.get("raison", "Routage LLM")
-            except Exception:
-                state.selected_agent = "admin"
-                state.plan = "Routage par défaut"
-
-            state.sub_tasks = [f"Analyser: {state.user_message[:80]}",
-                               "Générer une réponse adaptée"]
-
-        state.current_node = "agir"
-        return state
-
-    # ── AGIR ───────────────────────────────────────────────────────────────────
-    def agir(self, state: AgentState) -> AgentState:
-        """
-        Noeud 3 : Exécute l'action — appelle l'agent spécialisé.
-        """
-        agent_id = state.selected_agent
-        config = self.AGENTS_CONFIG.get(agent_id, self.AGENTS_CONFIG["admin"])
-
-        # Construction du prompt système personnalisé
-        system_prompt = config["prompt"]
-        uc = state.user_context
-        if uc:
-            name = uc.get("full_name") or uc.get("username", "l'étudiant(e)")
-            system_prompt += f"\n\nTu parles à {name}"
-            if uc.get("major"):
-                system_prompt += f", en {uc['major']}"
-            if uc.get("year"):
-                system_prompt += f", année {uc['year']}"
-            system_prompt += "."
-
-            # Injection de la mémoire long terme
-            memories = uc.get("memories", [])
-            if memories:
-                memory_text = "\n".join(f"- [{m.get('category','info')}] {m.get('content','')}" for m in memories[:8])
-                system_prompt += (
-                    "\n\nMÉMOIRE LONG TERME (ce que tu sais déjà sur cet étudiant) :\n"
-                    + memory_text
-                    + "\nUtilise ces informations pour personnaliser ta réponse."
-                )
-
-        # Injection du contexte RAG pour l'agent admin
-        if agent_id == "admin":
-            try:
-                from backend.services.rag_service import get_rag_service
-                rag = get_rag_service()
-                if rag.is_ready:
-                    rag_context = rag.build_context(state.user_message, n_results=4)
-                    if rag_context:
-                        system_prompt += (
-                            "\n\nCONTEXTE DOCUMENTAIRE ENIAD (utilise ces informations pour répondre) :\n"
-                            + rag_context
-                        )
-            except Exception:
-                pass
-
-        # Construction des messages
-        messages = [SystemMessage(content=system_prompt)]
-
-        # Historique (5 derniers messages)
-        for msg in state.conversation_history[-5:]:
-            if msg.get("role") == "user":
-                messages.append(HumanMessage(content=msg.get("content", "")))
-            else:
-                messages.append(AIMessage(content=msg.get("content", "")))
-
-        messages.append(HumanMessage(content=state.user_message))
-
-        try:
-            response = self.llm.invoke(messages)
-            state.agent_response = response.content
-            state.action_taken = f"Appel {config['name']} (itération {state.iteration_count + 1})"
-        except Exception as e:
-            error_msg = str(e)
-            import logging
-            logging.getLogger(__name__).error(f"LLM error in agir node: {error_msg}")
-            if "quota" in error_msg.lower() or "insufficient" in error_msg.lower():
-                state.agent_response = (
-                    "⚠️ Le service IA est temporairement indisponible "
-                    "(quota OpenAI dépassé). Veuillez réessayer plus tard "
-                    "ou contacter l'administrateur."
-                )
-            elif "api" in error_msg.lower() and "key" in error_msg.lower():
-                state.agent_response = (
-                    "⚠️ Clé API OpenAI non configurée ou invalide."
-                )
-            else:
-                state.agent_response = (
-                    "Je rencontre une difficulté technique. "
-                    "Veuillez réessayer ou contacter le support."
-                )
-            state.error = error_msg
-
-        state.iteration_count += 1
-        state.current_node = "observer"
-        return state
-
-    # ── OBSERVER ───────────────────────────────────────────────────────────────
-    def observer(self, state: AgentState) -> AgentState:
-        """
-        Noeud 4 : Évalue la qualité de la réponse.
-        Décide si une nouvelle itération est nécessaire.
-        """
-        response = state.agent_response
-        notes = []
-        quality = 1.0
-
-        # Critères de qualité
-        if len(response) < 30:
-            quality -= 0.4
-            notes.append("Réponse trop courte")
-
-        if state.error:
-            quality -= 0.5
-            notes.append(f"Erreur: {state.error}")
-
-        error_phrases = ["je ne sais pas", "i don't know", "erreur", "error"]
-        if any(p in response.lower() for p in error_phrases):
-            quality -= 0.2
-            notes.append("Réponse incertaine détectée")
-
-        if len(response) > 100 and "?" not in response[-100:]:
-            quality += 0.1
-            notes.append("Réponse complète et structurée")
-
-        state.response_quality = max(0.0, min(quality, 1.0))
-        state.observation_notes = "; ".join(notes) if notes else "Réponse satisfaisante"
-
-        # Décision de réessayer
-        state.needs_retry = (
-            state.response_quality < 0.5
-            and state.iteration_count < state.max_iterations
-        )
-
-        state.current_node = "agir" if state.needs_retry else "repondre"
-        return state
-
-    # ── RÉPONDRE ──────────────────────────────────────────────────────────────
-    def repondre(self, state: AgentState) -> AgentState:
-        """
-        Noeud 5 : Formate et retourne la réponse finale.
-        """
-        agent_id = state.selected_agent
-        config = self.AGENTS_CONFIG.get(agent_id, self.AGENTS_CONFIG["admin"])
-
-        state.final_response = state.agent_response
-        state.agent_name = config["name"]
-        groq_key = getattr(settings, "GROQ_API_KEY", "")
-        model_used = "llama-3.3-70b-versatile" if (groq_key and groq_key not in ("", "your-groq-api-key")) else settings.OPENAI_MODEL
-        state.metadata = {
-            "model": model_used,
-            "agent_id": agent_id,
-            "agent_name": config["name"],
-            "intent": state.intent,
-            "intent_confidence": round(state.intent_confidence, 2),
-            "keywords": state.keywords_detected,
-            "plan": state.plan,
-            "iterations": state.iteration_count,
-            "response_quality": round(state.response_quality, 2),
-            "observation": state.observation_notes,
-        }
-        state.current_node = "end"
-        return state
+def _should_retry(state: SmartStudentState) -> Literal["agir", "repondre"]:
+    """Retourne le prochain noeud apres observer."""
+    return "agir" if state.get("needs_retry") else "repondre"
 
 
-# ── Graphe d'états ─────────────────────────────────────────────────────────────
+# ── Construction et compilation du graphe ─────────────────────────────────────
+
+def _build_graph():
+    """Construit et compile le StateGraph LangGraph avec MemorySaver."""
+    graph = StateGraph(SmartStudentState)
+
+    # Ajout des noeuds
+    graph.add_node("percevoir", percevoir)
+    graph.add_node("planifier", planifier)
+    graph.add_node("agir", agir)
+    graph.add_node("observer", observer)
+    graph.add_node("repondre", repondre)
+
+    # Aretes fixes
+    graph.set_entry_point("percevoir")
+    graph.add_edge("percevoir", "planifier")
+    graph.add_edge("planifier", "agir")
+    graph.add_edge("agir", "observer")
+    graph.add_edge("repondre", END)
+
+    # Arete conditionnelle observer -> agir (retry) ou repondre (fin)
+    graph.add_conditional_edges(
+        "observer",
+        _should_retry,
+        {"agir": "agir", "repondre": "repondre"},
+    )
+
+    # Checkpointer MemorySaver (memoire courte par thread_id)
+    checkpointer = MemorySaver()
+    return graph.compile(checkpointer=checkpointer)
+
+
+# Graphe compile (singleton charge au premier appel)
+_compiled_graph = None
+
+
+def get_compiled_graph():
+    global _compiled_graph
+    if _compiled_graph is None:
+        _compiled_graph = _build_graph()
+        logger.info("LangGraph StateGraph compile avec MemorySaver")
+    return _compiled_graph
+
+
+# ── Utilitaire interne ─────────────────────────────────────────────────────────
+
+def _last_human_message(state: SmartStudentState) -> str:
+    """Retourne le contenu du dernier message humain dans l'etat."""
+    for msg in reversed(state.get("messages") or []):
+        if isinstance(msg, HumanMessage):
+            return msg.content
+        if isinstance(msg, dict) and msg.get("role") == "user":
+            return msg.get("content", "")
+    return ""
+
+
+# ── Interface publique ─────────────────────────────────────────────────────────
 
 class LangGraphOrchestrator:
     """
-    Orchestrateur basé sur le pattern StateGraph de LangGraph.
+    Orchestrateur SmartStudent base sur LangGraph StateGraph.
 
-    Graphe d'exécution :
+    Graphe compile :
+      [START] -> percevoir -> planifier -> agir -> observer
+                                                      |
+                                          needs_retry=True -> agir (retry)
+                                          needs_retry=False -> repondre -> [END]
 
-      [START]
-         │
-         ▼
-    ┌─────────────┐
-    │  PERCEVOIR  │  ← Analyse message + extraction intention
-    └──────┬──────┘
-           │
-           ▼
-    ┌─────────────┐
-    │  PLANIFIER  │  ← Sélection agent + construction plan
-    └──────┬──────┘
-           │
-           ▼
-    ┌─────────────┐ ◄─────────────────────────────────┐
-    │    AGIR     │  ← Appel agent spécialisé (LLM)   │
-    └──────┬──────┘                                   │
-           │                                          │
-           ▼                                          │
-    ┌─────────────┐       needs_retry == True         │
-    │  OBSERVER   │ ─────────────────────────────────►┘
-    └──────┬──────┘
-           │ needs_retry == False
-           ▼
-    ┌─────────────┐
-    │  RÉPONDRE   │  ← Formatage réponse finale
-    └──────┬──────┘
-           │
-         [END]
+    Checkpointer : MemorySaver (memoire courte par thread_id/conversation)
+    Memoire longue : injectee depuis PostgreSQL via user_context['memories']
     """
 
     def __init__(self):
-        self.llm = self._build_llm()
-        self.nodes = GraphNodes(self.llm)
-
-        self._graph = {
-            "percevoir": self.nodes.percevoir,
-            "planifier": self.nodes.planifier,
-            "agir":      self.nodes.agir,
-            "observer":  self.nodes.observer,
-            "repondre":  self.nodes.repondre,
-        }
-
-        self._transitions = {
-            "percevoir": lambda s: "planifier",
-            "planifier": lambda s: "agir",
-            "agir":      lambda s: "observer",
-            "observer":  lambda s: "agir" if s.needs_retry else "repondre",
-            "repondre":  lambda s: "end",
-        }
-
-    def _build_llm(self):
-        """Essaie Groq (gratuit) d'abord, replie sur OpenAI."""
-        groq_key = getattr(settings, "GROQ_API_KEY", None)
-        if _GROQ_AVAILABLE and groq_key and groq_key not in ("", "your-groq-api-key"):
-            try:
-                import logging
-                logging.getLogger(__name__).info("LLM: utilisation de Groq (llama-3.1-70b)")
-                return ChatGroq(
-                    api_key=groq_key,
-                    model="llama-3.3-70b-versatile",
-                    temperature=0.7,
-                )
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).warning(f"Groq init échoué: {e}. Repli sur OpenAI.")
-        if _OPENAI_AVAILABLE and settings.OPENAI_API_KEY:
-            import logging
-            logging.getLogger(__name__).info("LLM: utilisation de OpenAI")
-            return ChatOpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                model=settings.OPENAI_MODEL,
-                temperature=0.7,
-            )
-        raise RuntimeError("Aucun LLM disponible. Configure GROQ_API_KEY ou OPENAI_API_KEY dans backend/.env")
-
-    def _run_graph(self, initial_state: AgentState) -> AgentState:
-        """Exécute le graphe d'états jusqu'à END."""
-        state = initial_state
-        node_name = "percevoir"
-        visited = []
-
-        while node_name != "end":
-            visited.append(node_name)
-            # Exécute le noeud
-            state = self._graph[node_name](state)
-            # Détermine la transition suivante
-            node_name = self._transitions[node_name](state)
-
-            # Sécurité anti-boucle infinie
-            if len(visited) > 20:
-                state.final_response = state.agent_response
-                break
-
-        return state
+        self._graph = get_compiled_graph()
 
     async def process_message(
         self,
         user_message: str,
-        conversation_history: Optional[List[Dict[str, str]]] = None,
-        user_context: Optional[Dict[str, Any]] = None
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Point d'entrée principal — interface compatible avec l'ancien orchestrateur.
+        Point d'entree principal.
+        Interface backward-compatible avec l'API Flutter existante.
+
+        Args:
+            user_message: Message de l'etudiant
+            conversation_history: Historique (non utilise — gere par checkpointer)
+            user_context: Profil etudiant + memoires long terme + conversation_id
         """
-        # Initialisation de l'état
-        initial_state = AgentState(
-            user_message=user_message,
-            conversation_history=conversation_history or [],
-            user_context=user_context or {},
-        )
+        uc = user_context or {}
 
-        # Exécution du graphe
-        final_state = self._run_graph(initial_state)
+        # thread_id = conversation_id unique par module (gere la memoire courte)
+        conv_id = uc.get("conversation_id") or uc.get("user_id") or "default"
+        thread_id = f"user_{conv_id}" if isinstance(conv_id, int) else str(conv_id)
 
-        return {
-            "response":   final_state.final_response,
-            "agent":      final_state.selected_agent,
-            "agent_name": final_state.agent_name,
-            "metadata":   final_state.metadata,
+        initial_state: SmartStudentState = {
+            "messages": [HumanMessage(content=user_message)],
+            "user_context": uc,
+            "intent": "",
+            "intent_confidence": 0.0,
+            "keywords_detected": [],
+            "selected_agent": "admin",
+            "plan": "",
+            "agent_response": "",
+            "iteration_count": 0,
+            "response_quality": 0.0,
+            "needs_retry": False,
+            "final_response": "",
+            "agent_name": "",
+            "metadata": {},
+            "error": None,
         }
+
+        config = {"configurable": {"thread_id": thread_id}}
+
+        try:
+            result = await self._graph.ainvoke(initial_state, config=config)
+            return {
+                "response":   result.get("final_response") or "",
+                "agent":      result.get("selected_agent") or "admin",
+                "agent_name": result.get("agent_name") or "",
+                "metadata":   result.get("metadata") or {},
+            }
+        except Exception as e:
+            logger.error(f"Graph execution error: {e}", exc_info=True)
+            return {
+                "response":   "Une erreur s'est produite. Veuillez reessayer.",
+                "agent":      "admin",
+                "agent_name": "Agent Administratif",
+                "metadata":   {"error": str(e)},
+            }
 
     def get_graph_info(self) -> Dict[str, Any]:
-        """Retourne la structure du graphe (utile pour la documentation)."""
+        """Structure du graphe pour documentation et LangGraph Studio."""
         return {
-            "nodes": list(self._graph.keys()) + ["end"],
+            "type": "LangGraph StateGraph",
+            "version": "0.2.x",
+            "checkpointer": "MemorySaver",
+            "nodes": ["percevoir", "planifier", "agir", "observer", "repondre"],
             "edges": [
-                {"from": "percevoir", "to": "planifier", "condition": "always"},
-                {"from": "planifier", "to": "agir",      "condition": "always"},
-                {"from": "agir",      "to": "observer",  "condition": "always"},
-                {"from": "observer",  "to": "agir",      "condition": "needs_retry == True"},
-                {"from": "observer",  "to": "repondre",  "condition": "needs_retry == False"},
-                {"from": "repondre",  "to": "end",       "condition": "always"},
+                {"from": "__start__", "to": "percevoir"},
+                {"from": "percevoir", "to": "planifier"},
+                {"from": "planifier", "to": "agir"},
+                {"from": "agir",      "to": "observer"},
+                {"from": "observer",  "to": "agir",     "condition": "needs_retry == True"},
+                {"from": "observer",  "to": "repondre", "condition": "needs_retry == False"},
+                {"from": "repondre",  "to": "__end__"},
             ],
-            "cycle": "Percevoir → Planifier → Agir → Observer → (Agir)* → Répondre",
+            "agents": list(AGENTS_CONFIG.keys()),
+            "cycle": "percevoir -> planifier -> agir -> observer -> (agir)* -> repondre -> END",
         }
 
 
-# Instance globale
+# ── Instance globale ───────────────────────────────────────────────────────────
+
 orchestrator = LangGraphOrchestrator()
 
-# Alias de compatibilité
+# Alias de compatibilite
 Orchestrator = LangGraphOrchestrator

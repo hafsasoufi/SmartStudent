@@ -43,6 +43,10 @@ dependencies:
   # Networking
   connectivity_plus: ^5.0.0
 
+  # File handling (for PDF download & open)
+  path_provider: ^2.1.1
+  open_file: ^3.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
