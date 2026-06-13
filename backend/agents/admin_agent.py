@@ -154,7 +154,7 @@ def generer_document_pdf(doc_type: str, user_id: int, donnees_supplementaires: s
                 "email":           user.email,
                 "major":           profile.major if profile else "Genie Informatique",
                 "year":            profile.year if profile else 3,
-                "university":      (profile.university if profile else None) or "ENIAD Bechar",
+                "university":      (profile.university if profile else None) or "ENIAD Berkane",
                 "phone":           (profile.phone if profile else None) or "",
             }
 
@@ -403,7 +403,7 @@ async def agent_node(state: AdminAgentState) -> dict:
     annee = ctx.get("year") or "annee non renseignee"
 
     system_prompt = (
-        f"Tu es l'Agent Administratif de SmartStudent - ENIAD Bechar, Algerie.\n"
+        f"Tu es l'Agent Administratif de SmartStudent - ENIAD Berkane, Maroc.\n"
         f"Tu interagis avec: {nom}, Filiere: {filiere}, Annee: {annee}, ID utilisateur: {user_id}.\n\n"
         "REGLES ABSOLUES - TU DOIS TOUJOURS UTILISER TES OUTILS:\n"
         f"1. Profil etudiant -> recuperer_profil_etudiant(user_id={user_id})\n"
@@ -422,15 +422,14 @@ async def agent_node(state: AdminAgentState) -> dict:
         "- Apres execution d'un outil, presente les resultats clairement avec les references importantes (ID, ticket...)."
     )
 
-    llm = _get_llm().bind_tools(_TOOLS)
-    messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
-
     try:
+        llm = _get_llm().bind_tools(_TOOLS)
+        messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
         resp = await llm.ainvoke(messages)
         return {"messages": [resp]}
     except Exception as e:
         logger.error(f"agent_node error: {e}")
-        err = AIMessage(content=f"Une erreur est survenue. Veuillez reessayer ou contacter le secretariat ENIAD. ({e})")
+        err = AIMessage(content="Une erreur est survenue avec le service IA. Veuillez reessayer dans quelques instants ou contacter le secretariat ENIAD.")
         return {"messages": [err]}
 
 
@@ -484,7 +483,17 @@ class AdminAgent:
             "user_context": user_context,
         }
         config = {"configurable": {"thread_id": thread_id}}
-        result = await self._graph.ainvoke(initial, config=config)
+
+        try:
+            result = await self._graph.ainvoke(initial, config=config)
+        except Exception as e:
+            logger.error(f"AdminAgent.process graph error: {e}")
+            return {
+                "response": "Le service IA est temporairement indisponible. Veuillez reessayer ou contacter le secretariat ENIAD.",
+                "doc_id": None,
+                "request_id": None,
+                "ticket_id": None,
+            }
 
         last_ai = next(
             (m for m in reversed(result.get("messages", [])) if isinstance(m, AIMessage)),

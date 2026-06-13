@@ -26,10 +26,10 @@ class _PDF(FPDF):
         self.set_font("Helvetica", "B", 13)
         self.set_text_color(255, 255, 255)
         self.set_xy(10, 5)
-        self.cell(190, 8, "ECOLE NATIONALE D'INFORMATIQUE ET D'ADMINISTRATION", align="C", new_x="LMARGIN", new_y="NEXT")
+        self.cell(190, 8, "ECOLE NATIONALE DE L'INTELLIGENCE ARTIFICIELLE ET DU DIGITAL", align="C", new_x="LMARGIN", new_y="NEXT")
         self.set_font("Helvetica", "", 10)
         self.set_x(10)
-        self.cell(190, 6, "ENIAD - Bechar, Algerie", align="C", new_x="LMARGIN", new_y="NEXT")
+        self.cell(190, 6, "ENIAD - Berkane, Maroc", align="C", new_x="LMARGIN", new_y="NEXT")
         # Title
         self.set_text_color(0, 0, 0)
         self.ln(8)
@@ -49,7 +49,7 @@ class _PDF(FPDF):
         self.set_text_color(120, 120, 120)
         self.cell(
             0, 6,
-            f"Genere par SmartStudent | ENIAD | {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            f"Genere par SmartStudent | ENIAD Berkane | {datetime.now().strftime('%d/%m/%Y %H:%M')}",
             align="C",
         )
 
@@ -57,7 +57,7 @@ class _PDF(FPDF):
         self.ln(14)
         self.set_font("Helvetica", "", 11)
         self.set_text_color(0, 0, 0)
-        self.cell(90, 8, f"Bechar, le {datetime.now().strftime('%d/%m/%Y')}", new_x="RIGHT", new_y="TMARGIN")
+        self.cell(90, 8, f"Berkane, le {datetime.now().strftime('%d/%m/%Y')}", new_x="RIGHT", new_y="TMARGIN")
         self.cell(90, 8, "", new_x="LMARGIN", new_y="NEXT")
         self.cell(90, 8, "", new_x="RIGHT", new_y="TMARGIN")
         self.set_font("Helvetica", "B", 11)
@@ -135,9 +135,9 @@ class DocumentsAgent:
         id_part = f", portant le numero de carte etudiant {card_id}," if card_id else ""
         pdf.multi_cell(
             0, 9,
-            f"Le Directeur de l'Ecole Nationale d'Informatique et d'Administration (ENIAD) "
-            f"certifie que l'etudiant(e) {full_name}{id_part} est regulierement inscrit(e) "
-            f"en {level_label}, filiere {major}, pour l'annee universitaire 2025-2026.",
+            f"Le Directeur de l'Ecole Nationale de l'Intelligence Artificielle et du Digital "
+            f"(ENIAD) certifie que l'etudiant(e) {full_name}{id_part} est regulierement "
+            f"inscrit(e) en {level_label}, filiere {major}, pour l'annee universitaire 2025-2026.",
             align="J",
         )
         pdf.ln(6)
@@ -306,9 +306,9 @@ class DocumentsAgent:
         pdf.ln(2)
         pdf.multi_cell(
             0, 8,
-            "La presente convention est conclue entre l'Ecole Nationale d'Informatique et "
-            "d'Administration (ENIAD) de Bechar et l'organisme d'accueil designe ci-apres, "
-            "en vue de definir les conditions du stage de l'etudiant(e).",
+            "La presente convention est conclue entre l'Ecole Nationale de l'Intelligence "
+            "Artificielle et du Digital (ENIAD) de Berkane et l'organisme d'accueil designe "
+            "ci-apres, en vue de definir les conditions du stage de l'etudiant(e).",
             align="J",
         )
 

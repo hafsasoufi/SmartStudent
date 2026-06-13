@@ -318,14 +318,14 @@ async def agent_node(state: PlanningAgentState) -> dict:
         "- Réponds en français."
     )
 
-    llm = _get_llm().bind_tools(_TOOLS)
-    messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
     try:
+        llm = _get_llm().bind_tools(_TOOLS)
+        messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
         resp = await llm.ainvoke(messages)
         return {"messages": [resp]}
     except Exception as e:
         logger.error("planning agent_node error: %s", e)
-        return {"messages": [AIMessage(content=f"Erreur temporaire. Réessayez. ({e})")]}
+        return {"messages": [AIMessage(content="Le service IA est temporairement indisponible. Veuillez reessayer dans quelques instants.")]}
 
 
 # ── Graph compilation ─────────────────────────────────────────────────────────
@@ -371,7 +371,11 @@ class PlanningAgent:
             "user_context": user_context,
         }
         config = {"configurable": {"thread_id": thread_id}}
-        result = await self._graph.ainvoke(initial, config=config)
+        try:
+            result = await self._graph.ainvoke(initial, config=config)
+        except Exception as e:
+            logger.error("PlanningAgent.process graph error: %s", e)
+            return {"response": "Le service IA est temporairement indisponible. Veuillez reessayer."}
         last_ai = next(
             (m for m in reversed(result.get("messages", [])) if isinstance(m, AIMessage)),
             None,

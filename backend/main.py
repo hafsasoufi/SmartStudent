@@ -762,17 +762,20 @@ async def rag_search(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class _AdminAskRequest(_PydanticBaseModel):
+    question: str
+    conversation_id: Optional[str] = None
+
 @app.post("/api/admin/ask", tags=["Admin"])
 async def admin_ask(
-    request: Request,
+    body: _AdminAskRequest,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
     """Invoke le LangGraph AdminAgent complet (FAQ + doc + suivi + reclamation)."""
     user = await get_current_user(authorization, db)
-    body = await request.json()
-    question = body.get("question", "")
-    conversation_id = body.get("conversation_id", f"admin_{user.id}")
+    question = body.question.strip()
+    conversation_id = body.conversation_id or f"admin_{user.id}"
     if not question:
         raise HTTPException(status_code=400, detail="question required")
 
@@ -789,7 +792,7 @@ async def admin_ask(
             "student_card_id": getattr(profile, "student_card_id", None) or "",
             "major":           getattr(profile, "major", None) or "Genie Informatique",
             "year":            getattr(profile, "year", None) or 3,
-            "university":      getattr(profile, "university", None) or "ENIAD Bechar",
+            "university":      getattr(profile, "university", None) or "ENIAD Berkane",
             "phone":           getattr(profile, "phone", None) or "",
         }
         agent = get_admin_agent()
@@ -846,12 +849,19 @@ async def create_admin_request(
     doc_id = None
     try:
         from backend.agents.documents_agent import get_documents_agent
+        _full_name = user.full_name or user.username or ""
+        _parts = _full_name.split()
         user_data = {
-            "full_name": user.full_name or user.username,
-            "student_id": str(user.id),
-            "major": getattr(profile, "major", None) or "Genie Informatique",
-            "year": getattr(profile, "year", None) or 3,
-            "description": body.description or "",
+            "full_name":       _full_name,
+            "first_name":      getattr(user, "first_name", None) or (_parts[0] if _parts else ""),
+            "last_name":       getattr(user, "last_name",  None) or (" ".join(_parts[1:]) if len(_parts) > 1 else ""),
+            "student_id":      str(user.id),
+            "student_card_id": (getattr(profile, "student_card_id", None) or str(user.id)) if profile else str(user.id),
+            "email":           user.email or "",
+            "major":           (getattr(profile, "major",  None) or "Genie Informatique") if profile else "Genie Informatique",
+            "year":            (getattr(profile, "year",   None) or 3) if profile else 3,
+            "phone":           (getattr(profile, "phone",  None) or "") if profile else "",
+            "description":     body.description or "",
         }
         doc_id, _ = get_documents_agent().generate(body.request_type, user_data)
     except Exception:
@@ -978,6 +988,13 @@ import base64 as _base64
 class _DocumentRequest(_PydanticBaseModel):
     doc_type: str
     description: Optional[str] = None
+    # Convention de stage — company / internship fields
+    entreprise: Optional[str] = None
+    adresse_entreprise: Optional[str] = None
+    tuteur: Optional[str] = None
+    poste: Optional[str] = None
+    date_debut: Optional[str] = None
+    date_fin: Optional[str] = None
 
 @app.post("/api/documents/generate", tags=["Documents"])
 async def generate_document(
@@ -989,18 +1006,58 @@ async def generate_document(
     user = await get_current_user(authorization, db)
     profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
 
+    full_name = user.full_name or user.username or ""
+    name_parts = full_name.split()
+    first_name = getattr(user, "first_name", None) or (name_parts[0] if name_parts else "")
+    last_name  = getattr(user, "last_name",  None) or (" ".join(name_parts[1:]) if len(name_parts) > 1 else "")
+
     user_data = {
-        "full_name": user.full_name or user.username,
-        "student_id": user.id,
-        "major": (getattr(profile, "major", None) or "Genie Informatique") if profile else "Genie Informatique",
-        "year": (getattr(profile, "year", None) or 3) if profile else 3,
-        "description": req.description or "",
+        "full_name":       full_name,
+        "first_name":      first_name,
+        "last_name":       last_name,
+        "student_id":      str(user.id),
+        "student_card_id": (getattr(profile, "student_card_id", None) or str(user.id)) if profile else str(user.id),
+        "email":           user.email or "",
+        "major":           (getattr(profile, "major", None) or "Genie Informatique") if profile else "Genie Informatique",
+        "year":            (getattr(profile, "year",  None) or 3) if profile else 3,
+        "phone":           (getattr(profile, "phone", None) or "") if profile else "",
+        "description":     req.description or "",
+        # Convention de stage fields — filled in or left blank for manual completion
+        "entreprise":          req.entreprise or "________________",
+        "adresse_entreprise":  req.adresse_entreprise or "________________",
+        "tuteur":              req.tuteur or "________________",
+        "poste":               req.poste or "Stage de fin d'etudes",
+        "date_debut":          req.date_debut or "________________",
+        "date_fin":            req.date_fin or "________________",
     }
 
+    # For releve de notes, pull real exam grades
+    if any(k in req.doc_type.lower() for k in ("releve", "notes")):
+        try:
+            exams = db.query(Exam).filter(
+                Exam.user_id == user.id, Exam.status == "completed"
+            ).all()
+            user_data["grades"] = [
+                {
+                    "matiere": e.subject or e.title,
+                    "coefficient": 3,
+                    "note": round((e.score / e.total_points) * 20, 2),
+                }
+                for e in exams
+                if e.score is not None and e.total_points
+            ]
+        except Exception:
+            user_data["grades"] = []
+
     try:
+        import asyncio
+        from functools import partial
         from backend.agents.documents_agent import get_documents_agent
         agent = get_documents_agent()
-        doc_id, pdf_bytes = agent.generate(req.doc_type, user_data)
+        loop = asyncio.get_event_loop()
+        doc_id, pdf_bytes = await loop.run_in_executor(
+            None, partial(agent.generate, req.doc_type, user_data)
+        )
         pdf_b64 = _base64.b64encode(pdf_bytes).decode("utf-8")
         return {
             "doc_id": doc_id,
@@ -1043,6 +1100,24 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={
             "detail": exc.detail,
             "status_code": exc.status_code,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    )
+
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    detail = "; ".join(
+        f"{' -> '.join(str(l) for l in e['loc'])}: {e['msg']}"
+        for e in errors
+    )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": f"Donnees invalides: {detail}",
+            "status_code": 422,
             "timestamp": datetime.utcnow().isoformat()
         }
     )
