@@ -296,17 +296,75 @@ def planifier(state: SmartStudentState) -> dict:
 
 # ── Noeud 3 : AGIR ─────────────────────────────────────────────────────────────
 
-def agir(state: SmartStudentState) -> dict:
-    """Appelle l'agent specialise (LLM) avec le systeme prompt personnalise."""
+async def agir(state: SmartStudentState) -> dict:
+    """
+    Dispatch vers le sous-graphe ReAct de l'agent specialise.
+    Admin, Planning et Exams ont leurs propres graphes LangGraph avec outils reels.
+    Campus, Orientation, Wellbeing utilisent un appel LLM enrichi (RAG + memoire).
+    """
     agent_id = state.get("selected_agent") or "admin"
     cfg = AGENTS_CONFIG.get(agent_id, AGENTS_CONFIG["admin"])
     iteration = state.get("iteration_count") or 0
-
-    # --- Construction du prompt systeme ---
-    system_prompt = cfg["prompt"]
     uc = state.get("user_context") or {}
+    user_id = int(uc.get("user_id") or 0)
+    conv_id = str(uc.get("conversation_id") or f"user_{user_id}")
+    user_msg = _last_human_message(state)
 
-    # Personnalisation par profil etudiant
+    try:
+        # ── Agents avec sous-graphes ReAct complets ──────────────────────────
+        if agent_id == "admin":
+            from backend.agents.admin_agent import AdminAgent
+            result = await AdminAgent().process(user_msg, user_id, uc, conv_id)
+            response = result.get("response", "")
+
+        elif agent_id == "planning":
+            from backend.agents.planning_agent import PlanningAgent
+            result = await PlanningAgent().process(user_msg, user_id, uc, conv_id)
+            response = result.get("response", "")
+
+        elif agent_id == "exams":
+            from backend.agents.exams_agent import ExamsAgent
+            result = await ExamsAgent().process(user_msg, user_id, uc, conv_id)
+            response = result.get("response", "")
+
+        # ── Agents LLM enrichis (RAG + memoire) ─────────────────────────────
+        else:
+            response = await _call_llm_agent(agent_id, cfg, state, uc, user_msg)
+
+        return {
+            "agent_response": response,
+            "iteration_count": iteration + 1,
+            "messages": [AIMessage(content=response, name=cfg["name"])],
+            "error": None,
+        }
+
+    except Exception as e:
+        err = str(e)
+        logger.error(f"agir node error [{agent_id}]: {err}")
+        if "quota" in err.lower() or "insufficient" in err.lower():
+            fallback = "Service IA temporairement indisponible (quota). Reessayez plus tard."
+        elif "api" in err.lower() and "key" in err.lower():
+            fallback = "Cle API non configuree ou invalide."
+        else:
+            fallback = "Difficulte technique. Veuillez reessayer."
+        return {
+            "agent_response": fallback,
+            "iteration_count": iteration + 1,
+            "error": err,
+        }
+
+
+async def _call_llm_agent(
+    agent_id: str,
+    cfg: Dict[str, Any],
+    state: SmartStudentState,
+    uc: Dict[str, Any],
+    user_msg: str,
+) -> str:
+    """Appel LLM direct enrichi pour les agents sans sous-graphe ReAct (Campus, Orientation, Wellbeing)."""
+    system_prompt = cfg["prompt"]
+
+    # Personnalisation profil
     name = uc.get("full_name") or uc.get("username") or "l'etudiant(e)"
     system_prompt += f"\n\nTu parles a {name}"
     if uc.get("major"):
@@ -323,63 +381,35 @@ def agir(state: SmartStudentState) -> dict:
             for m in memories[:8]
         )
         system_prompt += (
-            "\n\nMEMOIRE LONG TERME (informations persistantes sur cet etudiant) :\n"
-            + mem_lines
+            "\n\nMEMOIRE LONG TERME :\n" + mem_lines
             + "\nUtilise ces informations pour personnaliser ta reponse."
         )
 
-    # Injection RAG pour l'agent admin
-    if agent_id == "admin":
+    # RAG pour campus/orientation si pertinent
+    if agent_id in ("campus", "orientation", "admin"):
         try:
             from backend.services.rag_service import get_rag_service
             rag = get_rag_service()
-            user_msg = _last_human_message(state)
             if rag.is_ready and user_msg:
-                rag_ctx = rag.build_context(user_msg, n_results=4)
+                rag_ctx = rag.build_context(user_msg, n_results=3)
                 if rag_ctx:
                     system_prompt += (
-                        "\n\nCONTEXTE DOCUMENTAIRE ENIAD :\n"
-                        + rag_ctx
+                        "\n\nCONTEXTE DOCUMENTAIRE ENIAD :\n" + rag_ctx
                         + "\nBase ta reponse sur ces documents officiels."
                     )
         except Exception:
             pass
 
-    # --- Construction des messages LangChain ---
     lc_messages = [SystemMessage(content=system_prompt)]
-    # Inclure les 6 derniers messages de la conversation (contexte multi-tours)
     for msg in (state.get("messages") or [])[-6:]:
         if isinstance(msg, (HumanMessage, AIMessage, SystemMessage)):
             lc_messages.append(msg)
-
-    # Assurer que le dernier message humain est present
     if not any(isinstance(m, HumanMessage) for m in lc_messages[1:]):
-        user_msg = _last_human_message(state)
         if user_msg:
             lc_messages.append(HumanMessage(content=user_msg))
 
-    try:
-        response = get_llm().invoke(lc_messages)
-        return {
-            "agent_response": response.content,
-            "iteration_count": iteration + 1,
-            "messages": [AIMessage(content=response.content, name=cfg["name"])],
-            "error": None,
-        }
-    except Exception as e:
-        err = str(e)
-        logger.error(f"LLM error in agir node: {err}")
-        if "quota" in err.lower() or "insufficient" in err.lower():
-            fallback = "Service IA temporairement indisponible (quota). Reessayez plus tard."
-        elif "api" in err.lower() and "key" in err.lower():
-            fallback = "Cle API non configuree ou invalide."
-        else:
-            fallback = "Difficulte technique. Veuillez reessayer."
-        return {
-            "agent_response": fallback,
-            "iteration_count": iteration + 1,
-            "error": err,
-        }
+    response = await get_llm().ainvoke(lc_messages)
+    return response.content
 
 
 # ── Noeud 4 : OBSERVER ────────────────────────────────────────────────────────

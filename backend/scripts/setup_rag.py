@@ -182,6 +182,32 @@ def index_static_knowledge(rag) -> int:
     return added
 
 
+def index_official_documents(rag) -> int:
+    """Indexe les documents officiels ENIAD : Règlement Intérieur + Convention de Stage."""
+    from backend.data.eniad_reglement import ENIAD_OFFICIAL_DOCUMENTS
+
+    docs = []
+    for entry in ENIAD_OFFICIAL_DOCUMENTS:
+        text = f"[{entry['source']}]\n{entry['title']}\n\n{entry['content']}"
+        chunks = chunk_text(text, chunk_size=900, overlap=150)
+        for i, chunk in enumerate(chunks):
+            docs.append({
+                "id": f"official_{entry['id']}_chunk{i}",
+                "text": chunk,
+                "metadata": {
+                    "source": "official_document",
+                    "category": entry.get("category", "reglement"),
+                    "title": entry["title"],
+                    "document_source": entry.get("source", "ENIAD"),
+                    "description": entry["title"],
+                },
+            })
+
+    added = rag.add_documents_batch(docs)
+    logger.info(f"  Documents officiels (Règlement + Convention) : {added} chunks indexés")
+    return added
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -219,16 +245,20 @@ def main():
     if rag.document_count > 0 and "--reset" not in sys.argv:
         logger.info(f"  Collection déjà peuplée ({rag.document_count} docs). Utilise --reset pour re-indexer.")
     else:
-        logger.info("\n[2/4] Indexation de la base de connaissances statique...")
+        logger.info("\n[2/5] Indexation de la base de connaissances statique...")
         kb_count = index_static_knowledge(rag)
 
-        logger.info("\n[3/4] Téléchargement et indexation des PDFs ENIAD...")
+        logger.info("\n[3/5] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
+        official_count = index_official_documents(rag)
+
+        logger.info("\n[4/5] Téléchargement et indexation des PDFs ENIAD...")
         pdf_count = index_pdf_resources(rag)
 
-        logger.info(f"\n[4/4] Terminé !")
-        logger.info(f"  Base de connaissances : {kb_count} chunks")
-        logger.info(f"  PDFs ENIAD           : {pdf_count} chunks")
-        logger.info(f"  TOTAL                : {rag.document_count} documents indexés")
+        logger.info(f"\n[5/5] Terminé !")
+        logger.info(f"  Base de connaissances       : {kb_count} chunks")
+        logger.info(f"  Documents officiels ENIAD   : {official_count} chunks")
+        logger.info(f"  PDFs ENIAD (web)             : {pdf_count} chunks")
+        logger.info(f"  TOTAL                        : {rag.document_count} documents indexés")
 
     # Test de requête
     logger.info("\n[TEST] Requête de test : 'emploi du temps IA semestre 5'")

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request, Header
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -23,6 +23,7 @@ from backend.auth import (
     create_access_token, create_refresh_token, TokenData
 )
 from backend.agents import orchestrator
+from backend.services.memory_manager import get_memory_manager
 
 settings = get_settings()
 
@@ -375,6 +376,7 @@ def _save_memory_if_relevant(db: Session, user_id: int, user_message: str, agent
 @app.post("/api/chat", response_model=ChatResponse, tags=["Chat"])
 async def chat(
     request: ChatRequest,
+    background_tasks: BackgroundTasks,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
@@ -430,8 +432,13 @@ async def chat(
         user_context=user_context
     )
 
-    # Save memory: detect important info to remember long-term
-    _save_memory_if_relevant(db, user.id, request.message, orchestrator_response)
+    # Extract and persist important facts in background (non-blocking)
+    background_tasks.add_task(
+        get_memory_manager().extract_and_store,
+        user.id,
+        request.message,
+        orchestrator_response["response"],
+    )
     
     # Save messages to database
     user_message_db = Message(
