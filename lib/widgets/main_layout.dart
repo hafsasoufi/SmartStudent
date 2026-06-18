@@ -755,6 +755,7 @@ import '../screens/roadmap_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/notification_page.dart';
 import '../screens/pitch_deck_screen.dart';
+import '../screens/assistant_screen.dart';
 import '../screens/auth_screen.dart';
 import '../models/board.dart';
 import '../widgets/add_idea_dialog.dart';
@@ -906,7 +907,19 @@ class _MainLayoutState extends State<MainLayout> {
         // Afficher différents FAB selon la page active
         switch (_selectedNavIndex) {
           case 0: // Dashboard
-            return const SizedBox.shrink(); // Pas de FAB sur Dashboard
+            return FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AssistantScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Assistant IA'),
+              heroTag: 'openAssistant',
+            );
           case 1: // Kanban
             if (boardProvider.boards.isEmpty ||
                 boardProvider.selectedBoardId == null) {
