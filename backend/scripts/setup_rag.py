@@ -182,6 +182,57 @@ def index_static_knowledge(rag) -> int:
     return added
 
 
+def index_modules(rag) -> int:
+    """Indexe les fiches modules + synthèses semestre générées depuis generate_modules.py."""
+    from backend.data.generate_modules import build_module_entries, build_synthese_entries
+
+    all_entries = build_module_entries() + build_synthese_entries()
+    docs = []
+    for entry in all_entries:
+        text = f"{entry['title']}\n\n{entry['content']}"
+        chunks = chunk_text(text, chunk_size=900, overlap=100)
+        for i, chunk in enumerate(chunks):
+            docs.append({
+                "id": f"mod_{entry['id']}_chunk{i}",
+                "text": chunk,
+                "metadata": {
+                    "source": "plan_filiere",
+                    "category": entry.get("category", "module"),
+                    "title": entry["title"],
+                    "description": entry["title"],
+                },
+            })
+
+    added = rag.add_documents_batch(docs)
+    logger.info(f"  Modules filières (EPSI/IA/GINF/IRSI/ROC) : {added} chunks indexés")
+    return added
+
+
+def index_admin_procedures(rag) -> int:
+    """Indexe les procédures administratives ENIAD."""
+    from backend.data.eniad_admin_procedures import ENIAD_ADMIN_PROCEDURES
+
+    docs = []
+    for entry in ENIAD_ADMIN_PROCEDURES:
+        text = f"{entry['title']}\n\n{entry['content']}"
+        chunks = chunk_text(text, chunk_size=900, overlap=100)
+        for i, chunk in enumerate(chunks):
+            docs.append({
+                "id": f"admin_{entry['id']}_chunk{i}",
+                "text": chunk,
+                "metadata": {
+                    "source": "admin_procedures",
+                    "category": entry.get("category", "admin"),
+                    "title": entry["title"],
+                    "description": entry["title"],
+                },
+            })
+
+    added = rag.add_documents_batch(docs)
+    logger.info(f"  Procédures administratives : {added} chunks indexés")
+    return added
+
+
 def index_events_clubs(rag) -> int:
     """Indexe les événements et clubs ENIADB depuis events_clubs_data.py."""
     from backend.data.events_clubs_data import ALL_ENTRIES
@@ -270,20 +321,28 @@ def main():
     if rag.document_count > 0 and "--reset" not in sys.argv:
         logger.info(f"  Collection déjà peuplée ({rag.document_count} docs). Utilise --reset pour re-indexer.")
     else:
-        logger.info("\n[2/6] Indexation de la base de connaissances statique...")
+        logger.info("\n[2/8] Indexation de la base de connaissances statique...")
         kb_count = index_static_knowledge(rag)
 
-        logger.info("\n[3/6] Indexation des événements et clubs ENIADB...")
+        logger.info("\n[3/8] Indexation des modules filières (EPSI/IA/GINF/IRSI/ROC)...")
+        mod_count = index_modules(rag)
+
+        logger.info("\n[4/8] Indexation des procédures administratives...")
+        admin_count = index_admin_procedures(rag)
+
+        logger.info("\n[5/8] Indexation des événements et clubs ENIADB...")
         ec_count = index_events_clubs(rag)
 
-        logger.info("\n[4/6] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
+        logger.info("\n[6/8] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
         official_count = index_official_documents(rag)
 
-        logger.info("\n[5/6] Téléchargement et indexation des PDFs ENIAD...")
+        logger.info("\n[7/8] Téléchargement et indexation des PDFs ENIAD...")
         pdf_count = index_pdf_resources(rag)
 
-        logger.info(f"\n[6/6] Terminé !")
+        logger.info(f"\n[8/8] Terminé !")
         logger.info(f"  Base de connaissances       : {kb_count} chunks")
+        logger.info(f"  Modules filières            : {mod_count} chunks")
+        logger.info(f"  Procédures administratives  : {admin_count} chunks")
         logger.info(f"  Événements & clubs           : {ec_count} chunks")
         logger.info(f"  Documents officiels ENIAD   : {official_count} chunks")
         logger.info(f"  PDFs ENIAD (web)             : {pdf_count} chunks")
