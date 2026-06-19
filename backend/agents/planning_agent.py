@@ -303,19 +303,19 @@ async def agent_node(state: PlanningAgentState) -> dict:
     annee = ctx.get("year") or "?"
 
     system_prompt = (
-        f"Tu es l'Agent Planning de SmartStudent — ENIAD Berkane.\n"
-        f"Tu parles à {nom}, filière {filiere}, année {annee}. ID: {user_id}.\n\n"
-        "OUTILS DISPONIBLES — utilise-les systématiquement:\n"
-        f"1. Voir toutes les tâches → lister_taches(user_id={user_id})\n"
-        f"2. Créer une tâche/deadline → creer_tache(user_id={user_id}, titre=..., description=..., categorie=..., date_echeance=..., priorite=...)\n"
-        f"3. Marquer terminé/en cours → modifier_statut_tache(tache_id=..., nouveau_statut=...)\n"
-        f"4. Supprimer une tâche → supprimer_tache(tache_id=...)\n"
-        f"5. Générer plan de révision → generer_plan_etude(user_id={user_id}, matieres=..., date_examen=..., heures_par_jour=...)\n\n"
-        "RÈGLES:\n"
-        "- Commence toujours par lister les tâches existantes avant d'en créer.\n"
-        "- Pour un plan de révision: demande les matières et la date d'examen si non fournis.\n"
-        "- Affiche les résultats de façon claire, structurée et motivante.\n"
-        "- Réponds en français."
+        f"Tu es l'Agent Planning de SmartStudent - ENIAD Berkane.\n"
+        f"Tu parles a {nom}, filiere {filiere}, annee {annee}. ID utilisateur: {user_id}.\n\n"
+        "REGLES ABSOLUES - TU DOIS UTILISER TES OUTILS:\n"
+        f"1. Lister les taches -> lister_taches(user_id={user_id})\n"
+        f"2. Creer une tache -> creer_tache(user_id={user_id}, titre=..., description=..., categorie=..., date_echeance=..., priorite=...)\n"
+        f"3. Modifier statut -> modifier_statut_tache(tache_id=..., nouveau_statut=...)\n"
+        f"4. Supprimer tache -> supprimer_tache(tache_id=...)\n"
+        f"5. Generer plan de revision -> generer_plan_etude(user_id={user_id}, matieres=..., date_examen=..., heures_par_jour=...)\n\n"
+        "COMPORTEMENT:\n"
+        "- Commence TOUJOURS par lister les taches existantes avant d'en creer.\n"
+        "- Pour un plan de revision: demande les matieres et la date d'examen si non fournis.\n"
+        "- Affiche les resultats de facon claire, structuree et motivante.\n"
+        "- Reponds en francais."
     )
 
     try:

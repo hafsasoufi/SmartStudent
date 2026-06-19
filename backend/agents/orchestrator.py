@@ -101,9 +101,9 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
         "name": "Agent Administratif",
         "keywords": [
             "faq", "document", "procedure", "regle", "formulaire", "attestation",
-            "inscription", "administratif", "emploi du temps", "horaire", "eniad",
+            "inscription", "administratif", "horaire", "eniad",
             "filiere", "convention", "stage admin", "bourse", "scolarite", "semestre",
-            "calendrier examen", "campus",
+            "calendrier", "secretariat", "administration",
         ],
         "prompt": (
             "Tu es l'Agent Administratif de SmartStudent a l'ENIAD.\n"
@@ -115,8 +115,9 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "planning": {
         "name": "Agent Planning",
         "keywords": [
-            "planning", "deadline", "date", "devoir", "emploi du temps",
-            "rappel", "semaine", "planifier", "organiser", "tache",
+            "planning", "deadline", "devoir", "emploi du temps",
+            "rappel", "semaine", "planifier", "organiser", "tache", "agenda",
+            "programme", "schedule", "calendrier personnel",
         ],
         "prompt": (
             "Tu es l'Agent Planning de SmartStudent.\n"
@@ -128,8 +129,9 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "exams": {
         "name": "Agent Examens",
         "keywords": [
-            "examen", "quiz", "test", "revision", "note", "qcm",
-            "exercice", "controle", "score", "evaluat",
+            "quiz", "qcm", "exercice", "controle", "score", "evaluat",
+            "genere quiz", "faire un quiz", "tester mes connaissances",
+            "entrainement", "pratique", "questions",
         ],
         "prompt": (
             "Tu es l'Agent Examens de SmartStudent.\n"
@@ -141,8 +143,9 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "orientation": {
         "name": "Agent Orientation",
         "keywords": [
-            "stage", "emploi", "cv", "lettre", "metier", "carriere",
-            "professionnel", "orientation", "entreprise", "job",
+            "stage", "emploi", "cv", "lettre de motivation", "metier", "carriere",
+            "professionnel", "orientation", "entreprise", "job", "recrutement",
+            "linkedin", "entretien", "alternance",
         ],
         "prompt": (
             "Tu es l'Agent Orientation de SmartStudent.\n"
@@ -154,8 +157,9 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "campus": {
         "name": "Agent Campus",
         "keywords": [
-            "evenement", "club", "association", "campus", "activite",
-            "groupe", "sport", "sortie", "conference", "workshop",
+            "evenement", "club", "association", "activite", "parascolaire",
+            "groupe", "sport", "sortie", "conference", "workshop", "atelier",
+            "bibliotheque", "cafeteria", "salle", "vie etudiante",
         ],
         "prompt": (
             "Tu es l'Agent Campus de SmartStudent.\n"
@@ -167,8 +171,10 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "wellbeing": {
         "name": "Agent Bien-etre",
         "keywords": [
-            "stress", "anxiete", "sante", "bien-etre", "fatigue",
-            "motivation", "aide", "soutien", "depression", "mental",
+            "stress", "stresse", "anxiete", "anxieux", "sante", "bien-etre",
+            "fatigue", "epuise", "burnout", "motivation", "demotive",
+            "aide psychologique", "soutien", "depression", "mental",
+            "panique", "surcharge", "difficile", "souffre", "detresse",
         ],
         "prompt": (
             "Tu es l'Agent Bien-etre de SmartStudent.\n"
@@ -233,15 +239,23 @@ def percevoir(state: SmartStudentState) -> dict:
         scores[agent_id] = len(matched)
         detected[agent_id] = matched
 
-    best_agent = max(scores, key=lambda k: scores[k])
-    best_score = scores[best_agent]
+    best_score = max(scores.values())
+    # Agents qui atteignent le score max
+    top_agents = [a for a, s in scores.items() if s == best_score]
+    best_agent = top_agents[0]
 
     if best_score >= 2:
         intent = f"demande_{best_agent}_precise"
         confidence = min(0.5 + best_score * 0.15, 0.95)
-    elif best_score == 1:
+    elif best_score == 1 and len(top_agents) == 1:
+        # Un seul agent correspond -> routage direct
         intent = f"demande_{best_agent}"
         confidence = 0.6
+    elif best_score == 1:
+        # Egalite -> LLM routing pour decider
+        intent = "demande_ambigue"
+        confidence = 0.4
+        best_agent = top_agents[0]
     else:
         intent = "demande_generale"
         confidence = 0.4

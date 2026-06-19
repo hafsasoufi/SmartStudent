@@ -3,63 +3,79 @@ Orientation Agent - Provides career advice and guidance
 """
 
 from typing import Dict, Any, Optional, List
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from .base_agent import BaseAgent
+
+
+_ORIENTATION_SYSTEM_PROMPT = """Tu es l'Agent Orientation & Carrière de SmartStudent - ENIAD Berkane, Maroc.
+Tu conseilles les étudiants sur leur avenir professionnel :
+
+1. ORIENTATION PROFESSIONNELLE : métiers de l'informatique, génie, management, conseil carrière
+2. CV & LETTRE DE MOTIVATION : rédaction, mise en forme, conseils personnalisés pour le Maroc
+3. STAGES & EMPLOIS : comment trouver un stage, préparer une candidature, s'entretenir
+4. COMPÉTENCES CLÉS : langages de programmation, certifications, compétences recherchées au Maroc
+5. RÉSEAU PROFESSIONNEL : LinkedIn, associations professionnelles, événements networking
+
+Domaines de formation à l'ENIAD : Génie Informatique, Génie Industriel, Génie Électrique, Management.
+Marché cible : Maroc et Afrique du Nord principalement.
+
+Sois inspirant et pratique. Donne des conseils concrets adaptés au marché marocain.
+Pour un CV, propose une structure claire (infos perso, formation, expériences, compétences, langues).
+Réponds toujours en français."""
 
 
 class OrientationAgent(BaseAgent):
     """Provides career advice, CV assistance, and internship guidance"""
-    
+
     def __init__(self):
         super().__init__(
-            name="Orientation Agent",
-            description="Provides career advice and guidance"
+            name="Agent Orientation",
+            description="Conseils carrière, CV et orientation professionnelle",
         )
-    
+
     def get_system_prompt(self) -> str:
-        return """You are the Orientation Assistant for SmartStudent. Your role is to:
+        return _ORIENTATION_SYSTEM_PROMPT
 
-1. CAREER GUIDANCE: Help explore career paths, explain professions, match interests to careers
-2. PROFESSIONAL DEVELOPMENT: Provide CV/resume guidance, networking tips, skill suggestions
-3. INTERNSHIPS & JOBS: Help find opportunities, prepare applications, explain workplace professionalism
-4. MAJOR SELECTION: Help explore academic majors, connect academics to careers, suggest paths
-5. NETWORKING: Explain professional associations, teach networking skills, build professional confidence
-
-Be encouraging and inspirational. Help students see connections between academics and careers.
-Provide practical career advice that students can use immediately.
-Help students develop confidence in their professional future."""
-
-    async def generate_cv_template(
+    async def process(
         self,
-        student_profile: Dict[str, Any]
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Generate a CV template for the student"""
-        # TODO: Implement CV template generation
-        return {
-            "template_id": None,
-            "content": None,
-            "status": "template_generation_not_implemented"
-        }
+        """Process orientation queries with personalized LLM response."""
+        uc = user_context or {}
+        name = uc.get("full_name") or uc.get("username") or "l'étudiant(e)"
+        major = uc.get("major") or ""
+        year = uc.get("year") or ""
 
-    async def suggest_internships(
-        self,
-        field_of_study: str,
-        skills: List[str],
-        year: int
-    ) -> List[Dict[str, Any]]:
-        """Suggest relevant internship opportunities"""
-        # TODO: Implement internship suggestion using RAG/external data
-        return []
+        system = self.get_system_prompt()
+        system += f"\n\nTu parles à {name}"
+        if major:
+            system += f", en filière {major}"
+        if year:
+            system += f", en année {year}"
+        system += "."
 
-    async def analyze_career_path(
-        self,
-        major: str,
-        skills: List[str],
-        interests: List[str]
-    ) -> Dict[str, Any]:
-        """Analyze and suggest career paths"""
-        # TODO: Implement career path analysis
-        return {
-            "suggested_paths": [],
-            "skill_gaps": [],
-            "next_steps": []
-        }
+        messages = [SystemMessage(content=system)]
+
+        if conversation_history:
+            for msg in conversation_history[-6:]:
+                role = msg.get("role", "")
+                content = msg.get("content", "")
+                if role == "user":
+                    messages.append(HumanMessage(content=content))
+                elif role == "assistant":
+                    messages.append(AIMessage(content=content))
+
+        messages.append(HumanMessage(content=user_message))
+
+        try:
+            response = self.llm.invoke(messages)
+            return {"response": response.content, "agent": self.name, "success": True}
+        except Exception as e:
+            return {
+                "response": "Le service orientation est temporairement indisponible. Contactez le service des stages ENIAD.",
+                "agent": self.name,
+                "success": False,
+                "error": str(e),
+            }

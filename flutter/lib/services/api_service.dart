@@ -260,6 +260,8 @@ class ApiService {
     required String message,
     String? conversationId,
   }) async {
+    // LLM agents (ReAct loops with tools) need up to 90s
+    const agentTimeout = Duration(seconds: 90);
     try {
       final response = await _performRequestWithFallback(
         () => dio.post(
@@ -268,6 +270,10 @@ class ApiService {
             'message': message,
             'conversation_id': conversationId,
           },
+          options: Options(
+            receiveTimeout: agentTimeout,
+            sendTimeout: agentTimeout,
+          ),
         ),
       );
       return response.data;

@@ -14,3 +14,33 @@ backend/.env
 node_modules
 .next/
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# SQLite database (données locales — ne pas versionner)
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated docs (PDF générés à la volée)
+backend/generated_docs/
+
+# Flutter build artifacts
+flutter/build/
+flutter/.dart_tool/
+smartstudent_flutter/build/
+smartstudent_flutter/.dart_tool/
+smartstudent_flutter/.flutter-plugins-dependencies
+
+# ChromaDB vector store (généré localement)
+backend/chroma_db/

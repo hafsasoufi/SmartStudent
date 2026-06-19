@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from typing import Annotated, Optional, TypedDict
+from typing import Annotated, Any, Optional, TypedDict
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
@@ -286,24 +286,30 @@ def analyser_lacunes(user_id: int) -> str:
 
 
 @tool
-def soumettre_reponses(exam_id: int, reponses_json: str) -> str:
-    """Soumet les réponses de l'étudiant à un quiz et calcule le score automatiquement.
-    reponses_json: JSON string avec les réponses. Format: {"1": "A", "2": "C", "3": "B", ...}
-    où la clé est l'ID de la question et la valeur est la lettre choisie (A, B, C ou D)."""
+def soumettre_reponses(exam_id: int, reponses_json: Any) -> str:
+    """Soumet les reponses de l'etudiant a un quiz et calcule le score automatiquement.
+    reponses_json: objet JSON ou string JSON avec les reponses. Format: {"1": "A", "2": "C", "3": "B"}
+    La cle est l'ID de la question (string) et la valeur est la lettre choisie (A, B, C ou D)."""
     try:
         from backend.models import Exam
         db = _db()
         try:
             exam = db.query(Exam).filter(Exam.id == exam_id).first()
             if not exam:
-                return f"Aucun examen trouvé avec l'ID {exam_id}."
+                return f"Aucun examen trouve avec l'ID {exam_id}."
             if exam.status == "completed":
-                return f"Ce quiz est déjà complété. Score obtenu: {exam.score}/{exam.total_points}."
+                return f"Ce quiz est deja complete. Score obtenu: {exam.score}/{exam.total_points}."
 
-            try:
-                user_answers = json.loads(reponses_json)
-            except json.JSONDecodeError:
-                return "Format de réponses invalide. Utilise: {\"1\": \"A\", \"2\": \"B\", ...}"
+            # Accept both JSON string and dict (Groq sometimes passes dict directly)
+            if isinstance(reponses_json, dict):
+                user_answers = reponses_json
+            elif isinstance(reponses_json, str):
+                try:
+                    user_answers = json.loads(reponses_json)
+                except json.JSONDecodeError:
+                    return "Format de reponses invalide. Utilise: {\"1\": \"A\", \"2\": \"B\", ...}"
+            else:
+                return "Format de reponses invalide."
 
             questions = exam.questions or []
             score = 0
@@ -381,21 +387,20 @@ async def agent_node(state: ExamsAgentState) -> dict:
     filiere = ctx.get("major") or "filière non renseignée"
 
     system_prompt = (
-        f"Tu es l'Agent Examens de SmartStudent — ENIAD Berkane.\n"
-        f"Tu parles à {nom}, filière {filiere}. ID: {user_id}.\n\n"
-        "OUTILS DISPONIBLES — utilise-les systématiquement:\n"
-        f"1. Générer un quiz QCM → generer_quiz(user_id={user_id}, matiere=..., sujet=..., nb_questions=..., difficulte=...)\n"
-        f"2. Voir l'historique des examens → obtenir_historique_examens(user_id={user_id})\n"
-        f"3. Statistiques de performance → obtenir_statistiques_examens(user_id={user_id})\n"
-        f"4. Analyser les matières faibles → analyser_lacunes(user_id={user_id})\n"
-        f"5. Corriger les réponses → soumettre_reponses(exam_id=..., reponses_json=...)\n\n"
+        f"Tu es l'Agent Examens de SmartStudent - ENIAD Berkane.\n"
+        f"Tu parles a {nom}, filiere {filiere}. ID utilisateur: {user_id}.\n\n"
+        "REGLES ABSOLUES - TU DOIS UTILISER TES OUTILS:\n"
+        f"1. Generer un quiz QCM -> generer_quiz(user_id={user_id}, matiere=..., sujet=..., nb_questions=5, difficulte='moyen')\n"
+        f"2. Voir historique examens -> obtenir_historique_examens(user_id={user_id})\n"
+        f"3. Statistiques performance -> obtenir_statistiques_examens(user_id={user_id})\n"
+        f"4. Analyser matieres faibles -> analyser_lacunes(user_id={user_id})\n"
+        f"5. Corriger reponses -> soumettre_reponses(exam_id=..., reponses_json={{\"1\": \"A\", \"2\": \"B\"}})\n\n"
         "COMPORTEMENT:\n"
-        "- Pour générer un quiz: demande la matière et le sujet précis si non fournis.\n"
-        "- Après avoir affiché les questions, attends les réponses de l'étudiant avant de corriger.\n"
-        "- Pour la correction: utilise soumettre_reponses avec les réponses fournies.\n"
-        "- Commente les résultats de façon pédagogique et encourageante.\n"
-        "- Suggère des révisions sur les points faibles identifiés.\n"
-        "- Réponds en français."
+        "- Pour generer un quiz: demande la matiere et le sujet precis si non fournis.\n"
+        "- IMPORTANT: apres avoir affiche les questions, ATTENDS les reponses de l'etudiant avant de corriger.\n"
+        "- Ne soumets PAS les reponses automatiquement - attends que l'etudiant reponde.\n"
+        "- Pour la correction: utilise soumettre_reponses avec les reponses fournies par l'etudiant.\n"
+        "- Reponds en francais."
     )
 
     try:
