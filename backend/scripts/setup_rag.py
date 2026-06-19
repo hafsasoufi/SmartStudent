@@ -233,6 +233,31 @@ def index_admin_procedures(rag) -> int:
     return added
 
 
+def index_convention_stage(rag) -> int:
+    """Indexe la convention de stage ENIAD (12 articles)."""
+    from backend.data.eniad_convention_stage import KNOWLEDGE_BASE
+
+    docs = []
+    for entry in KNOWLEDGE_BASE:
+        text = f"{entry['title']}\n\n{entry['content']}"
+        chunks = chunk_text(text, chunk_size=900, overlap=100)
+        for i, chunk in enumerate(chunks):
+            docs.append({
+                "id": f"cs_{entry['id']}_chunk{i}",
+                "text": chunk,
+                "metadata": {
+                    "source": "convention_stage",
+                    "category": entry.get("category", "convention"),
+                    "title": entry["title"],
+                    "description": entry["title"],
+                },
+            })
+
+    added = rag.add_documents_batch(docs)
+    logger.info(f"  Convention de stage : {added} chunks indexés")
+    return added
+
+
 def index_reglement_biblio(rag) -> int:
     """Indexe le règlement des études détaillé + catalogue bibliothèque ENIAD."""
     from backend.data.eniad_reglement_biblio import KNOWLEDGE_BASE
@@ -355,22 +380,26 @@ def main():
         logger.info("\n[4/8] Indexation des procédures administratives...")
         admin_count = index_admin_procedures(rag)
 
-        logger.info("\n[5/9] Indexation du règlement études + catalogue bibliothèque...")
+        logger.info("\n[5/10] Indexation de la convention de stage ENIAD...")
+        cs_count = index_convention_stage(rag)
+
+        logger.info("\n[6/10] Indexation du règlement études + catalogue bibliothèque...")
         rb_count = index_reglement_biblio(rag)
 
-        logger.info("\n[6/9] Indexation des événements et clubs ENIADB...")
+        logger.info("\n[7/10] Indexation des événements et clubs ENIADB...")
         ec_count = index_events_clubs(rag)
 
-        logger.info("\n[7/9] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
+        logger.info("\n[8/10] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
         official_count = index_official_documents(rag)
 
-        logger.info("\n[8/9] Téléchargement et indexation des PDFs ENIAD...")
+        logger.info("\n[9/10] Téléchargement et indexation des PDFs ENIAD...")
         pdf_count = index_pdf_resources(rag)
 
-        logger.info(f"\n[9/9] Terminé !")
+        logger.info(f"\n[10/10] Terminé !")
         logger.info(f"  Base de connaissances             : {kb_count} chunks")
         logger.info(f"  Modules filières (plan officiel)  : {mod_count} chunks")
         logger.info(f"  Procédures administratives        : {admin_count} chunks")
+        logger.info(f"  Convention de stage               : {cs_count} chunks")
         logger.info(f"  Règlement études + Bibliothèque   : {rb_count} chunks")
         logger.info(f"  Événements & clubs                : {ec_count} chunks")
         logger.info(f"  Documents officiels ENIAD         : {official_count} chunks")
