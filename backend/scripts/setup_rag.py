@@ -233,6 +233,31 @@ def index_admin_procedures(rag) -> int:
     return added
 
 
+def index_reglement_biblio(rag) -> int:
+    """Indexe le règlement des études détaillé + catalogue bibliothèque ENIAD."""
+    from backend.data.eniad_reglement_biblio import KNOWLEDGE_BASE
+
+    docs = []
+    for entry in KNOWLEDGE_BASE:
+        text = f"{entry['title']}\n\n{entry['content']}"
+        chunks = chunk_text(text, chunk_size=900, overlap=100)
+        for i, chunk in enumerate(chunks):
+            docs.append({
+                "id": f"rb_{entry['id']}_chunk{i}",
+                "text": chunk,
+                "metadata": {
+                    "source": "reglement_biblio",
+                    "category": entry.get("category", "reglement"),
+                    "title": entry["title"],
+                    "description": entry["title"],
+                },
+            })
+
+    added = rag.add_documents_batch(docs)
+    logger.info(f"  Règlement études + Bibliothèque : {added} chunks indexés")
+    return added
+
+
 def index_events_clubs(rag) -> int:
     """Indexe les événements et clubs ENIADB depuis events_clubs_data.py."""
     from backend.data.events_clubs_data import ALL_ENTRIES
@@ -330,23 +355,27 @@ def main():
         logger.info("\n[4/8] Indexation des procédures administratives...")
         admin_count = index_admin_procedures(rag)
 
-        logger.info("\n[5/8] Indexation des événements et clubs ENIADB...")
+        logger.info("\n[5/9] Indexation du règlement études + catalogue bibliothèque...")
+        rb_count = index_reglement_biblio(rag)
+
+        logger.info("\n[6/9] Indexation des événements et clubs ENIADB...")
         ec_count = index_events_clubs(rag)
 
-        logger.info("\n[6/8] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
+        logger.info("\n[7/9] Indexation des documents officiels (Règlement Intérieur + Convention de Stage)...")
         official_count = index_official_documents(rag)
 
-        logger.info("\n[7/8] Téléchargement et indexation des PDFs ENIAD...")
+        logger.info("\n[8/9] Téléchargement et indexation des PDFs ENIAD...")
         pdf_count = index_pdf_resources(rag)
 
-        logger.info(f"\n[8/8] Terminé !")
-        logger.info(f"  Base de connaissances       : {kb_count} chunks")
-        logger.info(f"  Modules filières            : {mod_count} chunks")
-        logger.info(f"  Procédures administratives  : {admin_count} chunks")
-        logger.info(f"  Événements & clubs           : {ec_count} chunks")
-        logger.info(f"  Documents officiels ENIAD   : {official_count} chunks")
-        logger.info(f"  PDFs ENIAD (web)             : {pdf_count} chunks")
-        logger.info(f"  TOTAL                        : {rag.document_count} documents indexés")
+        logger.info(f"\n[9/9] Terminé !")
+        logger.info(f"  Base de connaissances             : {kb_count} chunks")
+        logger.info(f"  Modules filières (plan officiel)  : {mod_count} chunks")
+        logger.info(f"  Procédures administratives        : {admin_count} chunks")
+        logger.info(f"  Règlement études + Bibliothèque   : {rb_count} chunks")
+        logger.info(f"  Événements & clubs                : {ec_count} chunks")
+        logger.info(f"  Documents officiels ENIAD         : {official_count} chunks")
+        logger.info(f"  PDFs ENIAD (web)                  : {pdf_count} chunks")
+        logger.info(f"  TOTAL                             : {rag.document_count} documents indexés")
 
     # Test de requête
     logger.info("\n[TEST] Requête de test : 'emploi du temps IA semestre 5'")
