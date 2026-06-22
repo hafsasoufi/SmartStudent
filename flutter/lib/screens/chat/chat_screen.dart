@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -58,7 +59,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   chatState.currentAgent!.toUpperCase(),
                   style: const TextStyle(fontSize: 12),
                 ),
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
               ),
             ),
         ],
@@ -114,11 +115,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         decoration: BoxDecoration(
                           color: isUser
                             ? AppTheme.primaryColor
-                            : Colors.grey[200],
+                            : Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[800]
+                              : Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -129,19 +132,46 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             ? CrossAxisAlignment.end
                             : CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              message.content,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: isUser ? Colors.white : Colors.black,
+                            if (isUser)
+                              Text(
+                                message.content,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                ),
+                              )
+                            else
+                              MarkdownBody(
+                                data: message.content,
+                                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                                  p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                  strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  listBullet: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                  code: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppTheme.primaryColor,
+                                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.10),
+                                    fontFamily: 'monospace',
+                                  ),
+                                  blockquote: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                shrinkWrap: true,
                               ),
-                            ),
                             if (!isUser && message.agent != null)
                               Padding(
-                                padding: const EdgeInsets.only(top: 4),
+                                padding: const EdgeInsets.only(top: 6),
                                 child: Text(
                                   message.agent!,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
+                                    color: Colors.grey[500],
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
