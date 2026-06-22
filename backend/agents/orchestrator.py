@@ -160,12 +160,17 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
             "evenement", "club", "association", "activite", "parascolaire",
             "groupe", "sport", "sortie", "conference", "workshop", "atelier",
             "bibliotheque", "cafeteria", "salle", "vie etudiante",
+            "absence", "exclusion", "reglement", "discipline", "tenue",
+            "dress code", "comportement", "interdit", "sanction", "notation",
+            "livre", "ouvrage", "emprunter", "reference", "nurlia", "secora",
+            "ennovers", "riot", "al ataa", "enactus", "aei", "campus eniad",
+            "gala", "forum entreprise", "hackathon", "portes ouvertes",
         ],
         "prompt": (
-            "Tu es l'Agent Campus de SmartStudent.\n"
-            "Tu informes sur : evenements campus, clubs, associations, "
-            "activites parascolaires, formation de groupes de travail.\n"
-            "Sois enthousiaste et cree du lien social."
+            "Tu es l'Agent Campus de l'ENIADB (Ecole Nationale de l'Intelligence Artificielle et du Digital de Berkane).\n"
+            "Tu couvres : le reglement interieur (absences, examens, discipline), les clubs etudiants (SECORA, ENNOVERS, NURLIA, RIOT, AL ATAA, Enactus), "
+            "les evenements, la bibliotheque (livres avec numeros de reference), et toutes les infos sur la vie a l'ENIADB.\n"
+            "Reponds dans la langue de l'etudiant (francais ou arabe). Cite les articles du reglement quand pertinent. Ne jamais inventer d'informations."
         ),
     },
     "wellbeing": {
@@ -175,12 +180,14 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
             "fatigue", "epuise", "burnout", "motivation", "demotive",
             "aide psychologique", "soutien", "depression", "mental",
             "panique", "surcharge", "difficile", "souffre", "detresse",
+            "sommeil", "dors", "concentrer", "peur", "seul", "isole",
+            "pleure", "triste", "perdu", "depassé", "depasse", "imposteur",
         ],
         "prompt": (
-            "Tu es l'Agent Bien-etre de SmartStudent.\n"
-            "Tu soutiens avec : gestion du stress, sante mentale, motivation, "
-            "equilibre vie etudiante, ressources d'aide psychologique.\n"
-            "Sois empathique, bienveillant et oriente vers des professionnels si necessaire."
+            "Tu es l'Agent Bien-etre de l'ENIADB, un assistant bienveillant et empathique.\n"
+            "Tu ecoutes sans jugement, detects les signes de stress/burnout/anxiete, proposes des strategies concretes.\n"
+            "Utilise 'tu', valide les emotions avant de conseiller. Pour les crises, oriente vers le 080 100 47 47 (gratuit, 24h/24).\n"
+            "Ne jamais diagnostiquer ni prescrire. Reponds dans la langue de l'etudiant."
         ),
     },
 }
@@ -341,7 +348,19 @@ async def agir(state: SmartStudentState) -> dict:
             result = await ExamsAgent().process(user_msg, user_id, uc, conv_id)
             response = result.get("response", "")
 
-        # ── Agents LLM enrichis (RAG + memoire) ─────────────────────────────
+        elif agent_id == "campus":
+            from backend.agents.campus_agent import CampusAgent
+            history = _extract_conversation_history(state)
+            result = await CampusAgent().process(user_msg, history, uc)
+            response = result.get("response", "")
+
+        elif agent_id == "wellbeing":
+            from backend.agents.wellbeing_agent import WellbeingAgent
+            history = _extract_conversation_history(state)
+            result = await WellbeingAgent().process(user_msg, history, uc)
+            response = result.get("response", "")
+
+        # ── Autres agents LLM enrichis (orientation) ─────────────────────────
         else:
             response = await _call_llm_agent(agent_id, cfg, state, uc, user_msg)
 
@@ -366,6 +385,17 @@ async def agir(state: SmartStudentState) -> dict:
             "iteration_count": iteration + 1,
             "error": err,
         }
+
+
+def _extract_conversation_history(state: SmartStudentState) -> List[Dict[str, str]]:
+    """Extrait l'historique de conversation depuis l'etat LangGraph."""
+    history = []
+    for msg in (state.get("messages") or [])[-8:]:
+        if isinstance(msg, HumanMessage):
+            history.append({"role": "user", "content": msg.content})
+        elif isinstance(msg, AIMessage):
+            history.append({"role": "assistant", "content": msg.content})
+    return history
 
 
 async def _call_llm_agent(

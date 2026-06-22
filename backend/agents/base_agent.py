@@ -22,13 +22,10 @@ class BaseAgent(ABC):
 
     @property
     def llm(self):
-        """Lazy LLM initialization — only connect when actually used."""
+        """Lazy LLM initialization — prefers Groq, falls back to OpenAI."""
         if self._llm is None:
-            self._llm = ChatOpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                model=settings.OPENAI_MODEL,
-                temperature=0.7,
-            )
+            from backend.agents.orchestrator import get_llm
+            self._llm = get_llm()
         return self._llm
 
     @abstractmethod

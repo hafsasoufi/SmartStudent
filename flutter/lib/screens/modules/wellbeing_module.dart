@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/module_agent_chat.dart';
 
@@ -12,6 +13,49 @@ class WellbeingModule extends ConsumerStatefulWidget {
 
 class _WellbeingModuleState extends ConsumerState<WellbeingModule> {
   int _moodRating = 3;
+  bool _savingMood = false;
+  List<Map<String, dynamic>> _moodHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadMoodHistory);
+  }
+
+  Future<void> _loadMoodHistory() async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final data = await api.getMoods();
+      if (mounted) setState(() => _moodHistory = data.cast<Map<String, dynamic>>());
+    } catch (_) {}
+  }
+
+  Future<void> _saveMood() async {
+    if (_savingMood) return;
+    setState(() => _savingMood = true);
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.saveMood(rating: _moodRating);
+      await _loadMoodHistory();
+      if (mounted) {
+        const labels = ['Très mal', 'Pas bien', 'Neutre', 'Bien', 'Excellent'];
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Humeur enregistrée : ${labels[_moodRating - 1]}'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Erreur : $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _savingMood = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +79,9 @@ class _WellbeingModuleState extends ConsumerState<WellbeingModule> {
               _MoodTab(
                 moodRating: _moodRating,
                 onMoodChanged: (v) => setState(() => _moodRating = v),
+                onSave: _saveMood,
+                isSaving: _savingMood,
+                history: _moodHistory,
               ),
               const _ConseilsTab(),
               const _SupportTab(),
@@ -73,8 +120,17 @@ class _AgentTab extends StatelessWidget {
 class _MoodTab extends StatelessWidget {
   final int moodRating;
   final ValueChanged<int> onMoodChanged;
+  final VoidCallback onSave;
+  final bool isSaving;
+  final List<Map<String, dynamic>> history;
 
-  const _MoodTab({required this.moodRating, required this.onMoodChanged});
+  const _MoodTab({
+    required this.moodRating,
+    required this.onMoodChanged,
+    required this.onSave,
+    required this.isSaving,
+    required this.history,
+  });
 
   static const _moodEmojis = ['😞', '😕', '😐', '🙂', '😄'];
   static const _moodLabels = ['Très mal', 'Pas bien', 'Neutre', 'Bien', 'Excellent'];
@@ -138,13 +194,14 @@ class _MoodTab extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Humeur enregistrée : ${_moodLabels[moodRating - 1]}'),
-                  ),
-                ),
-                icon: const Icon(Icons.check),
-                label: const Text('Enregistrer mon humeur'),
+                onPressed: isSaving ? null : onSave,
+                icon: isSaving
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.check),
+                label: Text(isSaving ? 'Enregistrement...' : 'Enregistrer mon humeur'),
               ),
             ),
           ]),
@@ -153,37 +210,56 @@ class _MoodTab extends StatelessWidget {
         const Text('Suivi hebdomadaire',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        _WeekBar(),
+        _WeekBar(history: history),
       ]),
     );
   }
 }
 
 class _WeekBar extends StatelessWidget {
-  static const _days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  static const _values = [3, 4, 2, 4, 5, 3, 4];
-  static const _colors = [
-    Colors.amber, Colors.lightGreen, Colors.orange,
-    Colors.lightGreen, Colors.green, Colors.amber, Colors.lightGreen,
+  final List<Map<String, dynamic>> history;
+  const _WeekBar({required this.history});
+
+  static const _dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  static const _ratingColors = [
+    Colors.red, Colors.orange, Colors.amber, Colors.lightGreen, Colors.green,
   ];
 
   @override
   Widget build(BuildContext context) {
+    // Build 7-slot array: fill from history (oldest first), pad left with 0
+    final values = List<int>.filled(7, 0);
+    final recent = history.length > 7 ? history.sublist(history.length - 7) : history;
+    final offset = 7 - recent.length;
+    for (var i = 0; i < recent.length; i++) {
+      values[offset + i] = (recent[i]['rating'] as int?) ?? 0;
+    }
+
+    // Day labels: last 7 days ending today
+    final today = DateTime.now();
+    final dayLabels = List.generate(7, (i) {
+      final d = today.subtract(Duration(days: 6 - i));
+      return _dayLabels[d.weekday - 1];
+    });
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(7, (i) {
+        final v = values[i];
+        final color = v > 0 ? _ratingColors[v - 1] : Colors.grey.shade300;
         return Column(children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
             width: 32,
-            height: _values[i] * 10.0,
+            height: v > 0 ? v * 10.0 : 6,
             decoration: BoxDecoration(
-              color: _colors[i].withOpacity(0.7),
+              color: color.withOpacity(0.75),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
           const SizedBox(height: 4),
-          Text(_days[i], style: const TextStyle(fontSize: 12)),
+          Text(dayLabels[i], style: const TextStyle(fontSize: 12)),
         ]);
       }),
     );

@@ -299,6 +299,11 @@ class _StagesTab extends StatelessWidget {
       'lieu': 'Khouribga, Maroc',
       'duree': '4–6 mois',
       'profil': 'IA / Data Science',
+      'description':
+          'Développement de modèles de ML pour l\'optimisation des processus miniers. '
+              'Vous travaillerez avec les équipes data d\'OCP sur des projets réels en production. '
+              'Encadrement par un ingénieur senior, rapport de stage requis à la fin.',
+      'contact': 'recrutement@ocpgroup.ma',
     },
     {
       'entreprise': 'Maroc Telecom',
@@ -306,6 +311,11 @@ class _StagesTab extends StatelessWidget {
       'lieu': 'Rabat, Maroc',
       'duree': '4–6 mois',
       'profil': 'IRSI',
+      'description':
+          'Audit de sécurité des infrastructures réseau, tests d\'intrusion et '
+              'mise en place de politiques de sécurité. Environnement SOC et SIEM. '
+              'Indemnité de stage possible selon accord.',
+      'contact': 'stages@maroctelecom.ma',
     },
     {
       'entreprise': 'Capgemini Maroc',
@@ -313,6 +323,11 @@ class _StagesTab extends StatelessWidget {
       'lieu': 'Casablanca, Maroc',
       'duree': '2–6 mois',
       'profil': 'GINF / IA',
+      'description':
+          'Développement d\'applications web avec React / Node.js / Python FastAPI. '
+              'Intégration dans une équipe Agile/Scrum. Possibilité d\'embauche à l\'issue du stage. '
+              'Remboursement transport et indemnité mensuelle.',
+      'contact': 'campus.ma@capgemini.com',
     },
     {
       'entreprise': 'INWI',
@@ -320,6 +335,11 @@ class _StagesTab extends StatelessWidget {
       'lieu': 'Casablanca, Maroc',
       'duree': '3–6 mois',
       'profil': 'ROC / IRSI',
+      'description':
+          'Déploiement et supervision de solutions IoT sur le réseau national INWI. '
+              'Travaux pratiques sur la 5G, la QoS et la gestion des équipements réseau. '
+              'Encadrement par l\'équipe Network Engineering.',
+      'contact': 'stages@inwi.ma',
     },
     {
       'entreprise': 'UM6P Ventures',
@@ -327,8 +347,104 @@ class _StagesTab extends StatelessWidget {
       'lieu': 'Ben Guerir, Maroc',
       'duree': '3–4 mois',
       'profil': 'IA / GINF',
+      'description':
+          'Construction de pipelines de données (ETL) pour des startups du campus UM6P. '
+              'Technologies : Apache Spark, Airflow, dbt, BigQuery. '
+              'Environnement startup dynamique, mentoring hebdomadaire.',
+      'contact': 'hello@um6pventures.ma',
     },
   ];
+
+  void _showStageDetail(BuildContext context, Map<String, String> s) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6,
+        maxChildSize: 0.85,
+        builder: (_, ctrl) => ListView(
+          controller: ctrl,
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(
+                child: Text(s['entreprise']!,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 20)),
+              ),
+              _Badge(s['profil']!, AppTheme.primaryColor),
+            ]),
+            const SizedBox(height: 6),
+            Text(s['poste']!,
+                style: TextStyle(fontSize: 15, color: Colors.grey[700])),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Icon(Icons.location_on, size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Text(s['lieu']!, style: const TextStyle(fontSize: 13)),
+              const SizedBox(width: 16),
+              const Icon(Icons.schedule, size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Text(s['duree']!, style: const TextStyle(fontSize: 13)),
+            ]),
+            const Divider(height: 28),
+            const Text('Description du stage',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            Text(s['description']!,
+                style: TextStyle(fontSize: 13, color: Colors.grey[800], height: 1.5)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.07),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(children: [
+                const Icon(Icons.email_outlined, size: 18, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(s['contact']!,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+              ]),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              ),
+              child: const Text(
+                'Pour postuler, contactez le service des stages ENIAD '
+                'afin d\'obtenir la convention de stage à faire signer par l\'entreprise.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.school),
+              label: const Text('Demander la convention de stage'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +465,8 @@ class _StagesTab extends StatelessWidget {
               const Text('Convention de stage ENIAD',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 2),
-              const Text('Téléchargez la convention sur eniad.ump.ma',
+              const Text(
+                  'Toute candidature nécessite une convention signée par l\'ENIAD et l\'entreprise.',
                   style: TextStyle(fontSize: 12)),
             ]),
           ),
@@ -360,7 +477,7 @@ class _StagesTab extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           itemCount: _stages.length,
           itemBuilder: (_, i) {
-            final s = _stages[i];
+            final s = Map<String, String>.from(_stages[i]);
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
               child: Padding(
@@ -393,10 +510,8 @@ class _StagesTab extends StatelessWidget {
                   const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Candidature : ${s['entreprise']}')),
-                      ),
+                    child: ElevatedButton(
+                      onPressed: () => _showStageDetail(context, s),
                       child: const Text('Voir l\'offre'),
                     ),
                   ),

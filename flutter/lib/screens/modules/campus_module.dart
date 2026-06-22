@@ -195,43 +195,137 @@ class _EventCard extends StatelessWidget {
   }
 }
 
-// ── Onglet Clubs (statique pour l'instant) ───────────────────────────────────
-class _ClubsTab extends StatelessWidget {
-  static const _clubs = [
-    {'name': 'Club IA & Data Science', 'members': 85, 'category': 'Technologie'},
-    {'name': 'Club Entrepreneuriat', 'members': 120, 'category': 'Business'},
-    {'name': 'Club Robotique', 'members': 60, 'category': 'Ingénierie'},
-    {'name': 'Club Débat', 'members': 45, 'category': 'Communication'},
-    {'name': 'Club Sport & Bien-être', 'members': 200, 'category': 'Sport'},
-  ];
+// ── Onglet Clubs (données réelles depuis l'API) ──────────────────────────────
+class _ClubsTab extends ConsumerStatefulWidget {
+  const _ClubsTab();
+
+  @override
+  ConsumerState<_ClubsTab> createState() => _ClubsTabState();
+}
+
+class _ClubsTabState extends ConsumerState<_ClubsTab> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(campusProvider.notifier).loadClubs());
+  }
+
+  static const _domainIcons = {
+    'Cybersécurité': Icons.security,
+    'Génie Informatique': Icons.code,
+    'Intelligence Artificielle': Icons.psychology,
+    'Robotique': Icons.precision_manufacturing,
+    'Social et humanitaire': Icons.volunteer_activism,
+    'Entrepreneuriat social': Icons.lightbulb,
+  };
+
+  static const _domainColors = {
+    'Cybersécurité': Colors.red,
+    'Génie Informatique': Colors.blue,
+    'Intelligence Artificielle': Colors.deepPurple,
+    'Robotique': Colors.teal,
+    'Social et humanitaire': Colors.orange,
+    'Entrepreneuriat social': Colors.green,
+  };
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _clubs.length,
-      itemBuilder: (_, i) {
-        final club = _clubs[i];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
-              child: Icon(Icons.group, color: AppTheme.primaryColor),
-            ),
-            title: Text(club['name'] as String,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(
-                '${club['category']} • ${club['members']} membres'),
-            trailing: OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Rejoint : ${club['name']}')),
-              ),
-              child: const Text('Rejoindre'),
-            ),
+    final state = ref.watch(campusProvider);
+
+    if (state.isLoadingClubs && state.clubs.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.clubs.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text('Impossible de charger les clubs',
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () => ref.read(campusProvider.notifier).loadClubs(),
+            child: const Text('Réessayer'),
           ),
-        );
-      },
+        ]),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(campusProvider.notifier).loadClubs(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: state.clubs.length,
+        itemBuilder: (_, i) {
+          final club = state.clubs[i];
+          final color = _domainColors[club.domain] ?? AppTheme.primaryColor;
+          final icon = _domainIcons[club.domain] ?? Icons.group;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: color.withOpacity(0.25)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  CircleAvatar(
+                    backgroundColor: color.withOpacity(0.12),
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(club.name,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(club.domain,
+                          style: TextStyle(fontSize: 12, color: color)),
+                    ]),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('${club.members} membres',
+                        style: TextStyle(
+                            fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                  ),
+                ]),
+                const SizedBox(height: 10),
+                Text(club.description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: club.isMember
+                      ? OutlinedButton.icon(
+                          onPressed: () =>
+                              ref.read(campusProvider.notifier).toggleClub(club.id),
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('Membre • Quitter'),
+                          style: OutlinedButton.styleFrom(foregroundColor: Colors.grey),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: () =>
+                              ref.read(campusProvider.notifier).toggleClub(club.id),
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Rejoindre le club'),
+                          style: ElevatedButton.styleFrom(backgroundColor: color),
+                        ),
+                ),
+              ]),
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -150,6 +150,21 @@ class EventResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# Mood Schemas
+class MoodCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    note: Optional[str] = None
+
+class MoodResponse(BaseModel):
+    id: int
+    user_id: int
+    rating: int
+    note: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # Plan Schemas
 class PlanCreate(BaseModel):
     title: str

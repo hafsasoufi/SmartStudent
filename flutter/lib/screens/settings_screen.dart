@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/localization_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -13,14 +14,12 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late bool _notificationsEnabled;
-  late bool _darkModeEnabled;
   late bool _offlineModeEnabled;
 
   @override
   void initState() {
     super.initState();
     _notificationsEnabled = true;
-    _darkModeEnabled = false;
     _offlineModeEnabled = false;
   }
 
@@ -93,17 +92,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             secondary: const Icon(Icons.dark_mode),
             title: const Text('Dark Mode'),
-            subtitle: const Text('Use dark theme (coming soon)'),
-            value: _darkModeEnabled,
+            subtitle: const Text('Thème sombre'),
+            value: ref.watch(themeModeProvider) == ThemeMode.dark,
             onChanged: (value) {
-              setState(() => _darkModeEnabled = value);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(_darkModeEnabled
-                    ? 'Dark mode enabled'
-                    : 'Dark mode disabled'),
-                ),
-              );
+              ref.read(themeModeProvider.notifier).setDark(value);
             },
           ),
           SwitchListTile(

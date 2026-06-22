@@ -8,7 +8,7 @@ import asyncio
 
 from backend.config import get_settings
 from backend.database import get_db, init_db, close_db
-from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory, AdminRequest, Complaint
+from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory, AdminRequest, Complaint, MoodEntry
 from backend.schemas import (
     UserRegister, UserLogin, UserResponse, TokenResponse,
     UserProfileUpdate, UserProfileResponse, ChatRequest, ChatResponse,
@@ -566,6 +566,136 @@ async def create_event(
     db.commit()
     db.refresh(event)
     return event
+
+# ==================== CLUBS ROUTES ====================
+
+@app.get("/api/campus/clubs", tags=["Campus"])
+async def get_clubs(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Retourne la liste des clubs ENIADB avec statut d'adhesion."""
+    user = await get_current_user(authorization, db)
+    from backend.data.events_clubs_data import CLUBS
+
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    prefs = dict(profile.preferences or {}) if profile and profile.preferences else {}
+    joined_clubs = prefs.get("joined_clubs", [])
+
+    member_counts = {
+        "club_001": 38, "club_002": 52, "club_003": 67,
+        "club_004": 29, "club_005": 41, "club_006": 35,
+    }
+    icons = {
+        "club_001": "security", "club_002": "code", "club_003": "psychology",
+        "club_004": "precision_manufacturing", "club_005": "volunteer_activism", "club_006": "lightbulb",
+    }
+
+    result = []
+    for c in CLUBS:
+        if c["id"] == "club_007":
+            continue
+        parts = c["title"].split(" - ", 1)
+        name = parts[0].replace("Club ", "").strip()
+        domain = parts[1].strip() if len(parts) > 1 else "General"
+        desc = c["content"].strip().replace("\n", " ")
+        if len(desc) > 220:
+            desc = desc[:220].rsplit(" ", 1)[0] + "..."
+        result.append({
+            "id": c["id"],
+            "name": name,
+            "full_name": c["title"],
+            "domain": domain,
+            "description": desc,
+            "members": member_counts.get(c["id"], 30) + len([j for j in joined_clubs if j == c["id"]]),
+            "is_member": c["id"] in joined_clubs,
+            "icon": icons.get(c["id"], "group"),
+        })
+    return result
+
+
+@app.post("/api/campus/clubs/{club_id}/toggle", tags=["Campus"])
+async def toggle_club_membership(
+    club_id: str,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Rejoindre ou quitter un club."""
+    user = await get_current_user(authorization, db)
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    prefs = dict(profile.preferences or {})
+    joined = list(prefs.get("joined_clubs", []))
+
+    if club_id in joined:
+        joined.remove(club_id)
+        is_member = False
+    else:
+        joined.append(club_id)
+        is_member = True
+
+    prefs["joined_clubs"] = joined
+    profile.preferences = prefs
+    db.commit()
+
+    return {"club_id": club_id, "is_member": is_member}
+
+
+# ==================== WELLBEING ROUTES ====================
+
+@app.post("/api/wellbeing/mood", tags=["Wellbeing"])
+async def save_mood(
+    body: dict,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Enregistre une entree d'humeur pour l'etudiant."""
+    user = await get_current_user(authorization, db)
+    rating = int(body.get("rating", 3))
+    note = body.get("note", "")
+
+    if rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="rating must be between 1 and 5")
+
+    mood = MoodEntry(user_id=user.id, rating=rating, note=note or None)
+    db.add(mood)
+    db.commit()
+    db.refresh(mood)
+
+    return {
+        "id": mood.id,
+        "rating": mood.rating,
+        "note": mood.note,
+        "created_at": mood.created_at.isoformat(),
+    }
+
+
+@app.get("/api/wellbeing/moods", tags=["Wellbeing"])
+async def get_moods(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Retourne les 7 dernieres entrees d'humeur."""
+    user = await get_current_user(authorization, db)
+    moods = (
+        db.query(MoodEntry)
+        .filter(MoodEntry.user_id == user.id)
+        .order_by(MoodEntry.created_at.desc())
+        .limit(7)
+        .all()
+    )
+    return [
+        {
+            "id": m.id,
+            "rating": m.rating,
+            "note": m.note,
+            "created_at": m.created_at.isoformat(),
+        }
+        for m in reversed(moods)
+    ]
+
 
 # ==================== EXAMS ROUTES ====================
 

@@ -178,3 +178,16 @@ class Complaint(Base):
     resolved_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="complaints")
+
+
+class MoodEntry(Base):
+    """Suivi quotidien de l'humeur de l'etudiant"""
+    __tablename__ = "mood_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating = Column(Integer, nullable=False)  # 1-5
+    note = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

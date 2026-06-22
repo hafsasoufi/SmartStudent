@@ -9,6 +9,7 @@ import 'routes/router.dart';
 import 'services/secure_storage_service.dart';
 import 'theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'services/api_service.dart';
 
 void main() async {
@@ -66,7 +67,7 @@ class _SmartStudentAppState extends ConsumerState<SmartStudentApp> {
       title: AppConfig.appName,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeModeProvider),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

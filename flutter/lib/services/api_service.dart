@@ -332,6 +332,38 @@ class ApiService {
     } on DioException catch (e) { throw _handleError(e); }
   }
 
+  Future<List<dynamic>> getClubs() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/campus/clubs'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> toggleClubMembership(String clubId) async {
+    try {
+      final r = await _performRequestWithFallback(
+        () => dio.post('/campus/clubs/$clubId/toggle'),
+      );
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> saveMood({required int rating, String? note}) async {
+    try {
+      final r = await _performRequestWithFallback(
+        () => dio.post('/wellbeing/mood', data: {'rating': rating, 'note': note ?? ''}),
+      );
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<dynamic>> getMoods() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/wellbeing/moods'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
   // ── Exams endpoints ───────────────────────────────────────────────────────
   Future<dynamic> getExamHistory() async {
     try {
