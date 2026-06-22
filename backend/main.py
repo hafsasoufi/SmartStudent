@@ -50,20 +50,40 @@ async def startup_event():
     init_db()
     _seed_demo_data()
 
+_ENIAD_EVENTS = [
+    {"title": "Movie Night Halloween — Club NURLIA", "description": "Soirée cinéma Halloween : film d'horreur, pop-corn, boissons, photos spooky. Entrée 20 DH. Dress code : noir, rouge, orange.", "event_type": "event", "start_date": datetime(2025, 10, 31, 18, 0), "location": "ENIADB"},
+    {"title": "Sortie nature / Randonnée — AEI ENIADB", "description": "09h30 départ Berkane, petit-déjeuner grotte Magharat Lh'mam, randonnée Tafoughat, visite mouflons, Zegzel, déjeuner collectif, activités ludiques, retour 17h30.", "event_type": "event", "start_date": datetime(2025, 10, 25, 9, 30), "location": "Berkane → Tafoughat → Zegzel"},
+    {"title": "Kick Off Party — AEI ENIADB", "description": "Fête de lancement : DJ et karaoké. Crêpe + boisson offertes. 50 places. Tarif 55 DH. Réservation : 06 28 27 78 47.", "event_type": "event", "start_date": datetime(2025, 11, 2, 15, 0), "location": "Coin de la Ruche"},
+    {"title": "Tech Connect Jour 2 — ENIAD Innoverse", "description": "Thème : Future Opportunities and Challenges. Programme : conférence + ateliers + compétition.", "event_type": "conference", "start_date": datetime(2025, 11, 2, 9, 30), "location": "ENIADB"},
+    {"title": "Formation Premiers Secours — Al Ataa × ASPIVOT", "description": "Formation certifiée ouverte à tous : RCP, protéger/alerter/secourir, situations d'urgence, exercices pratiques. Instagram : alataa.eniadb", "event_type": "workshop", "start_date": datetime(2025, 11, 1, 15, 0), "end_date": datetime(2025, 11, 1, 17, 30), "location": "ENIADB"},
+    {"title": "Forum de l'Entreprise ENIAD — 1ère édition × CIH Bank", "description": "Thème : L'IA et le recrutement. Plateforme d'échanges entreprises innovantes / talents. Contact : contact@eniadb.site", "event_type": "conference", "start_date": datetime(2025, 11, 14, 9, 0), "end_date": datetime(2025, 11, 15, 18, 0), "location": "Sidi Slimane, Berkane"},
+    {"title": "Programme Ingénieur 360° — Forum emploi AEI", "description": "Journée employabilité : conférences IA dans l'industrie, simulation d'entretien, workshops (Job Attitude + technique). 9h30–16h.", "event_type": "conference", "start_date": datetime(2025, 11, 20, 9, 30), "location": "ENIADB — Salles conférences"},
+    {"title": "Leo's Gala — Club LEO ENIADB", "description": "Gala annuel : Dekka Merrakchiya, Aissawa, DJ Reggada Oujda. Repas, dessert. Tenue traditionnelle obligatoire. Tarifs : interne 150 DH / externe 180 DH.", "event_type": "event", "start_date": datetime(2025, 12, 13, 12, 0), "location": "Salle des Fêtes Benisnassen"},
+    {"title": "Qoffa El Khir — Panier de la solidarité (Al Ataa)", "description": "Campagne caritative 2ème édition. Collecte de paniers solidaires pour personnes dans le besoin. Contact : 06 24 21 95 39", "event_type": "event", "start_date": datetime(2026, 2, 15, 10, 0), "location": "ENIADB"},
+    {"title": "Windows Pentesting — Active Directory Attacks (SECORA)", "description": "Atelier pentesting Windows : attaques Active Directory. Intervenant : Abdellatif TAZARANI. Club SECORA.", "event_type": "workshop", "start_date": datetime(2026, 2, 28, 13, 0), "location": "Salle BR6"},
+    {"title": "Battle of Minds — Tournoi d'échecs (AEI ENIADB)", "description": "Compétition échecs rapide (20 min/partie), élimination directe. Co-organisé AEI + LINX + Club Échecs Berkane. 60 joueurs max.", "event_type": "event", "start_date": datetime(2026, 4, 2, 12, 30), "location": "Buvette ENIAD"},
+    {"title": "ENIAD CTF — Capture The Flag (SECORA)", "description": "Workshops 9h00, pause café 12h30, CTF officiel 14h00 en salles AE5 & AE6. Apporter laptop + chargeur. Slogan : Break / Hack / Win", "event_type": "event", "start_date": datetime(2026, 4, 18, 9, 0), "location": "Salles AE5 & AE6"},
+]
+
 def _seed_demo_data():
-    """Insère des événements et tâches de démo si la base est vide."""
+    """Insere les vrais evenements ENIADB si absents."""
     db = next(get_db())
     try:
-        if db.query(Event).count() == 0:
-            now = datetime.utcnow()
-            demo_events = [
-                Event(title="Conférence IA & LLMs", description="Présentation des dernières avancées en intelligence artificielle et grands modèles de langage.", event_type="conference", start_date=now + timedelta(days=3), location="Amphithéâtre A", is_public=True),
-                Event(title="Journée Portes Ouvertes", description="Découvrez les filières et projets de fin d'études.", event_type="event", start_date=now + timedelta(days=7), location="Hall principal", is_public=True),
-                Event(title="Workshop Flutter", description="Atelier pratique : créer une application mobile Flutter de A à Z.", event_type="workshop", start_date=now + timedelta(days=10), location="Salle TP3", is_public=True),
-                Event(title="Deadline projet PFA", description="Remise du rapport d'avancement.", event_type="deadline", start_date=now + timedelta(days=14), location=None, is_public=True),
-                Event(title="Forum Entreprises", description="Rencontrez 50+ recruteurs pour stages et emplois.", event_type="event", start_date=now + timedelta(days=21), location="Centre de conférences", is_public=True),
-            ]
-            db.add_all(demo_events)
+        existing_titles = {e.title for e in db.query(Event.title).all()}
+        new_events = []
+        for ev in _ENIAD_EVENTS:
+            if ev["title"] not in existing_titles:
+                new_events.append(Event(
+                    title=ev["title"],
+                    description=ev.get("description"),
+                    event_type=ev["event_type"],
+                    start_date=ev["start_date"],
+                    end_date=ev.get("end_date"),
+                    location=ev.get("location"),
+                    is_public=True,
+                ))
+        if new_events:
+            db.add_all(new_events)
             db.commit()
     except Exception:
         db.rollback()
@@ -542,8 +562,14 @@ async def get_events(
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
+    """Retourne tous les evenements ENIADB (passes et a venir), du plus recent au plus ancien."""
     await get_current_user(authorization, db)
-    events = db.query(Event).filter(Event.is_public == True).order_by(Event.start_date).all()
+    events = (
+        db.query(Event)
+        .filter(Event.is_public == True)
+        .order_by(Event.start_date.desc())
+        .all()
+    )
     return events
 
 @app.post("/api/campus/events", response_model=EventResponse, tags=["Campus"])

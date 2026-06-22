@@ -72,6 +72,14 @@ class CampusState {
       .where((e) => e.startDate.isAfter(DateTime.now()))
       .toList()
     ..sort((a, b) => a.startDate.compareTo(b.startDate));
+
+  List<Event> get past => events
+      .where((e) => !e.startDate.isAfter(DateTime.now()))
+      .toList()
+    ..sort((a, b) => b.startDate.compareTo(a.startDate));
+
+  List<Event> get all => List<Event>.from(events)
+    ..sort((a, b) => b.startDate.compareTo(a.startDate));
 }
 
 class CampusNotifier extends StateNotifier<CampusState> {
@@ -93,7 +101,7 @@ class CampusNotifier extends StateNotifier<CampusState> {
   }
 
   Future<void> loadClubs() async {
-    state = state.copyWith(isLoadingClubs: true);
+    state = state.copyWith(isLoadingClubs: true, error: null);
     try {
       final data = await _api.getClubs();
       final clubs = data
@@ -101,7 +109,7 @@ class CampusNotifier extends StateNotifier<CampusState> {
           .toList();
       state = state.copyWith(clubs: clubs, isLoadingClubs: false);
     } catch (e) {
-      state = state.copyWith(isLoadingClubs: false);
+      state = state.copyWith(isLoadingClubs: false, error: e.toString());
     }
   }
 
