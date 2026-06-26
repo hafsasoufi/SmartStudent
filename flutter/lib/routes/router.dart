@@ -6,6 +6,7 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/chat/chat_screen.dart';
+import '../screens/chat/recommendations_screen.dart';
 import '../screens/modules/admin_module.dart';
 import '../screens/modules/planning_module.dart';
 import '../screens/modules/exams_module.dart';
@@ -15,6 +16,7 @@ import '../screens/modules/wellbeing_module.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
 
 class AuthNotifier extends ChangeNotifier {
   AuthNotifier(this.ref) {
@@ -76,6 +78,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'chat',
         builder: (context, state) => const ChatScreen(),
       ),
+      GoRoute(
+        path: '/recommendations',
+        name: 'recommendations',
+        builder: (context, state) => const RecommendationsScreen(),
+      ),
 
       // Module Routes
       GoRoute(
@@ -128,6 +135,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // Admin Dashboard Route
+      GoRoute(
+        path: '/admin-dashboard',
+        name: 'admin-dashboard',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
     ],
   );

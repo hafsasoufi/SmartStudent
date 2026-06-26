@@ -1,0 +1,1028 @@
+{
+  "ecole": "ENIAD - École Nationale de l'Intelligence Artificielle et du Digital",
+  "ville": "Berkane",
+  "adresse": "Km 1, P6008, Sidi Slimane Echcharaa, Berkane 63300",
+  "site_web": "www.eniad.ump.ma",
+  "email_general": "eniad@ump.ac.ma",
+  "telephone_general": "+212 5 36 00 10 00",
+
+  "direction": {
+    "directeur": "Pr. KHALID JAAFAR",
+    "email": "direction@eniad.ma",
+    "telephone": "+212 5 36 00 10 00",
+    "bureau": "Bloc Administratif - Bureau D01",
+    "secretariat_email": "secretariat@eniad.ma",
+    "secretariat_telephone": "+212 5 36 00 10 00",
+    "keywords": [
+      "direction", "directeur", "president", "chef etablissement", "responsable ecole",
+      "khalid jaafar", "pr jaafar", "doyen", "direction generale", "contacter direction",
+      "secretariat direction", "secretariat general"
+    ]
+  },
+
+  "chefs_filiere": [
+    {
+      "filiere": "Intelligence Artificielle",
+      "responsable": "Pr. Ahmed Benali",
+      "email": "ia.chef@eniad.ma",
+      "telephone": "+212 5 36 00 10 06",
+      "bureau": "Bureau F101",
+      "keywords": [
+        "intelligence artificielle", "ia", "ai", "filiere ia", "chef ia",
+        "deep learning", "machine learning", "data science", "vision artificielle",
+        "ahmed benali", "pr benali", "chef filiere ia", "responsable ia"
+      ]
+    },
+    {
+      "filiere": "Génie Informatique",
+      "responsable": "Pr. Sara El Mansouri",
+      "email": "gi.chef@eniad.ma",
+      "telephone": "+212 5 36 00 10 07",
+      "bureau": "Bureau F102",
+      "keywords": [
+        "genie informatique", "gi", "informatique", "filiere gi", "chef informatique",
+        "genie info", "developpement logiciel", "algorithmique",
+        "sara el mansouri", "pr mansouri", "chef filiere gi", "responsable gi"
+      ]
+    },
+    {
+      "filiere": "Robotique",
+      "responsable": "Pr. Hamza El Fassi",
+      "email": "robotique.chef@eniad.ma",
+      "telephone": "+212 5 36 00 10 08",
+      "bureau": "Bureau F103",
+      "keywords": [
+        "robotique", "robot", "filiere robotique", "chef robotique", "automatique",
+        "automatisation", "systemes embarques", "controle commande",
+        "hamza el fassi", "pr fassi", "chef filiere robotique", "responsable robotique"
+      ]
+    },
+    {
+      "filiere": "Réseaux et Systèmes",
+      "responsable": "Pr. Yassine Berrada",
+      "email": "reseaux.chef@eniad.ma",
+      "telephone": "+212 5 36 00 10 09",
+      "bureau": "Bureau F104",
+      "keywords": [
+        "reseaux", "reseau", "systemes", "systeme", "rs", "filiere reseaux", "chef reseaux",
+        "telecoms", "securite reseau", "administration systeme", "cloud",
+        "yassine berrada", "pr berrada", "chef filiere rs", "responsable reseaux"
+      ]
+    }
+  ],
+
+  "services": [
+    {
+      "categorie": "Services Administratifs",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "fonction": "Chef du Service Scolarité",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30 (Lundi - Vendredi)",
+      "keywords": [
+        "scolarite", "secretariat", "administration", "inscrit", "dossier",
+        "administratif", "bureau", "attestation", "carte", "certificat",
+        "diplome", "releve", "notes", "inscription", "reinscription",
+        "carte etudiante", "duplicata", "quitus", "conge academique",
+        "suspension etudes", "equivalence", "transfert", "radiation"
+      ]
+    },
+    {
+      "categorie": "Services Administratifs",
+      "service": "Service Réclamations",
+      "responsable": "Salma Benjelloun",
+      "fonction": "Responsable Réclamations",
+      "bureau": "Bloc Administratif - Bureau A02",
+      "email": "reclamations@eniad.ma",
+      "telephone": "+212 5 36 00 10 02",
+      "horaires": "08:30 - 16:30 (Lundi - Vendredi)",
+      "keywords": [
+        "reclamation", "plainte", "contestation", "litige",
+        "probleme administratif", "erreur administrative", "signalement",
+        "mediation", "appel decision", "recours"
+      ]
+    },
+    {
+      "categorie": "Support Technique",
+      "service": "Service Informatique",
+      "responsable": "Omar El Alaoui",
+      "fonction": "Responsable Informatique",
+      "bureau": "Bloc Technique - Bureau IT01",
+      "email": "support@eniad.ma",
+      "telephone": "+212 5 36 00 10 03",
+      "horaires": "08:00 - 17:00 (Lundi - Vendredi)",
+      "keywords": [
+        "support", "wifi", "wi-fi", "internet", "reseau", "connexion",
+        "panne", "technique", "ordinateur", "mot de passe", "mdp",
+        "compte", "identifiant", "reset", "reinitialiser", "login",
+        "plateforme", "moodle", "acces", "smartstudent", "application",
+        "ent", "portail etudiant", "email academique"
+      ]
+    },
+    {
+      "categorie": "Stages & Insertion Professionnelle",
+      "service": "Service Stages et Insertion",
+      "responsable": "Khalid Tazi",
+      "fonction": "Responsable Stages",
+      "bureau": "Bloc Administratif - Bureau A05",
+      "email": "stages@eniad.ma",
+      "telephone": "+212 5 36 00 10 04",
+      "horaires": "08:30 - 16:30 (Lundi - Vendredi)",
+      "keywords": [
+        "stage", "convention", "convention de stage", "pfa", "pfe",
+        "projet fin etude", "entreprise", "insertion", "signer convention",
+        "rapport stage", "encadrement", "tuteur entreprise", "stage ete",
+        "stage observation", "stage immersion", "offre stage", "recherche entreprise"
+      ]
+    },
+    {
+      "categorie": "Vie Étudiante",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "fonction": "Responsable Vie Estudiantine",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30 (Lundi - Vendredi)",
+      "keywords": [
+        "bourse", "aide sociale", "aide financiere", "club", "association",
+        "activite", "evenement", "conference", "hackathon", "sortie",
+        "vie etudiante", "absence", "justificatif", "logement", "hebergement",
+        "cite universitaire", "transport", "navette", "sante", "infirmerie"
+      ]
+    },
+    {
+      "categorie": "Ressources Documentaires",
+      "service": "Bibliothèque / Médiathèque",
+      "responsable": "Nadia Amrani",
+      "fonction": "Responsable Bibliothèque",
+      "bureau": "Bloc Pédagogique - Rez-de-chaussée",
+      "email": "bibliotheque@eniad.ma",
+      "telephone": "+212 5 36 00 10 10",
+      "horaires": "08:00 - 18:00 (Lundi - Vendredi) | 09:00 - 13:00 (Samedi)",
+      "keywords": [
+        "bibliotheque", "mediatheque", "livre", "ouvrage", "emprunter", "preter",
+        "pret livre", "rendre livre", "ressource documentaire", "these", "memoire",
+        "revue", "periodique", "base de donnees", "acces bibliotheque", "carte bibliotheque"
+      ]
+    },
+    {
+      "categorie": "Finances",
+      "service": "Service des Finances",
+      "responsable": "Hassan El Ouazzani",
+      "fonction": "Responsable Finances",
+      "bureau": "Bloc Administratif - Bureau A03",
+      "email": "finances@eniad.ma",
+      "telephone": "+212 5 36 00 10 11",
+      "horaires": "08:30 - 15:30 (Lundi - Vendredi)",
+      "keywords": [
+        "frais scolarite", "paiement", "recu paiement", "facture", "finance",
+        "quitus financier", "dette", "remboursement", "virement", "cheque",
+        "frais inscription", "payer", "regler", "acquittement frais"
+      ]
+    },
+    {
+      "categorie": "Relations Internationales",
+      "service": "Bureau Relations Internationales",
+      "responsable": "Leila Benhaddou",
+      "fonction": "Responsable RI",
+      "bureau": "Bloc Administratif - Bureau A07",
+      "email": "ri@eniad.ma",
+      "telephone": "+212 5 36 00 10 12",
+      "horaires": "09:00 - 16:00 (Lundi - Vendredi)",
+      "keywords": [
+        "mobilite internationale", "erasmus", "echange etudiant", "partenariat",
+        "universite etrangere", "stage etranger", "bourse internationale",
+        "visa etudes", "sejour etranger", "programme echange", "double diplome"
+      ]
+    }
+  ],
+
+  "procedures": {
+    "carte_perdue": {
+      "titre": "Duplicata de carte étudiant",
+      "description": "Procédure pour obtenir un duplicata en cas de perte ou vol de la carte étudiant",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "3 à 5 jours ouvrables",
+      "resultat": "Nouvelle carte étudiant (duplicata) délivrée au guichet",
+      "documents": [
+        "Copie de la CIN (carte nationale d'identité)",
+        "Photo d'identité récente (fond blanc, 3.5x4.5 cm)",
+        "Formulaire de demande de duplicata (disponible au guichet Scolarité ou sur SmartStudent)",
+        "Déclaration de perte (en cas de perte, disponible au service scolarité)"
+      ],
+      "etapes": [
+        "1. En cas de vol : déposer une plainte au commissariat et obtenir le récépissé",
+        "2. Préparer une copie de votre CIN et une photo d'identité récente",
+        "3. Remplir le formulaire de demande de duplicata au guichet Scolarité (Bureau A01)",
+        "4. Déposer le dossier complet au Service Scolarité",
+        "5. Récupérer le duplicata au guichet Scolarité dans les délais indiqués"
+      ],
+      "notes": "Un seul duplicata est autorisé par année académique. Des frais administratifs peuvent s'appliquer.",
+      "keywords": ["carte", "perdu", "perdue", "duplicata", "carte etudiante", "perte carte", "carte volée", "carte vol"]
+    },
+
+    "changement_filiere": {
+      "titre": "Changement de filière",
+      "description": "Procédure pour changer de spécialité au sein de l'ENIAD",
+      "service": "Chef de filière cible + Service Scolarité",
+      "responsable": "Chef de filière de la spécialité souhaitée",
+      "bureau": "Bureau de filière concerné puis Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "1 à 2 semaines (décision du comité pédagogique)",
+      "resultat": "Réponse officielle de l'administration (acceptation ou refus motivé)",
+      "conditions": "Le changement est possible uniquement en début d'année académique, sous réserve de places disponibles et de validation pédagogique.",
+      "documents": [
+        "Relevés de notes des semestres précédents",
+        "Lettre de motivation manuscrite (raisons du changement, projet professionnel)",
+        "Copie de la CIN",
+        "Dossier d'inscription initial (ou copie du baccalauréat)"
+      ],
+      "etapes": [
+        "1. Vérifier les prérequis et places disponibles dans la filière cible (contacter le chef de filière)",
+        "2. Rédiger une lettre de motivation détaillant les raisons du changement",
+        "3. Rencontrer le Chef de la filière cible pour un entretien préalable et obtenir son accord",
+        "4. Déposer le dossier complet au Service Scolarité (Bureau A01) avant la date limite",
+        "5. Attendre la décision du comité pédagogique (convocation possible)",
+        "6. En cas d'acceptation, effectuer la mise à jour administrative auprès du Service Scolarité"
+      ],
+      "chefs_filiere": {
+        "Intelligence Artificielle": {"chef": "Pr. Ahmed Benali", "email": "ia.chef@eniad.ma", "telephone": "+212 5 36 00 10 06", "bureau": "Bureau F101"},
+        "Génie Informatique": {"chef": "Pr. Sara El Mansouri", "email": "gi.chef@eniad.ma", "telephone": "+212 5 36 00 10 07", "bureau": "Bureau F102"},
+        "Robotique": {"chef": "Pr. Hamza El Fassi", "email": "robotique.chef@eniad.ma", "telephone": "+212 5 36 00 10 08", "bureau": "Bureau F103"},
+        "Réseaux et Systèmes": {"chef": "Pr. Yassine Berrada", "email": "reseaux.chef@eniad.ma", "telephone": "+212 5 36 00 10 09", "bureau": "Bureau F104"}
+      },
+      "keywords": ["changement filiere", "changer filiere", "transfert filiere", "autre filiere", "changer specialite"]
+    },
+
+    "attestation": {
+      "titre": "Attestation de scolarité",
+      "description": "Document officiel prouvant votre inscription à l'ENIAD pour l'année en cours",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "2 à 3 jours ouvrables (génération immédiate via SmartStudent)",
+      "resultat": "Attestation de scolarité officielle signée et cachetée (ou PDF sécurisé via SmartStudent)",
+      "documents": [
+        "Carte étudiant ou numéro de matricule (CNE)",
+        "Aucun autre document requis pour la demande standard"
+      ],
+      "etapes": [
+        "1. Via SmartStudent (recommandé) : Onglet 'Documents' → 'Attestation de scolarité' → Générer",
+        "2. Ou se rendre au guichet du Service Scolarité avec votre carte étudiant",
+        "3. Préciser l'usage de l'attestation si demandé (banque, organisme, bourse, etc.)",
+        "4. Récupérer l'attestation signée et cachetée au guichet ou télécharger le PDF depuis SmartStudent"
+      ],
+      "notes": "Le nombre d'attestations par an peut être limité. Pour un usage officiel (ambassade, banque), précisez l'organisme destinataire.",
+      "keywords": ["attestation", "attestation de scolarite", "attestation inscription", "preuve inscription", "justificatif scolarite"]
+    },
+
+    "releve_notes": {
+      "titre": "Relevé de notes",
+      "description": "Document officiel récapitulatif de vos notes par semestre ou par année",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "1 à 3 jours ouvrables",
+      "resultat": "Relevé de notes officiel signé et cacheté par l'administration",
+      "documents": [
+        "Carte étudiant (à présenter au guichet)",
+        "Préciser la période souhaitée (semestre 1, semestre 2, année complète...)"
+      ],
+      "etapes": [
+        "1. Se présenter au guichet du Service Scolarité avec votre carte étudiant",
+        "2. Préciser le semestre ou l'année académique concerné(e)",
+        "3. Remplir le formulaire de demande si requis",
+        "4. Récupérer le relevé officiel signé et cacheté dans les délais indiqués"
+      ],
+      "notes": "Les notes peuvent être consultées en ligne sur la plateforme pédagogique. Le relevé officiel (cacheté) est requis pour les candidatures externes.",
+      "keywords": ["releve", "releve de notes", "bulletin", "notes officielles", "historique notes", "transcript", "notes semestre"]
+    },
+
+    "probleme_note": {
+      "titre": "Contestation ou erreur de note",
+      "description": "Procédure en cas d'erreur, d'oubli ou de contestation d'une note d'examen",
+      "service": "Enseignant concerné → Chef de filière → Service Scolarité",
+      "responsable": "Enseignant de la matière (1er recours), puis Chef de filière",
+      "bureau": "Bureau de l'enseignant, puis bureau de filière, puis Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "3 à 7 jours ouvrables",
+      "resultat": "Correction officielle de la note ou réponse motivée du comité pédagogique",
+      "documents": [
+        "Copie de la note contestée (relevé ou capture d'écran de l'ENT/plateforme)",
+        "Justificatif de présence à l'examen (si disponible : copie d'examen, feuille de présence)",
+        "Demande écrite de vérification (formulaire disponible au guichet)"
+      ],
+      "etapes": [
+        "1. Contacter l'enseignant de la matière concernée pour vérifier (erreur de saisie possible)",
+        "2. Si l'erreur est confirmée, préparer une demande écrite avec les justificatifs",
+        "3. Déposer la demande auprès du Chef de votre filière dans les 15 jours suivant la publication des notes",
+        "4. Le Chef de filière transmet au Service Scolarité pour correction officielle si recevable",
+        "5. Attendre la notification de la décision"
+      ],
+      "notes": "Le délai de contestation est généralement de 15 jours après la publication des résultats. Passé ce délai, la note devient définitive.",
+      "keywords": ["probleme note", "erreur note", "mauvaise note", "contester note", "note manquante", "correction note", "ma note", "note incorrecte"]
+    },
+
+    "absence_examen": {
+      "titre": "Absence à un examen",
+      "description": "Procédure pour justifier une absence à un examen et obtenir un rattrapage",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30",
+      "delai": "Dossier à déposer dans les 72h suivant l'absence",
+      "resultat": "Absence justifiée et convocation à une session de rattrapage si dossier recevable",
+      "documents": [
+        "Certificat médical (si absence pour raison médicale) — délivré par un médecin agréé",
+        "Convocation officielle (tribunal, administration, service militaire...)",
+        "Tout autre justificatif valable selon les cas",
+        "Formulaire de déclaration d'absence (disponible au Bureau A06)"
+      ],
+      "etapes": [
+        "1. Rassembler le justificatif de votre absence dans les meilleurs délais",
+        "2. Se présenter au Service Affaires Estudiantines (Bureau A06) dans les 72h suivant l'examen",
+        "3. Remplir et déposer le formulaire de déclaration d'absence avec le justificatif",
+        "4. Attendre la décision de la commission sur la recevabilité du justificatif",
+        "5. Si accepté : convocation à la session de rattrapage notifiée par voie officielle"
+      ],
+      "notes": "Le délai de 72h est impératif. Une absence non justifiée à un examen entraîne la note zéro.",
+      "keywords": ["absent", "absence", "absence examen", "rate examen", "manque examen", "justifier absence", "justificatif", "rattrapage"]
+    },
+
+    "stage_pfa_pfe": {
+      "titre": "Stage PFA / PFE",
+      "description": "Procédure pour valider et encadrer votre Projet de Fin d'Année (PFA) ou Projet de Fin d'Études (PFE)",
+      "service": "Service Stages et Insertion",
+      "responsable": "Khalid Tazi",
+      "bureau": "Bloc Administratif - Bureau A05",
+      "email": "stages@eniad.ma",
+      "telephone": "+212 5 36 00 10 04",
+      "horaires": "08:30 - 16:30",
+      "delai": "5 à 10 jours ouvrables pour validation du sujet",
+      "resultat": "Stage PFA/PFE officiellement enregistré, convention signée, encadrant assigné",
+      "documents": [
+        "Proposition de sujet (fiche de sujet validée par l'encadrant pédagogique)",
+        "Lettre d'acceptation de l'entreprise d'accueil",
+        "Convention de stage signée par les trois parties (étudiant, entreprise, ENIAD)",
+        "Copie de la CIN"
+      ],
+      "etapes": [
+        "1. Chercher une entreprise d'accueil et définir le sujet avec votre encadrant pédagogique",
+        "2. Remplir la fiche de sujet et la faire valider par l'encadrant et le Chef de filière",
+        "3. Faire signer la convention de stage par l'entreprise",
+        "4. Déposer la convention et les documents au Service Stages (Bureau A05) pour validation",
+        "5. Suivre les instructions de votre encadrant tout au long du projet",
+        "6. Rédiger et soumettre le rapport final selon le calendrier défini"
+      ],
+      "notes": "Le PFA concerne les étudiants en 3e, 4e année. Le PFE concerne les étudiants en 5e année (dernière année). La soutenance est obligatoire.",
+      "keywords": ["pfe", "pfa", "projet fin", "fin d'etude", "stage fin", "memoire", "encadrant", "sujet pfe", "sujet pfa", "soutenance"]
+    },
+
+    "convention_stage": {
+      "titre": "Convention de stage",
+      "description": "Procédure pour générer, signer et valider la convention de stage obligatoire",
+      "service": "Service Stages et Insertion",
+      "responsable": "Khalid Tazi",
+      "bureau": "Bloc Administratif - Bureau A05",
+      "email": "stages@eniad.ma",
+      "telephone": "+212 5 36 00 10 04",
+      "horaires": "08:30 - 16:30",
+      "delai": "3 à 5 jours ouvrables",
+      "resultat": "Convention de stage validée, signée par toutes les parties et enregistrée officiellement",
+      "documents": [
+        "Informations complètes sur l'entreprise (nom, adresse, téléphone, fax)",
+        "Nom, prénom et poste du tuteur en entreprise",
+        "Dates précises de début et de fin de stage",
+        "Intitulé du poste / sujet de stage",
+        "Copie de la CIN de l'étudiant"
+      ],
+      "etapes": [
+        "1. Via SmartStudent : onglet 'Documents' → 'Convention de stage' → Remplir les informations et générer",
+        "2. Ou se rendre au Bureau A05 pour récupérer le formulaire papier",
+        "3. Faire signer la convention par le représentant de l'entreprise",
+        "4. Faire valider et signer la convention par l'encadrant pédagogique",
+        "5. Déposer la convention signée au Service Stages (Bureau A05) pour la signature de la direction",
+        "6. Récupérer l'exemplaire validé par l'ENIAD"
+      ],
+      "notes": "Aucun stage ne peut commencer sans convention signée par les trois parties. L'assurance de l'étudiant doit être à jour.",
+      "keywords": ["convention", "convention de stage", "signer convention", "formulaire stage", "document stage"]
+    },
+
+    "acces_plateforme": {
+      "titre": "Problème d'accès à la plateforme pédagogique",
+      "description": "Résolution des problèmes de connexion à Moodle, ENT ou portail étudiant",
+      "service": "Service Informatique",
+      "responsable": "Omar El Alaoui",
+      "bureau": "Bloc Technique - Bureau IT01",
+      "email": "support@eniad.ma",
+      "telephone": "+212 5 36 00 10 03",
+      "horaires": "08:00 - 17:00",
+      "delai": "1 à 2 jours ouvrables",
+      "resultat": "Accès à la plateforme pédagogique rétabli",
+      "documents": [
+        "Numéro de matricule / CNE",
+        "Email académique (@eniad.ma) si disponible",
+        "Capture d'écran du message d'erreur (si possible)"
+      ],
+      "etapes": [
+        "1. Vérifier vos identifiants de connexion : matricule (ou CNE) + mot de passe",
+        "2. Essayer la récupération de mot de passe depuis la page de connexion de la plateforme",
+        "3. Vider le cache du navigateur ou essayer un autre navigateur (Chrome recommandé)",
+        "4. Si le problème persiste, contacter le Service Informatique par email ou en se rendant au Bureau IT01",
+        "5. Fournir votre matricule pour que le support rétablisse votre accès"
+      ],
+      "notes": "L'identifiant par défaut est votre numéro de matricule. En cas de première connexion, utilisez le mot de passe communiqué lors de l'inscription.",
+      "keywords": ["plateforme", "moodle", "ent", "portail", "acces plateforme", "connexion plateforme", "cours en ligne", "identifiant plateforme"]
+    },
+
+    "reinitialisation_mdp": {
+      "titre": "Réinitialisation du mot de passe",
+      "description": "Procédure pour récupérer ou réinitialiser un mot de passe oublié ou bloqué",
+      "service": "Service Informatique",
+      "responsable": "Omar El Alaoui",
+      "bureau": "Bloc Technique - Bureau IT01",
+      "email": "support@eniad.ma",
+      "telephone": "+212 5 36 00 10 03",
+      "horaires": "08:00 - 17:00",
+      "delai": "Quelques heures à 1 jour ouvrable",
+      "resultat": "Mot de passe réinitialisé et accès rétabli",
+      "documents": [
+        "Numéro de matricule / CNE",
+        "Email académique (@eniad.ma) pour recevoir le lien de réinitialisation",
+        "Carte étudiant (si déplacement au bureau IT01)"
+      ],
+      "etapes": [
+        "1. Sur la page de connexion, cliquer sur 'Mot de passe oublié ?'",
+        "2. Saisir votre email académique (@eniad.ma) pour recevoir le lien de réinitialisation",
+        "3. Si l'email n'est pas reçu dans 10 minutes, vérifier le dossier spam",
+        "4. Si toujours aucun email, contacter le Service Informatique (Bureau IT01 ou email support@eniad.ma)",
+        "5. Présenter votre matricule et carte étudiant pour vérification d'identité",
+        "6. Le support réinitialisera votre mot de passe temporaire à changer à la prochaine connexion"
+      ],
+      "notes": "Ne partagez jamais votre mot de passe. Le Service Informatique ne vous demandera jamais votre mot de passe actuel.",
+      "keywords": ["mot de passe", "password", "reinitialisation", "oublie mot de passe", "compte bloque", "mdp", "mdp oublie", "changer mot de passe"]
+    },
+
+    "wifi": {
+      "titre": "Accès WiFi et connexion réseau ENIAD",
+      "description": "Comment se connecter au réseau WiFi du campus et résoudre les problèmes de connexion",
+      "service": "Service Informatique",
+      "responsable": "Omar El Alaoui",
+      "bureau": "Bloc Technique - Bureau IT01",
+      "email": "support@eniad.ma",
+      "telephone": "+212 5 36 00 10 03",
+      "horaires": "08:00 - 17:00",
+      "delai": "Accès immédiat avec les bons identifiants — 1 à 2 jours si intervention technique requise",
+      "resultat": "Connexion WiFi fonctionnelle au réseau ENIAD",
+      "documents": [
+        "Matricule étudiant (votre numéro d'identifiant ENIAD)"
+      ],
+      "etapes": [
+        "1. Sélectionner le réseau WiFi 'ENIAD-Wifi' sur votre appareil",
+        "2. Saisir vos identifiants : matricule étudiant + mot de passe par défaut (communiqué à l'inscription)",
+        "3. Si c'est votre première connexion ou si vous avez oublié le mot de passe : contacter le Service Informatique (support@eniad.ma ou Bureau IT01)",
+        "4. En cas de problème persistant (signal faible, coupure, zone sans couverture) : signaler la zone concernée au Service Informatique"
+      ],
+      "notes": "Le réseau ENIAD-Wifi est réservé aux étudiants inscrits. Votre accès est activé automatiquement après votre inscription.",
+      "keywords": [
+        "wifi", "wi-fi", "internet", "reseau", "connexion", "point d'acces",
+        "besoin wifi", "besoin internet", "comment acceder wifi", "comment se connecter",
+        "identifiants wifi", "mot de passe wifi", "probleme internet", "probleme wifi",
+        "pas de wifi", "signal faible", "reseau campus", "deconnexion"
+      ]
+    },
+
+    "bourse": {
+      "titre": "Demande de bourse d'études",
+      "description": "Procédure pour demander une aide financière ou une bourse auprès de l'ENIAD",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30",
+      "delai": "2 à 4 semaines (décision de la commission d'attribution)",
+      "resultat": "Décision d'attribution ou de refus communiquée officiellement",
+      "conditions": "La bourse est attribuée selon des critères sociaux (revenus familiaux), académiques (résultats) et de présence.",
+      "documents": [
+        "Copie de la CIN",
+        "Justificatif de revenus familiaux (fiche de paie, attestation de travail ou déclaration de revenus)",
+        "Attestation de scolarité en cours",
+        "Relevé de notes du dernier semestre",
+        "Formulaire de demande de bourse (disponible au Bureau A06)"
+      ],
+      "etapes": [
+        "1. Retirer le formulaire de demande de bourse au Bureau A06 ou le télécharger sur le site ENIAD",
+        "2. Rassembler tous les documents justificatifs requis",
+        "3. Déposer le dossier complet au Service Affaires Estudiantines avant la date limite d'appel à candidatures",
+        "4. Attendre la convocation pour un entretien éventuel avec la commission",
+        "5. Recevoir la notification officielle de la décision (acceptation ou refus motivé)"
+      ],
+      "notes": "Les dates de dépôt des dossiers de bourse sont annoncées en début d'année académique. Se renseigner au Bureau A06.",
+      "keywords": ["bourse", "aide financiere", "aide sociale", "aide etudiant", "allocation", "demande bourse", "soutien social"]
+    },
+
+    "participation_evenement": {
+      "titre": "Participation à un événement étudiant",
+      "description": "Inscription et participation aux événements, clubs et activités de la vie étudiante",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30",
+      "delai": "Selon les dates limites de chaque événement",
+      "resultat": "Inscription confirmée et participation validée",
+      "documents": [
+        "Formulaire d'inscription (disponible en ligne ou au Bureau A06)",
+        "Carte étudiant (certains événements l'exigent)",
+        "Autorisation parentale pour les mineurs (si applicable)"
+      ],
+      "etapes": [
+        "1. Consulter le calendrier des événements sur le site ENIAD ou via SmartStudent",
+        "2. Remplir le formulaire d'inscription disponible en ligne ou au Bureau A06",
+        "3. Soumettre le formulaire avant la date limite de candidature",
+        "4. Confirmer votre inscription et conserver le récépissé ou la confirmation reçue",
+        "5. Se présenter à l'événement avec votre carte étudiant"
+      ],
+      "notes": "Certains événements (hackathons, conférences) nécessitent une pré-sélection. Renseignez-vous auprès des Affaires Estudiantines.",
+      "keywords": ["evenement", "conference", "hackathon", "workshop", "club", "association", "activite", "sortie", "seminaire", "concours"]
+    },
+
+    "certificat": {
+      "titre": "Demande de certificat administratif",
+      "description": "Obtenir un certificat officiel de l'ENIAD (certificat de scolarité, de résidence, etc.)",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "2 à 4 jours ouvrables",
+      "resultat": "Certificat officiel signé et cacheté par l'administration",
+      "documents": [
+        "Copie de la CIN",
+        "Formulaire de demande de certificat (disponible au guichet ou sur SmartStudent)",
+        "Justificatif d'utilisation du certificat si requis (organisme destinataire)"
+      ],
+      "etapes": [
+        "1. Identifier le type de certificat nécessaire et l'organisme destinataire",
+        "2. Se rendre au Service Scolarité ou faire la demande en ligne via SmartStudent",
+        "3. Remplir et déposer le formulaire de demande avec les pièces justificatives",
+        "4. Récupérer le certificat signé et cacheté au guichet Scolarité"
+      ],
+      "keywords": ["certificat", "demande certificat", "certificat etudiant", "certificat scolarite", "document officiel"]
+    },
+
+    "retrait_diplome": {
+      "titre": "Retrait du diplôme d'ingénieur",
+      "description": "Procédure pour récupérer votre diplôme officiel après validation de la scolarité",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "Variable : entre 1 et 6 mois après la fin des études et la validation de la soutenance",
+      "resultat": "Diplôme d'ingénieur d'État remis officiellement",
+      "conditions": "Tous les modules validés, aucune dette administrative, quitus obtenu auprès de tous les services.",
+      "documents": [
+        "Copie de la CIN",
+        "Carte étudiant (ou ancienne carte si expirée)",
+        "Quitus complet (bibliothèque, scolarité, informatique, finances)",
+        "Reçu de paiement des frais de scolarité entièrement soldés",
+        "PV de soutenance ou attestation de réussite"
+      ],
+      "etapes": [
+        "1. Vérifier que tous les modules sont validés et la soutenance réussie",
+        "2. Obtenir le quitus de chaque service : bibliothèque, scolarité, service informatique, finances",
+        "3. S'assurer qu'aucune dette financière ou administrative ne subsiste",
+        "4. Contacter le Service Scolarité pour connaître la date de disponibilité du diplôme",
+        "5. Se présenter au Bureau A01 avec l'ensemble des documents pour le retrait officiel"
+      ],
+      "notes": "Le diplôme est un document officiel signé par le Directeur et par l'Université. Sa préparation prend du temps après la soutenance.",
+      "keywords": ["diplome", "retrait diplome", "recuperer diplome", "graduation", "fin etude diplome", "diplome pret", "quitus"]
+    },
+
+    "reinscription": {
+      "titre": "Réinscription annuelle",
+      "description": "Procédure de réinscription obligatoire à effectuer chaque début d'année académique",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "À effectuer avant la date limite fixée (généralement début octobre)",
+      "resultat": "Réinscription validée, nouvelle carte étudiant et accès aux services rétablis",
+      "documents": [
+        "Relevé de notes de l'année précédente (ou PV de délibération)",
+        "Reçu de paiement des frais de scolarité de la nouvelle année",
+        "2 photos d'identité récentes (fond blanc)",
+        "Copie de la CIN",
+        "Formulaire de réinscription (disponible au Bureau A01 ou sur SmartStudent)"
+      ],
+      "etapes": [
+        "1. Vérifier votre situation académique (modules validés, passage en année supérieure)",
+        "2. Payer les frais de scolarité auprès du Service Finances (Bureau A03) avant la date limite",
+        "3. Retirer et remplir le formulaire de réinscription au Service Scolarité",
+        "4. Déposer le dossier complet au Bureau A01 avec tous les documents requis",
+        "5. Récupérer la nouvelle carte étudiant et le certificat de réinscription",
+        "6. Activer votre accès à la plateforme pédagogique avec vos nouveaux identifiants"
+      ],
+      "notes": "Un étudiant non réinscrit ne peut pas assister aux cours ni passer les examens. La réinscription est obligatoire chaque année.",
+      "keywords": ["reinscription", "re-inscription", "inscrire nouvelle annee", "renouveler inscription", "dossier reinscription", "annee suivante"]
+    },
+
+    "conge_academique": {
+      "titre": "Demande de congé académique (suspension d'études)",
+      "description": "Procédure pour suspendre temporairement vos études pour raison médicale, personnelle ou professionnelle",
+      "service": "Service Scolarité",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "1 à 2 semaines (décision de la direction)",
+      "resultat": "Congé académique accordé et dossier mis en suspens jusqu'à la date de reprise",
+      "conditions": "Le congé académique est accordé pour des raisons valables (médicales, familiales graves, service militaire, projet professionnel). La durée maximale est généralement d'un an.",
+      "documents": [
+        "Demande écrite adressée au Directeur de l'ENIAD",
+        "Justificatif de la raison du congé (certificat médical, convocation, etc.)",
+        "Copie de la CIN",
+        "Dernier relevé de notes"
+      ],
+      "etapes": [
+        "1. Rédiger une demande écrite adressée au Directeur, expliquant clairement les raisons",
+        "2. Joindre les justificatifs nécessaires selon la raison invoquée",
+        "3. Déposer le dossier au Service Scolarité (Bureau A01)",
+        "4. Attendre la décision de la direction (un entretien peut être requis)",
+        "5. En cas d'accord : votre inscription est suspendue jusqu'à la date de reprise convenue",
+        "6. À la date de reprise : effectuer la réinscription normalement au Bureau A01"
+      ],
+      "notes": "Pendant le congé académique, l'étudiant conserve le statut d'étudiant mais n'assiste pas aux cours. La reprise se fait par réinscription.",
+      "keywords": ["conge academique", "suspension etudes", "arret etudes", "pause etudes", "conge scolaire", "interrompre etudes", "reprendre etudes"]
+    },
+
+    "equivalence_module": {
+      "titre": "Demande d'équivalence de module",
+      "description": "Procédure pour faire valider des modules acquis dans un autre établissement",
+      "service": "Chef de filière + Service Scolarité",
+      "responsable": "Chef de filière concerné",
+      "bureau": "Bureau de filière puis Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "2 à 4 semaines (étude du dossier par le comité pédagogique)",
+      "resultat": "Validation des équivalences accordées ou refusées avec motivation",
+      "documents": [
+        "Relevés de notes officiels de l'établissement d'origine (traduits en français si nécessaire)",
+        "Descriptions détaillées (syllabus) des modules concernés",
+        "Diplôme ou attestation de réussite de l'établissement d'origine",
+        "Formulaire de demande d'équivalence (disponible au Service Scolarité)",
+        "Copie de la CIN"
+      ],
+      "etapes": [
+        "1. Préparer les syllabus des modules pour lesquels vous souhaitez une équivalence",
+        "2. Se renseigner auprès du Chef de votre filière sur les critères d'équivalence",
+        "3. Déposer le dossier complet au Service Scolarité (Bureau A01)",
+        "4. Le comité pédagogique étudiera les équivalences possibles",
+        "5. Recevoir la décision officielle par voie administrative"
+      ],
+      "keywords": ["equivalence", "equivalent", "module valide", "reconnaissance module", "transfert module", "credits transfert", "validation acquis"]
+    },
+
+    "emploi_temps": {
+      "titre": "Problème d'emploi du temps",
+      "description": "Obtenir, consulter ou signaler un problème avec votre emploi du temps",
+      "service": "Secrétariat pédagogique / Chef de filière",
+      "responsable": "Chef de votre filière",
+      "bureau": "Bureau de votre filière",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "1 à 3 jours ouvrables pour correction",
+      "resultat": "Emploi du temps mis à jour et accessible sur la plateforme ou au tableau d'affichage",
+      "documents": [],
+      "etapes": [
+        "1. Consulter l'emploi du temps sur la plateforme pédagogique (Moodle/ENT) ou le tableau d'affichage",
+        "2. En cas de chevauchement ou d'erreur, contacter le Secrétariat pédagogique ou votre Chef de filière",
+        "3. Signaler le problème par email en précisant votre promo, groupe et les cours concernés",
+        "4. Attendre la correction et la republication de l'emploi du temps"
+      ],
+      "notes": "Les emplois du temps peuvent être modifiés en cours de semestre. Consultez régulièrement la plateforme et le tableau d'affichage.",
+      "keywords": ["emploi du temps", "planning", "cours annule", "chevauchement", "salle cours", "horaire cours", "programme semaine", "EDT"]
+    },
+
+    "programme_examens": {
+      "titre": "Calendrier et planning des examens",
+      "description": "Obtenir le programme des examens de fin de semestre",
+      "service": "Service Scolarité / Chef de filière",
+      "responsable": "Fatima Zahra El Idrissi",
+      "bureau": "Bloc Administratif - Bureau A01",
+      "email": "scolarite@eniad.ma",
+      "telephone": "+212 5 36 00 10 01",
+      "horaires": "08:30 - 16:30",
+      "delai": "Publié 2 à 3 semaines avant les examens",
+      "resultat": "Programme des examens disponible",
+      "documents": [],
+      "etapes": [
+        "1. Consulter la plateforme pédagogique (Moodle/ENT) dans la rubrique 'Examens'",
+        "2. Consulter le tableau d'affichage du Bloc Administratif",
+        "3. En cas d'absence du programme ou d'erreur, contacter le Service Scolarité ou votre Chef de filière",
+        "4. Pour toute convocation d'examen, vérifier l'identifiant et la salle assignés"
+      ],
+      "notes": "Le calendrier des examens est généralement publié 2 à 3 semaines avant la session. Les dates sont indicatives et peuvent être modifiées.",
+      "keywords": ["examen", "calendrier examens", "planning examens", "programme examens", "date examen", "session examen", "semestre", "partiel", "final"]
+    },
+
+    "bibliotheque": {
+      "titre": "Accès et services de la bibliothèque",
+      "description": "Emprunter des ouvrages, accéder aux ressources documentaires et aux bases de données",
+      "service": "Bibliothèque / Médiathèque",
+      "responsable": "Nadia Amrani",
+      "bureau": "Bloc Pédagogique - Rez-de-chaussée",
+      "email": "bibliotheque@eniad.ma",
+      "telephone": "+212 5 36 00 10 10",
+      "horaires": "08:00 - 18:00 (Lundi-Vendredi) | 09:00 - 13:00 (Samedi)",
+      "delai": "Accès immédiat sur présentation de la carte étudiant",
+      "resultat": "Accès aux ressources documentaires, prêt d'ouvrages",
+      "documents": [
+        "Carte étudiant en cours de validité",
+        "Formulaire d'adhésion bibliothèque (première visite uniquement)"
+      ],
+      "etapes": [
+        "1. Se présenter à la bibliothèque avec votre carte étudiant",
+        "2. S'inscrire à la bibliothèque lors de la première visite (formulaire d'adhésion)",
+        "3. Rechercher les ouvrages via le catalogue en ligne ou demander assistance au bibliothécaire",
+        "4. Emprunter les ouvrages selon le quota autorisé (généralement 2 à 3 livres à la fois)",
+        "5. Respecter la durée de prêt (généralement 2 semaines, renouvelable une fois)"
+      ],
+      "notes": "Tout retard dans le retour des livres entraîne une pénalité. Les ouvrages de référence (dictionnaires, encyclopédies) ne peuvent pas être empruntés.",
+      "keywords": ["bibliotheque", "livre", "ouvrage", "emprunter", "pret livre", "ressource documentaire", "these", "memoire", "acces bibliotheque"]
+    },
+
+    "paiement_frais": {
+      "titre": "Paiement des frais de scolarité",
+      "description": "Procédure pour payer les frais d'inscription et de scolarité",
+      "service": "Service des Finances",
+      "responsable": "Hassan El Ouazzani",
+      "bureau": "Bloc Administratif - Bureau A03",
+      "email": "finances@eniad.ma",
+      "telephone": "+212 5 36 00 10 11",
+      "horaires": "08:30 - 15:30 (Lundi - Vendredi)",
+      "delai": "Paiement à effectuer avant la date limite fixée (début d'année académique)",
+      "resultat": "Reçu de paiement délivré et accès aux services académiques validé",
+      "documents": [
+        "Copie de la CIN",
+        "Formulaire de réinscription (si applicable)",
+        "Chèque ou reçu de virement bancaire (selon le mode de paiement)"
+      ],
+      "etapes": [
+        "1. Se renseigner sur le montant des frais de scolarité auprès du Service Finances (Bureau A03)",
+        "2. Effectuer le paiement en espèces, par chèque ou virement bancaire selon les modalités acceptées",
+        "3. Obtenir un reçu de paiement officiel",
+        "4. Conserver précieusement ce reçu (nécessaire pour la réinscription et le quitus final)"
+      ],
+      "notes": "Des facilités de paiement (échelonnement) peuvent être accordées sur demande justifiée auprès du Service Finances.",
+      "keywords": ["frais scolarite", "paiement", "recu paiement", "acquittement", "dette financiere", "frais inscription", "payer scolarite", "quitus financier"]
+    },
+
+    "logement": {
+      "titre": "Logement et hébergement étudiant",
+      "description": "Informations sur les possibilités de logement pour les étudiants de l'ENIAD",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30",
+      "delai": "Variable selon la disponibilité des places",
+      "resultat": "Attribution ou orientation vers un logement adapté",
+      "documents": [
+        "Copie de la CIN",
+        "Attestation de scolarité",
+        "Justificatif de domicile familial (pour justifier l'éloignement)",
+        "Justificatif de revenus familiaux (pour les aides)"
+      ],
+      "etapes": [
+        "1. Se renseigner auprès des Affaires Estudiantines (Bureau A06) sur les possibilités disponibles",
+        "2. Pour la cité universitaire (si disponible) : déposer une demande dès l'inscription",
+        "3. Pour les logements privés : consulter les listes de logements référencés par l'ENIAD",
+        "4. Déposer le dossier de demande avec les justificatifs requis"
+      ],
+      "notes": "L'ENIAD peut orienter vers les cités universitaires partenaires ou fournir une liste de logements privés de confiance près du campus.",
+      "keywords": ["logement", "hebergement", "cite universitaire", "residence", "appartement", "chambre", "louer", "maison", "dormir campus"]
+    },
+
+    "transport": {
+      "titre": "Transport et navette campus",
+      "description": "Informations sur les moyens de transport pour accéder au campus de l'ENIAD",
+      "service": "Affaires Estudiantines",
+      "responsable": "Meryem Chraibi",
+      "bureau": "Bloc Administratif - Bureau A06",
+      "email": "etudiant@eniad.ma",
+      "telephone": "+212 5 36 00 10 05",
+      "horaires": "08:30 - 16:30",
+      "delai": "Inscription selon les disponibilités",
+      "resultat": "Accès au service de navette ou information sur les transports disponibles",
+      "documents": [
+        "Carte étudiant (pour inscription au service navette)"
+      ],
+      "etapes": [
+        "1. Se renseigner auprès des Affaires Estudiantines sur le service de navette disponible",
+        "2. S'inscrire au service de navette en fournissant votre carte étudiant",
+        "3. Consulter le planning et les arrêts de la navette"
+      ],
+      "notes": "Des lignes de bus publics desservent également le campus depuis le centre-ville de Berkane. Renseignez-vous auprès des Affaires Estudiantines.",
+      "keywords": ["transport", "navette", "bus", "aller campus", "acces campus", "deplacement", "moyen transport", "trajet"]
+    },
+
+    "mobilite_internationale": {
+      "titre": "Mobilité internationale et Erasmus+",
+      "description": "Procédure pour partir en échange international ou bénéficier d'un programme de mobilité",
+      "service": "Bureau Relations Internationales",
+      "responsable": "Leila Benhaddou",
+      "bureau": "Bloc Administratif - Bureau A07",
+      "email": "ri@eniad.ma",
+      "telephone": "+212 5 36 00 10 12",
+      "horaires": "09:00 - 16:00 (Lundi - Vendredi)",
+      "delai": "3 à 6 mois avant le départ (processus de sélection)",
+      "resultat": "Place dans le programme d'échange confirmée, visa et préparation administrative",
+      "conditions": "Généralement ouvert aux étudiants à partir de la 3e année, avec un bon niveau académique et de langues.",
+      "documents": [
+        "Relevés de notes des deux dernières années",
+        "Lettre de motivation (en français et/ou dans la langue du pays cible)",
+        "Curriculum Vitae",
+        "Passeport en cours de validité",
+        "Attestation de niveau de langue (si requise)",
+        "Formulaire de candidature (disponible au Bureau RI)"
+      ],
+      "etapes": [
+        "1. Consulter les offres de mobilité disponibles auprès du Bureau RI (Bureau A07)",
+        "2. Vérifier les conditions d'éligibilité (année, niveau académique, langue)",
+        "3. Préparer le dossier de candidature complet",
+        "4. Déposer la candidature avant la date limite de l'appel à candidatures",
+        "5. Passer les entretiens de sélection si requis",
+        "6. En cas de sélection : préparer le visa, le logement et les formalités administratives avec l'aide du Bureau RI"
+      ],
+      "notes": "L'ENIAD participe à des programmes Erasmus+ et des accords bilatéraux. Les équivalences de modules à l'étranger sont à valider au préalable avec le Chef de filière.",
+      "keywords": ["mobilite internationale", "erasmus", "echange etudiant", "programme echange", "stage etranger", "universite etrangere", "double diplome", "bourse internationale"]
+    },
+
+    "reclamation": {
+      "titre": "Réclamation administrative",
+      "description": "Déposer une réclamation en cas de problème administratif, d'erreur ou de litige",
+      "service": "Service Réclamations",
+      "responsable": "Salma Benjelloun",
+      "bureau": "Bloc Administratif - Bureau A02",
+      "email": "reclamations@eniad.ma",
+      "telephone": "+212 5 36 00 10 02",
+      "horaires": "08:30 - 16:30",
+      "delai": "5 à 10 jours ouvrables pour traitement",
+      "resultat": "Réponse officielle et résolution du problème soulevé",
+      "documents": [
+        "Description écrite et détaillée du problème",
+        "Pièces justificatives de la situation contestée (documents, captures d'écran, courriers...)",
+        "Copie de la CIN",
+        "Formulaire de réclamation (disponible au Bureau A02)"
+      ],
+      "etapes": [
+        "1. Rassembler tous les documents prouvant le problème rencontré",
+        "2. Rédiger une description claire et précise de la situation",
+        "3. Déposer le formulaire de réclamation complété avec les pièces justificatives au Bureau A02",
+        "4. Conserver une copie de votre dossier de réclamation",
+        "5. Attendre la prise de contact du Service Réclamations",
+        "6. Recevoir la réponse officielle ou participer à une médiation si nécessaire"
+      ],
+      "notes": "Tentez d'abord une résolution à l'amiable avec le service concerné avant de déposer une réclamation formelle.",
+      "keywords": ["reclamation", "plainte", "contestation", "litige", "probleme administratif", "erreur administrative", "signalement", "appel", "recours"]
+    },
+
+    "contact_direction": {
+      "titre": "Contacter la Direction de l'ENIAD",
+      "description": "Prendre contact avec la direction de l'établissement pour des questions importantes",
+      "service": "Direction Générale",
+      "responsable": "Pr. KHALID JAAFAR",
+      "bureau": "Bloc Administratif - Bureau D01",
+      "email": "direction@eniad.ma",
+      "telephone": "+212 5 36 00 10 00",
+      "secretariat": "secretariat@eniad.ma",
+      "horaires": "Sur rendez-vous uniquement (contacter le secrétariat)",
+      "delai": "Rendez-vous sous 3 à 7 jours ouvrables selon disponibilité",
+      "resultat": "Entretien avec la direction ou réponse officielle à la demande",
+      "documents": [
+        "Demande écrite adressée à la Direction",
+        "Exposé clair de l'objet de la demande ou de la problématique"
+      ],
+      "etapes": [
+        "1. Pour les questions courantes : s'adresser d'abord au service concerné (Scolarité, Stages, etc.)",
+        "2. Pour les questions nécessitant l'arbitrage de la direction : rédiger une demande écrite",
+        "3. Déposer la demande au Secrétariat de la Direction (Bureau D01) ou par email secretariat@eniad.ma",
+        "4. Attendre la confirmation d'un rendez-vous ou une réponse écrite"
+      ],
+      "notes": "La direction traite principalement les demandes escaladées ou les situations exceptionnelles. Pour les questions courantes, contacter directement les services compétents.",
+      "keywords": ["direction", "directeur", "khalid jaafar", "contacter direction", "rdv directeur", "secretariat direction", "direction generale"]
+    }
+  },
+
+  "informations_generales": {
+    "annee_academique": "2025-2026",
+    "filieres": [
+      "Intelligence Artificielle (IA)",
+      "Génie Informatique (GI)",
+      "Robotique",
+      "Réseaux et Systèmes (RS)"
+    ],
+    "cycles": [
+      "Cycle Ingénieur 5 ans (après Bac : Classes Prépa intégrées + 3 ans cycle ingénieur)",
+      "Cycle Ingénieur 3 ans (admission sur titre : DUT, BTS, DEUG, CPGE...)"
+    ],
+    "diplome": "Ingénieur d'État en Intelligence Artificielle et Digital (ENIAD - UMP)",
+    "calendrier": {
+      "rentree": "Septembre 2025",
+      "examens_s1": "Janvier 2026",
+      "examens_s2": "Juin 2026",
+      "rattrapage": "Juillet 2026",
+      "fin_annee": "Juillet 2026"
+    },
+    "documents_generables_smartstudent": [
+      "Attestation de scolarité",
+      "Convention de stage",
+      "Règlement intérieur"
+    ]
+  },
+
+  "faq": [
+    {
+      "question": "Comment obtenir une attestation de scolarité ?",
+      "reponse": "Via SmartStudent (onglet Documents) en quelques clics, ou au guichet Scolarité (Bureau A01). Délai : 2-3 jours.",
+      "procedure": "attestation"
+    },
+    {
+      "question": "J'ai perdu ma carte étudiant, que faire ?",
+      "reponse": "Se rendre au Service Scolarité (Bureau A01) avec une CIN et une photo. Délai de 3 à 5 jours ouvrables.",
+      "procedure": "carte_perdue"
+    },
+    {
+      "question": "Comment signer une convention de stage ?",
+      "reponse": "Générer via SmartStudent ou au Bureau A05. La convention doit être signée par l'entreprise, l'encadrant et l'ENIAD.",
+      "procedure": "convention_stage"
+    },
+    {
+      "question": "Mon mot de passe ne fonctionne plus, que faire ?",
+      "reponse": "Utiliser 'Mot de passe oublié' sur la plateforme, ou contacter le Service Informatique (support@eniad.ma, Bureau IT01).",
+      "procedure": "reinitialisation_mdp"
+    },
+    {
+      "question": "Comment contester une note d'examen ?",
+      "reponse": "Contacter d'abord l'enseignant, puis le Chef de filière dans les 15 jours suivant la publication des résultats.",
+      "procedure": "probleme_note"
+    },
+    {
+      "question": "Je veux changer de filière, est-ce possible ?",
+      "reponse": "Oui, sous conditions. Se renseigner auprès du Chef de la filière cible puis déposer un dossier à la Scolarité.",
+      "procedure": "changement_filiere"
+    },
+    {
+      "question": "Comment m'inscrire à la bibliothèque ?",
+      "reponse": "Se présenter à la bibliothèque (Bloc Pédagogique, RDC) avec la carte étudiant. Accès ouvert de 8h à 18h.",
+      "procedure": "bibliotheque"
+    },
+    {
+      "question": "Quand se déroulent les examens ?",
+      "reponse": "S1 : Janvier 2026 | S2 : Juin 2026 | Rattrapage : Juillet 2026. Programme détaillé sur la plateforme pédagogique.",
+      "procedure": "programme_examens"
+    },
+    {
+      "question": "J'ai raté un examen, que faire ?",
+      "reponse": "Déposer un justificatif au Bureau A06 dans les 72h. Si recevable, une convocation de rattrapage sera accordée.",
+      "procedure": "absence_examen"
+    },
+    {
+      "question": "Comment partir en échange international ?",
+      "reponse": "Contacter le Bureau Relations Internationales (Bureau A07, ri@eniad.ma). L'ENIAD participe à des programmes Erasmus+.",
+      "procedure": "mobilite_internationale"
+    }
+  ]
+}

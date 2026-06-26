@@ -3,16 +3,22 @@ class AppConfig {
   static const String appVersion = '1.0.0';
   
   // API Configuration
-  // The client tries several common local endpoints until one works.
+  // Order matters — each URL is tried in sequence until one responds.
+  // [0] Current PC WiFi IP  ← Android devices on same WiFi use this
+  // [1] Android emulator    ← AVD uses 10.0.2.2 to reach the host
+  // [2] USB adb reverse     ← physical device connected via USB (run: adb reverse tcp:8000 tcp:8000)
+  // [3] USB adb reverse     ← same, 127.0.0.1 alias
+  // [4] Windows hotspot IP  ← phone tethered to PC hotspot
+  // [5] Web / desktop       ← browser / desktop app running on same machine
+  // [6] Web / desktop       ← same, 127.0.0.1 alias
   static const List<String> apiBaseUrls = [
-    'http://localhost:8000/api',      // USB (adb reverse) — PRIORITAIRE
-    'http://127.0.0.1:8000/api',      // USB (adb reverse) — fallback
-    'http://192.168.1.106:8000/api',  // PC WiFi (réseau actuel)
-    'http://172.20.10.2:8000/api',    // PC IP (hotspot network)
-    'http://192.168.8.135:8000/api',  // PC WiFi IP (home/office network)
-    'http://192.168.137.1:8000/api',  // PC hotspot IP (Windows Mobile Hotspot)
-    'http://10.0.2.2:8000/api',       // Android emulator
-    'http://10.30.29.176:8000/api',   // PC IP (old university WiFi)
+    'http://192.168.8.135:8000/api',  // [0] PC WiFi IP (current)
+    'http://10.0.2.2:8000/api',       // [1] Android emulator
+    'http://localhost:8000/api',      // [2] USB adb reverse
+    'http://127.0.0.1:8000/api',      // [3] USB adb reverse fallback
+    'http://192.168.137.1:8000/api',  // [4] Windows Mobile Hotspot
+    'http://localhost:8000/api',      // [5] Web / desktop
+    'http://127.0.0.1:8000/api',      // [6] Web / desktop fallback
   ];
   static const String apiTimeout = '15'; // seconds per URL attempt (regular endpoints)
   

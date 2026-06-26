@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page {
+      size: A4;
+      margin: 3.6cm 2cm 2.8cm 2cm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 9.5pt;
+      color: #000;
+      line-height: 1.45;
+    }
+
+    /* ── Fixed header — appears on EVERY page ───────────────────────── */
+    .fixed-header {
+      position: fixed;
+      top: -3.4cm;
+      left: 0;
+      right: 0;
+      height: 3.2cm;
+    }
+    .fixed-header img {
+      width: 17cm;
+      height: auto;
+      display: block;
+    }
+    .fixed-header .hdr-divider {
+      border-top: 1pt solid #666;
+      margin-top: 2pt;
+    }
+
+    /* ── Fixed footer — appears on EVERY page ───────────────────────── */
+    .fixed-footer {
+      position: fixed;
+      bottom: -2.5cm;
+      left: 0;
+      right: 0;
+      height: 2.3cm;
+      border-top: 0.5pt solid #888;
+      padding-top: 2pt;
+      text-align: center;
+      font-size: 6.5pt;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    /* ── Document title ──────────────────────────────────────────────── */
+    .title-box {
+      text-align: center;
+      border: 2pt solid #000;
+      padding: 6pt 15pt;
+      margin: 6pt 0 8pt 0;
+    }
+    .title-box h1 {
+      font-size: 15pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+    }
+
+    /* ── Preamble ────────────────────────────────────────────────────── */
+    .preamble {
+      text-align: center;
+      font-size: 9.5pt;
+      margin-bottom: 8pt;
+      line-height: 1.5;
+    }
+
+    /* ── Section header (I. II. III. IV. V.) ────────────────────────── */
+    .section-hdr {
+      background-color: #D0D0D0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      padding: 4pt 10pt;
+      margin: 10pt 0 6pt 0;
+    }
+
+    /* ── Article title ───────────────────────────────────────────────── */
+    .art-title {
+      color: #7a3030;
+      font-weight: bold;
+      font-size: 9.5pt;
+      margin: 7pt 0 3pt 0;
+    }
+
+    /* ── Standard bullet list ────────────────────────────────────────── */
+    ul.blist {
+      margin: 0 0 4pt 18pt;
+      padding: 0;
+      list-style-type: disc;
+    }
+    ul.blist li {
+      margin-bottom: 3pt;
+      line-height: 1.4;
+    }
+
+    /* ── Dash list (sub-items) ───────────────────────────────────────── */
+    ul.dlist {
+      margin: 2pt 0 2pt 18pt;
+      padding: 0;
+      list-style-type: none;
+    }
+    ul.dlist li {
+      margin-bottom: 2pt;
+      line-height: 1.4;
+    }
+    ul.dlist li::before { content: "\2013\00A0"; }   /* – */
+
+    /* ── Numbered sub-items ──────────────────────────────────────────── */
+    ol.nlist {
+      margin: 2pt 0 2pt 20pt;
+      padding: 0;
+      list-style-type: decimal;
+    }
+    ol.nlist li { margin-bottom: 2pt; }
+
+    /* ── Article 7Bis absence table ──────────────────────────────────── */
+    .abs-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6pt 0 4pt 0;
+      font-size: 9pt;
+    }
+    .abs-table th {
+      background-color: #F2F2F2;
+      font-weight: bold;
+      text-align: center;
+      border: 1pt solid #888;
+      padding: 4pt 6pt;
+    }
+    .abs-table td {
+      border: 1pt solid #888;
+      padding: 3pt 5pt;
+      vertical-align: top;
+    }
+
+    /* ── Engagement section ──────────────────────────────────────────── */
+    .engage-hdr {
+      background-color: #D0D0D0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      padding: 4pt 10pt;
+      margin: 14pt 0 10pt 0;
+    }
+    .engage-line {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8pt;
+    }
+    .engage-line td {
+      vertical-align: bottom;
+      padding: 0;
+      font-size: 9.5pt;
+    }
+    .el-label { font-weight: bold; white-space: nowrap; padding-right: 4pt; width: 1%; }
+    .el-value  { border-bottom: 1pt solid #000; padding-bottom: 1pt; }
+    .engage-stmt {
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+      margin: 10pt 0 16pt 0;
+    }
+    .sig-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8pt;
+    }
+    .sig-table td {
+      width: 50%;
+      text-align: left;
+      vertical-align: top;
+      font-size: 9.5pt;
+      padding: 0 10pt 0 0;
+    }
+
+    /* ── Page footer bar ─────────────────────────────────────────────── */
+    .page-footer {
+      font-size: 7pt;
+      text-align: center;
+      color: #333;
+      margin-top: 12pt;
+      border-top: 0.5pt solid #888;
+      padding-top: 3pt;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Fixed header on every page ───────────────────────────────── -->
+  <div class="fixed-header">
+    <img src="{{ header_url }}" alt="ENIAD Header"/>
+    <div class="hdr-divider"></div>
+  </div>
+
+  <!-- ── Fixed footer on every page ───────────────────────────────── -->
+  <div class="fixed-footer">
+    المدرسة الوطنية للذكاء الاصطناعي والرقمنة &mdash; بركان، طريق أكليم، كلم 1، سيدي سليمان الشراع، ص ب : 01 ؛ 63300 بركان<br/>
+    L'École Nationale de l'Intelligence Artificielle et du Digital de Berkane &mdash; Route Aklim, Km 1, Sidi Slimane Ech-Cheraa, BP 01, 63300 Berkane<br/>
+    <span>&#127760;</span> www.eniad.ump.ma &nbsp;&ndash;&nbsp; &#9993; eniad@ump.ac.ma
+    &nbsp;&nbsp;&nbsp;
+    Page <pdf:pagenumber/> sur <pdf:pagecount/>
+  </div>
+
+  <!-- ── Title ─────────────────────────────────────────────────────── -->
+  <div class="title-box"><h1>RÈGLEMENT INTÉRIEUR</h1></div>
+
+  <!-- ── Preamble ──────────────────────────────────────────────────── -->
+  <p class="preamble">
+    Ce règlement se réfère à celui adopté par le conseil de l'Université Mohammed Premier, à la loi 01-00 et au<br/>
+    Cahier des Normes Pédagogiques Nationales et a été adopté par le conseil d'établissement et pourra être<br/>
+    réactualisé en cas de besoin.
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       I. RÈGLEMENT DES ÉTUDES
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-hdr">I. RÈGLEMENT DES ÉTUDES</div>
+
+  <!-- Article 1 -->
+  <p class="art-title">Article.1 :&nbsp;&nbsp; Accès à l'école</p>
+  <ul class="blist">
+    <li>L'ENIAD étant un établissement à accès régulé, l'accès aux études des classes préparatoires et du cycle ingénieur est organisé par voie de concours.</li>
+  </ul>
+
+  <!-- Article 2 -->
+  <p class="art-title">Article.2 :&nbsp;&nbsp; Durée et continu de la formation</p>
+  <p style="margin-bottom:3pt;">Les études à l'<strong>ENIAD</strong> durent cinq années (dix semestres), réparties en deux cycles :</p>
+  <ul class="blist">
+    <li><strong>Un cycle préparatoire</strong> d'une durée de deux années (ou quatre semestres)</li>
+    <li><strong>Un cycle ingénieur d'état</strong> d'une durée de trois années (ou six semestres) et organisé dans le cadre d'une filière et inclus le Projet de Fin d'Etude (PFE) réalisé durant tout le sixième semestre.</li>
+  </ul>
+
+  <!-- Article 3 -->
+  <p class="art-title">Article.3 :&nbsp;&nbsp; Élève de L'ENIAD</p>
+  <ul class="blist">
+    <li>Considéré élève à l'ENID toute personne ayant réussi à l'un des concours d'accès à l'école et régulièrement inscrite à l'établissement. Les droits et obligations des élèves ingénieurs sont précisés dans les articles 69 à 76 de la loi 01.00 portant sur l'organisation de l'enseignement supérieur. Un élève ingénieur perd son statut d'élève ingénieur dès qu'il est exclu de l'école ou a achevé ses études et a obtenu son diplôme.</li>
+    <li>Les élèves qui s'inscrivent à l'ENIAD en acceptent les principes pédagogiques des études à l'ENIAD, ainsi que le présent règlement.</li>
+  </ul>
+
+  <!-- Article 4 -->
+  <p class="art-title">Article.4 :&nbsp;&nbsp; Inscription et Réinscription</p>
+  <ul class="blist">
+    <li>L'inscription et la réinscription à l'école sont annuelles. Elle s'effectue par les élèves dans les délais fixés par le Directeur de l'école conformément aux dispositions ministérielles. L'inscription est renouvelable chaque année.</li>
+    <li>L'inscription en première année de l'ENIAD est ouverte aux candidats titulaires du baccalauréat de l'enseignement secondaire.</li>
+    <li>L'inscription en troisième année de l'ENIAD est ouverte aux candidats titulaires du DUT/DEUST et DEUG ou une licence (Pro/fondamentale/Sciences et techniques).</li>
+    <li>L'inscription est subordonnée à une procédure de sélection dont les modalités sont fixées par le ministère de tutelle.</li>
+    <li>Après son inscription, Il est délivré à tout élève ingénieur une carte d'élève ingénieur qui constitue sa pièce d'identité dans l'enceinte de l'établissement, elle présente le moyen d'authentification des élèves lors des examens et donne notamment droit d'accès aux services offerts par l'école. Le cas échéant, l'élève doit présenter sa Carte d'Identité Nationale.</li>
+    <li>Un élève s'inscrit seulement dans une filière d'ingénierie.</li>
+    <li>L'élève ingénieur peut se réinscrire une fois à un module non validé. Il peut bénéficier d'une dérogation octroyée par le directeur de l'établissement, pour une deuxième et dernière réinscription.</li>
+  </ul>
+
+  <!-- Article 5 -->
+  <p class="art-title">Article.5 :&nbsp;&nbsp; Choix des filières du cycle ingénieur</p>
+  <ul class="blist">
+    <li>Le choix des spécialités est arrêté à la fin de la deuxième année du cycle préparatoire intégré selon une bonne orientation des élèves et une répartition équitable entre les spécialités tenant compte des vœux des élèves, de leur classement et de la capacité d'accueil de chaque filière. Les élèves sont classés sur la base des notes obtenues dans le cycle préparatoire intégré.</li>
+    <li>Le choix des options au niveau de la même filière est arrêté par l'équipe pédagogique de la filière en question.</li>
+  </ul>
+
+  <!-- Article 6 -->
+  <p class="art-title">Article.6 :&nbsp;&nbsp; Assiduité et Présence</p>
+  <ul class="blist">
+    <li>La présence aux diverses activités pédagogiques : Cours magistraux, Travaux Dirigés (TD), Travaux Pratiques (TP), Ateliers, séminaires, visites, Contrôles de connaissances ou Examens est <strong>obligatoire</strong>. L'absence à ces enseignements est gérée par les filières et est prise en compte lors des délibérations de fin d'année.</li>
+    <li>Toute absence à un enseignement devra être justifiée dans un <strong>délai de 48 heures</strong> à compter de la date de la 1<sup>ère</sup> absence auprès de l'enseignant responsable de l'activité et du service de scolarité. Seule la commission pédagogique de la filière valide la justification.</li>
+    <li>Tout Élève-Ingénieur exclu(e) d'une séance d'activité pédagogique, pour indiscipline ou autre motif, sera considéré comme absent(e).</li>
+    <li>Les élèves ingénieurs sont tenus à respecter les emplois du temps.</li>
+    <li>L'accès aux locaux d'enseignement en dehors des horaires prévus dans l'emploi du temps doit faire l'objet d'une autorisation.</li>
+  </ul>
+
+  <!-- Article 7 -->
+  <p class="art-title">Article.7 :&nbsp;&nbsp; Retards et Absences</p>
+  <ul class="blist">
+    <li><strong>Tout retard</strong> à une séance des différentes activités pédagogiques risque d'entraîner une exclusion à cette séance et, par conséquent, est pris pour une absence non justifiée et n'engage pas la responsabilité civile de l'enseignant ayant pris cette décision.</li>
+    <li>Toute absence à une séance des différentes activités pédagogiques est relevée par l'enseignant, sur une feuille d'absence, qui en tiendra compte lors de l'affectation des notes du module et pendant la délibération.</li>
+    <li>L'élève ingénieur qui s'absente sans justificatif à une séance de travaux pratiques durant le semestre peut ne pas valider le module correspondant pendant la session ordinaire. Et la séance ne peut en aucun cas être rattrapée.</li>
+    <li>Une absence justifiée à une séance de TP n'est pas pénalisante et la séance ne peut en aucun cas être rattrapée.</li>
+    <li>L'absence à plus d'une séance des Travaux Pratiques d'un même module, ou plus de deux séances de Cours ou Travaux Dirigés d'un même module compromet les chances de validation de ce module.</li>
+    <li>Les absences excessives aux différentes activités pédagogiques, justifiées soient-elles, peuvent compromettre la scolarité de l'Élève ingénieur : le Conseil de l'Établissement se réunira pour y prendre les mesures nécessaires.</li>
+    <li>L'Élève-Ingénieur absent(e) est tenu(e) de justifier son absence auprès du service de secrétariats du directeur adjoint et au(x) coordonnateur(s) de(s) filière(s) et à l'enseignant dans un délai maximum de 48 heures.</li>
+  </ul>
+
+  <!-- Article 7Bis -->
+  <p class="art-title">Article.7Bis :&nbsp;&nbsp; Retards et Absences bis</p>
+  <ul class="blist">
+    <li>Le Conseil a présenté la grille des motifs d'absence acceptés et les moyens de leur justification comme suit :</li>
+  </ul>
+
+  <table class="abs-table">
+    <tr>
+      <th style="width:45%;">Motifs d'absence</th>
+      <th style="width:55%;">Justification</th>
+    </tr>
+    <tr>
+      <td>Maladie ou accident</td>
+      <td>Un certificat médical délivré par un médecin selon l'imprimé fourni par l'école.</td>
+    </tr>
+    <tr>
+      <td>Hospitalisation</td>
+      <td>Une attestation d'hospitalisation selon l'imprimé fourni par l'école</td>
+    </tr>
+    <tr>
+      <td>
+        Convocation administrative :<br/>
+        1. Police,<br/>
+        2. Consulat,<br/>
+        3. Entretien de stage,<br/>
+        4. Activité socioculturelle
+      </td>
+      <td>Une copie certifiée conforme de la convocation</td>
+    </tr>
+    <tr>
+      <td>Stage autorisé par l'école</td>
+      <td>
+        – Copie de la convention de stage.<br/>
+        – Une copie certifiée conforme de l'attestation de stage ;<br/>
+        – Autorisation écrite délivrée par le coordinateur de la filière.
+      </td>
+    </tr>
+    <tr>
+      <td>Décès d'un proche de 1<sup>ere</sup> ou de 2<sup>ème</sup> degré : parents, grands-parents, frères et sœurs et enfants.</td>
+      <td>Une copie certifiée conforme de l'attestation du décès</td>
+    </tr>
+    <tr>
+      <td>État de santé causant des absences répétitives ou prolongées dépassant un seuil de 30 absences (soit l'équivalent de 15 jours).</td>
+      <td>Dossier médical détaillé dûment signé par une entité médicale reconnue</td>
+    </tr>
+  </table>
+
+  <!-- Article 8 -->
+  <p class="art-title">Article.8 :&nbsp;&nbsp; Sanctions aux absences</p>
+  <ul class="blist">
+    <li>Les sanctions concernant les absences non justifiées des élèves cumulées sur plusieurs modules lors d'un semestre sont prévues comme suit :
+      <ul class="dlist">
+        <li>Pour trois absences, <strong>un avertissement</strong> : une copie de la décision serait transmise à l'élève ingénieur concerné.</li>
+        <li>Pour cinq absences, <strong>un blâme</strong> : une copie de la décision serait transmise aux parents de l'élève ingénieur.</li>
+        <li>Pour 7 absences, le Conseil de l'École se réunirait en conseil de discipline et déciderait de la durée de <strong>l'exclusion</strong>.</li>
+      </ul>
+    </li>
+    <li>Les sanctions concernant les absences non justifiées des élèves cumulées sur un module sont prévues comme suit :
+      <ul class="dlist">
+        <li>Pour trois absences à un élément du module, entraine <strong>l'annulation de l'élément</strong>.</li>
+        <li>Pour cinq absences à un module entraine <strong>l'annulation de module</strong>.</li>
+      </ul>
+    </li>
+    <li>Le cumul d'absence justifiée et non justifiée supérieur ou égale à 15% de volume horaire du semestre entraine l'annulation de la session de rattrapage.</li>
+    <li>L'avertissement est formulé par les enseignants concernés en présence des responsables de module, de la filière et de l'élève. Le PV d'avertissement est fait en trois exemplaires signés, un pour l'élève, un pour la filière et un pour l'administration. La direction veille à l'application des sanctions et des décisions des commissions pédagogiques et du conseil de discipline.</li>
+    <li><strong>N.B</strong> : Toutes les sanctions sont prises en considérations par les jurys des délibérations et par l'administration dans l'octroi de recommandations pour les stages, les bourses, etc.).</li>
+  </ul>
+
+  <!-- Article 9 -->
+  <p class="art-title">Article.9 :&nbsp;&nbsp; Contrôles et examens</p>
+  <ul class="blist">
+    <li>La présence des élèves ingénieurs à tous les contrôles et/ou aux examens est obligatoire.</li>
+    <li>L'élève ingénieur (e) qui s'absente avec justificatif à un contrôle et/ou aux examens de la session ordinaire n'a le droit qu'à la session de rattrapage.</li>
+    <li>L'élève ingénieur (e) qui s'absente sans justificatif à un contrôle de la session ordinaire peut demander une dérogation exceptionnelle pour passer la session de rattrapage. Cette dérogation est étudiée par la direction de l'école après avis de la commission pédagogique de la filière.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       II. RÈGLEMENT DES ÉTUDES (Évaluation)
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-hdr">II. RÈGLEMENT DES ÉTUDES</div>
+
+  <!-- Article 10 -->
+  <p class="art-title">Article.10 :&nbsp;&nbsp; Évaluation des connaissances</p>
+  <ul class="blist">
+    <li>L'évaluation des connaissances des aptitudes et des compétences est organisée pour chaque module ou élément de module :
+      <ul class="dlist">
+        <li>Elle s'effectue sous forme de contrôle continu qui peut prendre la forme d'examens, de tests, de devoirs, d'exposés, de rapports de stages ou de tout autre moyen de contrôle conformément aux descriptifs des filières ;</li>
+        <li>Toutefois, si besoin est, outre le contrôle continu, un examen final peut être organisé ;</li>
+        <li>Les examens de TP sont pratiques, toute autre forme d'examen (écrit, oral) doit rester exceptionnelle et justifiée ;</li>
+        <li>Le nombre de contrôles est spécifié dans le descriptif de chaque module. Cependant, deux contrôles écris au moins sont organisés pour chaque élément de module ou module. Un contrôle à la mi-session et un autre à la fin de la session ;</li>
+        <li>Les contrôles des connaissances et les examens sont organisés sous la responsabilité administrative du directeur de l'école conformément aux principes d'équité et d'égalité des chances ;</li>
+      </ul>
+    </li>
+    <li>Les évaluations écrites ne peuvent avoir lieu qu'en présence du ou des enseignants responsables de l'épreuve. Dans le cas échéant, un ou (des) enseignant (s) peut (peuvent) être désignés par le directeur de l'établissement en concertation avec le coordinateur de la filière dont relève l'épreuve.</li>
+    <li>Les notes des épreuves écrites peuvent donner lieu à une vérification et non à une discussion. Tout élève qui a des raisons sérieuses de croire qu'une erreur matérielle d'omission, d'addition ou de report a été commise à son égard, peut solliciter une vérification de la note par une demande écrite à l'enseignant responsable et déposée au secrétariat du Directeur Adjoint., dans les deux jours ouvrables suivant la publication des résultats. Dans le cas d'une réponse favorable, il appartient à l'enseignant de fixer le mode et le contexte de vérification les plus appropriés.</li>
+    <li><strong><u>L'élève est dans l'obligation d'assumer la note recalculée après vérification.</u></strong></li>
+    <li><strong><u>Les notes des épreuves de nature orale ou pratique ne peuvent donner lieu à une vérification.</u></strong></li>
+  </ul>
+
+  <!-- Article 11 -->
+  <p class="art-title">Article.11 :&nbsp;&nbsp; Admission du module</p>
+  <ul class="blist">
+    <li>Le module est considéré validé si la moyenne générale des contrôles lui sont afférents est au moins égale à :
+      <ul class="dlist">
+        <li>10/20 pour CP</li>
+        <li>12/20 pour CI</li>
+      </ul>
+    </li>
+    <li>La note éliminatoire est fixée à :
+      <ul class="dlist">
+        <li>Strictement inférieur à 7 pour le CP</li>
+        <li>Strictement inférieur à 7 pour le CI</li>
+      </ul>
+    </li>
+    <li>L'élève ingénieur n'ayant pas validé un module est convoqué à un contrôle de rattrapage.</li>
+    <li>L'élève ingénieur est déclaré admis si : la moyenne générale obtenue est au moins égale à :
+      <ul class="dlist">
+        <li>10/20 pour le CP</li>
+        <li>12/20 pour le CI</li>
+      </ul>
+    </li>
+    <li>Sous réserve :
+      <ul class="dlist">
+        <li>D'avoir validé 12 modules sur 14 (12/14) pour le CP, 12 modules sur 14, (12/14) pour le tronc commun (3ème année) et 10 modules sur 14 (10/14) pour le 4ème et 5ème année.</li>
+      </ul>
+    </li>
+    <li>Une année est validée et donne droit à l'inscription à l'année suivante si les conditions de validation spécifiées dans le cahier des normes pédagogiques nationales et dans le descriptif de la filière sont satisfaites (voir CNP).</li>
+    <li>Pour les élèves ingénieurs qui ne satisfont pas les conditions de passage à l'année supérieure, le chef d'établissement peut, après délibération du jury de l'année, accorder l'octroi d'une année de réserve. L'année de réserve ne peut être autorisée qu'une seule fois par cycle.</li>
+  </ul>
+
+  <!-- Article 12 -->
+  <p class="art-title">Article.12 :&nbsp;&nbsp; Calendrier et Convocation des élèves ingénieurs aux contrôles (ou examens)</p>
+  <ul class="blist">
+    <li>Le calendrier des contrôles (ou examens) est établi par le directeur adjoint chargé de la pédagogie en concertation avec les coordonnateurs des filières.</li>
+    <li>Les contrôles et les examens sont organisés sous la responsabilité administrative du directeur de l'école.</li>
+    <li>Les élèves ingénieurs doivent en être informés au moins une semaine avant.</li>
+    <li>Les examens (ou contrôle) sont organisés en deux sessions successives :
+      <ul class="dlist">
+        <li>Une session normale dont la date, pour chaque élément de module est communiquée aux élèves par voie d'affichage au plus tard une semaine avant la date prévue pour cette session.</li>
+        <li>Une session de rattrapage qui a lieu une semaine au moins après la proclamation des résultats de la session normale. Un élève n'a droit qu'à un seul rattrapage par module.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <!-- Article 13 -->
+  <p class="art-title">Article.13 :&nbsp;&nbsp; Accès des candidats aux locaux de contrôle (ou examen)</p>
+  <ul class="blist">
+    <li>Les élèves ingénieurs doivent consulter les plannings des contrôles, prendre note de leurs places de contrôle, des horaires et des locaux suffisamment à l'avance.</li>
+    <li>Ils doivent se présenter aux locaux d'examens 10 minutes au moins avant le début des épreuves munis obligatoirement de la carte d'élève ingénieur (le cas échéant leur Carte d'Identité Nationale).</li>
+    <li>En cas de retard inférieur au <strong>tiers de</strong> la durée de l'épreuve à compter à partir de sa distribution, les élèves ingénieurs sont autorisés à accéder à la salle de l'examen à condition qu'aucun des élèves ingénieurs n'ait quitté la salle d'examen avant cet intervalle de temps. <strong><u>Toutefois, il est à signaler que les élèves retardataires n'ont le droit de bénéficier d'aucun temps supplémentaire pendant l'épreuve.</u></strong></li>
+  </ul>
+
+  <!-- Article 14 -->
+  <p class="art-title">Article.14 :&nbsp;&nbsp; Devoirs de l'élève ingénieur durant l'épreuve de contrôle (ou examen)</p>
+  <ul class="blist">
+    <li>L'élève ingénieur doit être muni de tout matériel nécessaire pour l'exécution de son contrôle et il doit :
+      <ul class="dlist">
+        <li>Inscrire son Nom et Prénom, son code Apogée, sur la copie d'examen et apposer sa signature sur la fiche de présence (<strong><u>le matériel est personnel et ne peut pas être prêté</u></strong>)</li>
+        <li>Composer personnellement et seul (sauf disposition contraire et autorisée) ;</li>
+        <li>Respecter le bon déroulement de l'épreuve ;</li>
+        <li>Ne pas troubler le bon déroulement de l'épreuve ;</li>
+        <li>Respecter les délais annonce dans l'article 15 () pour pouvoir quitter la salle ;</li>
+        <li>Respecter les consignes relatives au bon déroulement des contrôles et des examens</li>
+        <li>Remettre obligatoirement la copie d'examen avant de quitter la salle ;</li>
+        <li>Déposer les sacs et les objets lourds ou encombrants déposés à l'entrée de la salle ou en bout de rangée</li>
+      </ul>
+    </li>
+    <li>Pendant les contrôles et les examens, il est interdit :
+      <ul class="dlist">
+        <li>De communiquer entre candidats ou avec l'extérieur ;</li>
+        <li>D'utiliser ou même conserver sans les utiliser des documents ou matériels non autorisés pendant l'épreuve ;</li>
+        <li>D'utiliser les téléphones portables, tablettes ou tout appareil électronique non autorisé ; Ils doivent être laissés à l'extérieur de la salle de contrôle ou d'examen ;</li>
+      </ul>
+    </li>
+    <li>Une surveillance active et continue, avec observation ferme si nécessaire, constitue un moyen efficace de dissuasion.</li>
+  </ul>
+
+  <!-- Article 15 -->
+  <p class="art-title">Article.15 :&nbsp;&nbsp; Sortie des candidats des salles de contrôle (ou d'examen)</p>
+  <ul class="blist">
+    <li>Aucun candidat n'est autorisé à se déplacer ou à quitter momentanément ou définitivement le lieu d'examen, avant le déroulement <strong><u>de la moitié de la durée</u></strong> de la composition une fois les sujets distribués.</li>
+    <li>Si un élève ingénieur se trouve dans l'obligation de quitter temporairement la salle d'examen, il ne pourra le faire qu'après l'approbation du responsable de l'épreuve et se faire accompagner par un surveillant. Dans ce cas, les élève ingénieurs sortent un par un. Ils devront remettre leur copie d'examen au surveillant, qui la leur restituera à leur retour en prenant le soin d'y inscrire l'heure de sortie et celle du retour.</li>
+    <li>L'élève ingénieur qui enfreint ce règlement sera sanctionné par la note zéro accordée à l'épreuve concernée et ne pourra en aucun cas bénéficier d'un examen de rattrapage.</li>
+  </ul>
+
+  <!-- Article 16 -->
+  <p class="art-title">Article.16 :&nbsp;&nbsp; Fraude aux examens (ou contrôles)</p>
+  <ul class="blist">
+    <li>Tout manquement ou non-respect de chacune des consignes citées à l'article 14 et 15 tient lieu de fraude</li>
+    <li>Toute tentative de fraude, ou à postériori fraude dûment constatée lors du déroulement des examens (ou contrôles) entraînera une convocation de son auteur devant le conseil de discipline. Les surveillants du contrôle élaborent un rapport, détaillé et dument signé, décrivant les fraudes commises par l'élève ingénieur ainsi que toute pièce justificative facilitant le jugement du conseil de discipline. L'élève ingénieur peut continuer l'exécution de son épreuve.</li>
+    <li>Des dispositions similaires sont applicables dans le cas d'un plagiat ou d'une fraude constatés lors des activités d'évaluation effectuées en dehors de l'établissement (PFE, projet et mini projet, devoirs et recherches annexes à rendre,…).</li>
+    <li>La direction de l'école se réserve le droit de procéder à des poursuites disciplinaires ou judiciaires à l'encontre de tout élève ingénieur ayant nuit au bon fonctionnement de l'école ou ayant porté atteinte à ses composantes ou ayant commis une tricherie ou fraude.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       III. COMPORTEMENT DE L'ÉLÈVE INGÉNIEUR
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-hdr">III. COMPORTEMENT DE L'ÉLÈVE INGÉNIEUR</div>
+
+  <!-- Article 17 -->
+  <p class="art-title">Article.17 :&nbsp;&nbsp; Liberté d'opinion</p>
+  <ul class="blist">
+    <li>L'enseignement implique l'objectivité du savoir et la tolérance des opinions. Il est incompatible avec toute forme de propagande et doit demeurer hors de toute emprise politique, philosophique ou religieuse.</li>
+  </ul>
+
+  <!-- Article 18 -->
+  <p class="art-title">Article.18 :&nbsp;&nbsp; Manquement à la discipline</p>
+  <ul class="blist">
+    <li>Les auteurs de tout manquement de discipline de l'établissement (indiscipline, manque de respect, dégradation de matériel...) font l'objet de rapports officiels en fonction de la gravité de l'incident. Chaque rapport doit parvenir à la direction dans un délai de 48 heures suivant le constat. Le Conseil d'établissement de l'École, réuni en Conseil de Discipline, étudie les rapports et entérine les propositions de sanctions, en fonction des textes des lois en vigueur et des règlements intérieurs de l'université et de l'école.</li>
+  </ul>
+
+  <!-- Article 19 -->
+  <p class="art-title">Article.19 :&nbsp;&nbsp; Conduite et comportement</p>
+  <ul class="blist">
+    <li>Pour la conduite et le comportement à l'intérieur de l'école, les élèves sont tenus à respecter l'ensemble des personnels pédagogiques, administratifs et techniques. Tout manquement au respect, ou tout autre acte inconvenant, risquant de porter atteinte au bon déroulement des enseignements est sévèrement sanctionné.</li>
+  </ul>
+
+  <!-- Article 20 -->
+  <p class="art-title">Article.20 :&nbsp;&nbsp; Respect du patrimoine</p>
+  <ul class="blist">
+    <li>Pour la conduite et le comportement à l'intérieur de l'École, les Élèves Ingénieurs sont tenus de :
+      <ul class="dlist">
+        <li>Veiller au bon état des différents bâtiments (salles de cours, de TD et de TP, laboratoires, ateliers, toilette…) et à leur propreté.</li>
+        <li>Prendre soin du matériel, en raison de sa fragilité, sa performance et sa cherté et éviter de l'abîmer ou de le casser. Toute dégradation constatée sera, en conséquence sévèrement sanctionnée et le remboursement exigé.</li>
+        <li>Accorder le maximum de soin aux livres empruntés auprès de la bibliothèque. Tout ouvrage abîmé ou déchiré, partiellement même, devra être remboursé et l'auteur d'un tel acte risque d'être privé de consultation ultérieure pour une certaine durée.</li>
+      </ul>
+    </li>
+    <li>Chaque contenu de cours, TD et TP est la seule propriété de l'enseignant qui l'a mis en œuvre. Les supports fournis aux élèves, ainsi que les notes prises par les élèves durant les enseignements ne peuvent en aucun cas être placés en libre accès sur Internet. Les élèves qui ne respectent pas cette règle seront convoqués en conseil de discipline.</li>
+  </ul>
+
+  <!-- Article 21 -->
+  <p class="art-title">Article.21 :&nbsp;&nbsp; Utilisation des locaux</p>
+  <ul class="blist">
+    <li>Les conditions d'utilisation des locaux sont définies et contrôlées par le Directeur de l'école. Les personnes étrangères à l'école ne peuvent y pénétrer sans une autorisation explicite de la Direction. Toute dégradation ou utilisation anormale des locaux, et environnement entraînera une procédure disciplinaire.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       IV. DISPOSITIONS GÉNÉRALES
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-hdr">IV. DISPOSITIONS GÉNÉRALES</div>
+
+  <p class="art-title">Article.22 :</p>
+  <ul class="blist">
+    <li>Il est strictement interdit d'utiliser tout appareil électronique et de prendre des photos et/ou des vidéos dans les salles de cours, de travaux dirigé, de travaux pratiques ou de réunion sans une autorisation préalable. La prise de photos sans consentement et/ou la mise en ligne de photos prises des épreuves des examens, des élèves en situation personnelle, des enseignants et du personnel administratif pendant l'exercice de leurs fonctions fera l'objet de sanctions pouvant entrainer l'exclusion systématique de l'établissement à laquelle s'ajoutera la confiscation temporaire ou prolongée de l'appareil utilisé et les actes commis feront l'objet de poursuites judiciaires.</li>
+  </ul>
+
+  <p class="art-title">Article.23 :</p>
+  <ul class="blist">
+    <li>Les élèves doivent avoir une tenue correcte dans les différents espaces de l'établissement. Les tenues excentriques ou de nature à attirer l'attention sont interdits.</li>
+  </ul>
+
+  <p class="art-title">Article.24 :</p>
+  <ul class="blist">
+    <li>Le bizutage est strictement interdit.</li>
+  </ul>
+
+  <p class="art-title">Article.25 :</p>
+  <ul class="blist">
+    <li>L'interdiction de fumer est générale et absolue dans tous les locaux de l'école conformément aux dispositions de Dahir n° 1-91-112 du 27 moharrem 1416 (26 juin 1995) portant promulgation de la loi n°15-91 relative à l'interdiction de la consommation du tabac et de la publicité de ce produit dans les lieux publics ainsi que sa vente aux mineurs</li>
+  </ul>
+
+  <p class="art-title">Article.26 :</p>
+  <ul class="blist">
+    <li>Toute utilisation et ou détention des produits (cigarette électronique, stupéfiants, alcool, psychotropes, ...) fera l'objet d'une sanction disciplinaire majeure et d'une poursuite judiciaire.</li>
+  </ul>
+
+  <p class="art-title">Article.27 :</p>
+  <ul class="blist">
+    <li>Toute réunion, assemblée ou activité doit faire l'objet d'une autorisation écrite sur la base d'une demande écrite déposée auprès de la direction auparavant.</li>
+  </ul>
+
+  <p class="art-title">Article.28 :</p>
+  <ul class="blist">
+    <li>Une police d'assurance annuelle est obligatoire pour une inscription ou une réinscription à l'école.</li>
+  </ul>
+
+  <p class="art-title">Article.29 :</p>
+  <ul class="blist">
+    <li>Les étudiants majeurs sont les seuls interlocuteurs de l'administration et des équipes pédagogiques à l'exclusion de tout tiers tel que parent ou ami.</li>
+  </ul>
+
+  <p class="art-title">Article.30 :</p>
+  <p style="margin-left:10pt; margin-bottom:4pt;">Le conseil d'établissement est la seule habilité à faire des modifications du présent règlement chaque fois qu'il est nécessaire.</p>
+
+  <p class="art-title">Article.31 :</p>
+  <ul class="blist">
+    <li>Le présent règlement intérieur des études de l'ENIAD Berkane est établi et approuvé par le conseil d'établissement.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       V. ENGAGEMENT
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="engage-hdr">V. ENGAGEMENT</div>
+
+  <table class="engage-line">
+    <tr>
+      <td class="el-label">Je soussigné(e) M., Mlle&nbsp;:</td>
+      <td class="el-value">{{ nom_etudiant }}</td>
+    </tr>
+  </table>
+
+  <table class="engage-line">
+    <tr>
+      <td class="el-label">CIN&nbsp;:</td>
+      <td class="el-value">{{ cin }}</td>
+    </tr>
+  </table>
+
+  <table class="engage-line">
+    <tr>
+      <td class="el-label">Inscrit(e) en&nbsp;:</td>
+      <td class="el-value" style="width:80pt;">{{ annee }}</td>
+      <td style="white-space:nowrap; padding: 0 8pt; vertical-align:bottom; font-weight:bold;">
+        Année&nbsp;
+        {% if is_ci %}CI ☑ &ndash; CP ☐{% else %}CI ☐ &ndash; CP ☑{% endif %}
+      </td>
+      <td class="el-label" style="white-space:nowrap;">Filière&nbsp;:</td>
+      <td class="el-value">{{ filiere }}</td>
+    </tr>
+  </table>
+
+  <p class="engage-stmt">
+    Déclare avoir pris connaissance du règlement intérieur de l'école et m'engage à le respecter.
+  </p>
+
+  <table class="sig-table">
+    <tr>
+      <td>
+        <div style="font-weight:bold; margin-bottom:4pt;">Signature de l'étudiant : Lu et approuvé</div>
+        <br/><br/><br/>
+      </td>
+      <td>
+        <div style="margin-bottom:4pt;">
+          Berkane, le&nbsp;:
+          <span style="display:inline-block; border-bottom:1pt solid #000; min-width:120pt;">{{ date_signature }}</span>
+        </div>
+        <br/><br/><br/>
+      </td>
+    </tr>
+  </table>
+
+
+</body>
+</html>

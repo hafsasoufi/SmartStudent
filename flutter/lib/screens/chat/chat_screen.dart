@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
 
@@ -9,6 +10,30 @@ class ChatScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
+
+// ─── Quick suggestion chip ───────────────────────────────────────────────────
+class _QuickChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _QuickChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF0052A5).withOpacity(0.25)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)],
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+    ),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
@@ -50,9 +75,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: const Text('AI Assistant'),
         elevation: 0,
         actions: [
+          // Recommendations shortcut
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Recommandations',
+            onPressed: () => context.push('/recommendations'),
+          ),
           if (chatState.currentAgent != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.only(right: 12),
               child: Chip(
                 label: Text(
                   chatState.currentAgent!.toUpperCase(),
@@ -67,33 +98,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: chatState.messages.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 80,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Start a conversation',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'Ask me anything about your studies, planning, exams, career, campus life, or well-being',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                  child: Column(children: [
+                    Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 12),
+                    Text('Démarrez une conversation', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Posez une question ou utilisez les raccourcis ci-dessous',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Recommendations highlight card
+                    GestureDetector(
+                      onTap: () => context.push('/recommendations'),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0052A5), Color(0xFF1565C0)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          textAlign: TextAlign.center,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [BoxShadow(color: const Color(0xFF0052A5).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
                         ),
+                        child: Row(children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Recommandations IA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                            SizedBox(height: 4),
+                            Text('Obtenez des conseils personnalisés avec les démarches administratives complètes', style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.4)),
+                          ])),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 15),
+                        ]),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Quick suggestions
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _QuickChip(label: '📄 Attestation', onTap: () => ref.read(chatProvider.notifier).sendMessage('Je veux une attestation de scolarité')),
+                        _QuickChip(label: '📋 Convention de stage', onTap: () => ref.read(chatProvider.notifier).sendMessage('Je veux une convention de stage')),
+                        _QuickChip(label: '📅 Emploi du temps', onTap: () => ref.read(chatProvider.notifier).sendMessage("Qui contacter pour l'emploi du temps ?")),
+                      ],
+                    ),
+                  ]),
                 )
               : ListView.builder(
                   controller: _scrollController,

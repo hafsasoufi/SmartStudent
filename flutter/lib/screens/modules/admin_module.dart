@@ -1,14 +1,16 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
 
-// ─── Palette ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _kPrimary  = Color(0xFF0052A5);
 const _kDark     = Color(0xFF0A1628);
 const _kGreen    = Color(0xFF1B8A4E);
@@ -18,7 +20,7 @@ const _kBg       = Color(0xFFF0F4FA);
 const _kAgentBg  = Color(0xFFFFFFFF);
 const _kUserBg   = Color(0xFF0052A5);
 
-// ─── Data models ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Data models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum _StepStatus { pending, running, done }
 
@@ -29,17 +31,15 @@ class _Step {
 }
 
 class _ActionResult {
-  final String type;           // doc | ticket | status | info
+  final String type;           // doc | request | info
   final String? docId;
   final String? pdfBase64;
-  final String? ticketId;
   final String? requestId;
 
   const _ActionResult({
     required this.type,
     this.docId,
     this.pdfBase64,
-    this.ticketId,
     this.requestId,
   });
 }
@@ -61,7 +61,7 @@ class _ActiveTask {
   _ActiveTask({required this.label, required this.done, this.ref, required this.time});
 }
 
-// ─── Step inference ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Step inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 List<_Step> _inferSteps(String msg) {
   final m = msg.toLowerCase();
   if (m.contains('attestation') || m.contains('scolarite')) {
@@ -73,31 +73,22 @@ List<_Step> _inferSteps(String msg) {
       _Step('Archivage et validation'),
     ];
   }
-  if (m.contains('releve') || m.contains('notes') || m.contains('moyenne')) {
+  if (m.contains('reglement') || m.contains('gavel')) {
     return [
-      _Step('Analyse de votre demande'),
-      _Step('Recuperation de vos notes'),
-      _Step('Calcul de la moyenne generale'),
-      _Step('Generation du releve officiel'),
-      _Step('Archivage et validation'),
+      _Step('Demande du reglement interieur'),
+      _Step('Chargement du document officiel'),
+      _Step('Generation du PDF'),
+      _Step('Validation'),
     ];
   }
-  if (m.contains('convention') || (m.contains('stage') && !m.contains('certificat'))) {
+  if (m.contains('convention') || m.contains('entreprise:') ||
+      (m.contains('stage') && !m.contains('certificat'))) {
     return [
-      _Step('Analyse de votre demande'),
       _Step('Verification du profil etudiant'),
-      _Step('Preparation de la convention'),
-      _Step('Generation du document officiel'),
-      _Step('Archivage et validation'),
-    ];
-  }
-  if (m.contains('reclamation') || m.contains('probleme') || m.contains('plainte') || m.contains('signalement')) {
-    return [
-      _Step('Analyse de votre reclamation'),
-      _Step('Classification automatique'),
-      _Step('Creation du ticket de suivi'),
-      _Step('Attribution du numero COMP'),
-      _Step('Confirmation d\'enregistrement'),
+      _Step('Preparation des informations du stage'),
+      _Step('Generation de la convention PDF'),
+      _Step('Archivage du document'),
+      _Step('Validation'),
     ];
   }
   if (m.contains('statut') || m.contains('suivi') || m.contains('mes demandes') || m.contains('historique')) {
@@ -116,7 +107,7 @@ List<_Step> _inferSteps(String msg) {
   ];
 }
 
-// ─── AdminModule ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ AdminModule â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AdminModule extends ConsumerStatefulWidget {
   const AdminModule({Key? key}) : super(key: key);
   @override
@@ -128,7 +119,7 @@ class _AdminModuleState extends ConsumerState<AdminModule>
   late TabController _tab;
 
   @override
-  void initState() { super.initState(); _tab = TabController(length: 4, vsync: this); }
+  void initState() { super.initState(); _tab = TabController(length: 3, vsync: this); }
   @override
   void dispose()   { _tab.dispose(); super.dispose(); }
 
@@ -145,8 +136,8 @@ class _AdminModuleState extends ConsumerState<AdminModule>
           ),
           const SizedBox(width: 10),
           const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Agent Administratif', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('ENIAD · Propulse par Groq Llama 3.3', style: TextStyle(fontSize: 10, color: Colors.white70)),
+            Text('Assistant Administratif', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('ENIAD Â· Conseiller administratif intelligent', style: TextStyle(fontSize: 10, color: Colors.white70)),
           ]),
         ]),
         backgroundColor: _kDark,
@@ -158,10 +149,9 @@ class _AdminModuleState extends ConsumerState<AdminModule>
           unselectedLabelColor: Colors.white54,
           labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           tabs: const [
-            Tab(icon: Icon(Icons.chat_bubble_outline, size: 18), text: 'Agent'),
+            Tab(icon: Icon(Icons.chat_bubble_outline, size: 18), text: 'Assistant'),
             Tab(icon: Icon(Icons.folder_outlined,     size: 18), text: 'Documents'),
             Tab(icon: Icon(Icons.assignment_outlined, size: 18), text: 'Demandes'),
-            Tab(icon: Icon(Icons.report_outlined,     size: 18), text: 'Reclamations'),
           ],
         ),
       ),
@@ -171,14 +161,13 @@ class _AdminModuleState extends ConsumerState<AdminModule>
           _AgentTab(onSwitchTab: (i) => _tab.animateTo(i)),
           const _DocumentsTab(),
           const _DemandesTab(),
-          const _ReclamationsTab(),
         ],
       ),
     );
   }
 }
 
-// ─── Agent Tab (main agentic interface) ──────────────────────────────────────
+// â”€â”€â”€ Agent Tab (main agentic interface) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _AgentTab extends ConsumerStatefulWidget {
   final void Function(int) onSwitchTab;
   const _AgentTab({required this.onSwitchTab});
@@ -203,12 +192,10 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
   bool _showProfile   = false;
 
   static const _quickActions = [
-    ('Mon attestation de scolarite', Icons.school_outlined,      _kPrimary),
-    ('Mon releve de notes',          Icons.grade_outlined,        _kGreen),
+    ('Mon attestation de scolarite', Icons.school_outlined,         _kPrimary),
     ('Convention de stage',          Icons.business_center_outlined, _kPurple),
-    ('Etat de mes demandes',         Icons.track_changes_outlined, Color(0xFF00695C)),
-    ('Deposer une reclamation',      Icons.report_problem_outlined, _kOrange),
-    ('Procedures ENIAD',             Icons.help_center_outlined,  Color(0xFF283593)),
+    ("Reglement de l'ecole",         Icons.gavel_outlined,           _kGreen),
+    ('Procedures ENIAD',             Icons.help_center_outlined,     Color(0xFF283593)),
   ];
 
   @override
@@ -241,14 +228,16 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
     final name = (_profile['full_name'] as String?) ??
                  (_profile['username'] as String?) ?? 'etudiant(e)';
     setState(() => _msgs.add(_Msg.agent(
-      'Bonjour $name ! Je suis votre assistant administratif.\n\n'
-      'Je peux vous aider a :\n'
-      '• Obtenir une attestation de scolarite\n'
-      '• Generer un releve de notes avec vos vraies notes\n'
-      '• Preparer une convention de stage\n'
-      '• Suivre vos demandes et reclamations\n'
-      '• Repondre a vos questions sur les procedures ENIAD\n\n'
-      'Que puis-je faire pour vous ?',
+      'Bonjour $name ! Je suis votre assistant administratif ENIAD.\n\n'
+      'Je genere les documents officiels suivants :\n'
+      'â€¢ Attestation de scolarite â€” certifie votre inscription\n'
+      'â€¢ Convention de stage â€” accord ENIAD / etudiant / entreprise\n'
+      "â€¢ Reglement de l'ecole â€” reglement interieur officiel ENIAD\n\n"
+      'Je peux aussi :\n'
+      'â€¢ Vous guider sur les 15 demarches administratives de l\'ENIAD\n'
+      'â€¢ Repondre a vos questions sur les procedures et services\n'
+      'â€¢ Identifier le bon service et le responsable a contacter\n\n'
+      'Decrivez votre situation et je vous guide etape par etape.',
     )));
   }
 
@@ -262,6 +251,165 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
         );
       }
     });
+  }
+
+  // â”€â”€ Convention de Stage form dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  Future<void> _showConventionDialog() async {
+    // Controllers are owned by _ConventionFormSheet (a StatefulWidget).
+    // Flutter disposes them only after the close animation fully completes,
+    // preventing "ChangeNotifier used after dispose" errors.
+    final result = await showModalBottomSheet<Map<String, String>?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => const _ConventionFormSheet(),
+    );
+
+    // At this point the modal widget tree is fully gone â€” safe to setState.
+    if (result != null && mounted) {
+      _sendConvention(
+        entreprise: result['entreprise']!,
+        adresse:    result['adresse']!,
+        telephone:  result['telephone']!,
+        fax:        result['fax']!,
+        tuteur:     result['tuteur']!,
+        poste:      result['poste']!,
+        debut:      result['debut']!,
+        fin:        result['fin']!,
+      );
+    }
+  }
+
+  void _sendConvention({
+    required String entreprise,
+    required String adresse,
+    required String telephone,
+    required String fax,
+    required String tuteur,
+    required String poste,
+    required String debut,
+    required String fin,
+  }) {
+    final buf = StringBuffer('Genere ma convention de stage.\n');
+    buf.writeln('Entreprise: $entreprise');
+    if (adresse.isNotEmpty)   buf.writeln('Adresse: $adresse');
+    if (telephone.isNotEmpty) buf.writeln('Tel: $telephone');
+    if (fax.isNotEmpty)       buf.writeln('Fax: $fax');
+    if (tuteur.isNotEmpty)    buf.writeln('Tuteur: $tuteur');
+    buf.writeln('Poste/Sujet: ${poste.isNotEmpty ? poste : "Stage de fin d etudes"}');
+    if (debut.isNotEmpty)     buf.writeln('Date de debut: $debut');
+    if (fin.isNotEmpty)       buf.writeln('Date de fin: $fin');
+    _send(buf.toString().trim());
+  }
+
+  // ── Attestation de scolarité: smart flow ──────────────────────────────────
+  Future<void> _triggerAttestationFlow() async {
+    if (_isThinking) return;
+    final api = ref.read(apiServiceProvider);
+
+    // 1. Check what fields are already in the profile
+    if (mounted) setState(() => _isThinking = true);
+    Map<String, dynamic> prefill;
+    try {
+      prefill = await api.getAttestationPrefill();
+    } catch (e) {
+      if (mounted) setState(() {
+        _isThinking = false;
+        _msgs.add(_Msg.agent('Impossible de charger votre profil. Veuillez reessayer.'));
+      });
+      return;
+    }
+    if (mounted) setState(() => _isThinking = false);
+
+    final missing = Map<String, String>.from(
+        (prefill['missing_fields'] as Map? ?? {}).map(
+          (k, v) => MapEntry(k.toString(), v.toString()),
+        ));
+
+    if (missing.isEmpty) {
+      // All fields present → generate immediately
+      _generateAttestationDirect({});
+    } else {
+      // Show form for missing fields only
+      if (!mounted) return;
+      final extraFields = await showModalBottomSheet<Map<String, dynamic>?>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => _AttestationMissingFieldsSheet(missingFields: missing),
+      );
+      if (extraFields != null && mounted) {
+        _generateAttestationDirect(extraFields);
+      }
+    }
+  }
+
+  Future<void> _generateAttestationDirect(Map<String, dynamic> extraFields) async {
+    if (_isThinking) return;
+    final api = ref.read(apiServiceProvider);
+
+    final steps = _inferSteps('attestation');
+    steps[0].status = _StepStatus.running;
+
+    setState(() {
+      _msgs.add(_Msg.user('Je veux mon attestation de scolarite'));
+      _isThinking = true;
+      _steps  = steps;
+      _stepIdx = 0;
+    });
+    _scrollToBottom();
+
+    _stepTimer = Timer.periodic(const Duration(milliseconds: 1400), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() {
+        if (_stepIdx < _steps.length) {
+          _steps[_stepIdx].status = _StepStatus.done;
+          _stepIdx++;
+          if (_stepIdx < _steps.length) _steps[_stepIdx].status = _StepStatus.running;
+        }
+      });
+    });
+
+    try {
+      final result = await api.generateAttestation(extraFields: extraFields);
+      _stepTimer?.cancel();
+
+      final action = _ActionResult(
+        type: 'doc',
+        docId: result['doc_id'] as String?,
+        pdfBase64: result['pdf_base64'] as String?,
+      );
+
+      if (mounted) setState(() {
+        for (final s in _steps) s.status = _StepStatus.done;
+        _isThinking = false;
+        _msgs.add(_Msg.agent(
+          result['message'] as String? ?? 'Attestation generee avec succes.',
+          action: action,
+        ));
+        _activeTasks.insert(0, _ActiveTask(
+          label: 'Attestation generee',
+          done: true,
+          ref: result['doc_id'] as String?,
+          time: DateTime.now(),
+        ));
+        if (_activeTasks.length > 5) _activeTasks.removeLast();
+      });
+      _scrollToBottom();
+    } catch (e) {
+      _stepTimer?.cancel();
+      if (mounted) setState(() {
+        _isThinking = false;
+        _msgs.add(_Msg.agent(
+          'Erreur lors de la generation : $e\nVeuillez verifier votre profil ou contacter le secretariat.',
+        ));
+      });
+    }
   }
 
   Future<void> _send(String text) async {
@@ -303,7 +451,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
         _isThinking = false;
         _msgs.add(_Msg.agent(result['response'] as String? ?? 'Demande traitee.', action: actionResult));
         if (label != null) {
-          _activeTasks.insert(0, _ActiveTask(label: label, done: true, ref: actionResult?.docId ?? actionResult?.ticketId, time: DateTime.now()));
+          _activeTasks.insert(0, _ActiveTask(label: label, done: true, ref: actionResult?.docId ?? actionResult?.requestId, time: DateTime.now()));
           if (_activeTasks.length > 5) _activeTasks.removeLast();
         }
       });
@@ -321,9 +469,6 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
     if (r['doc_id'] != null) {
       return _ActionResult(type: 'doc', docId: r['doc_id'] as String?, pdfBase64: r['pdf_base64'] as String?);
     }
-    if (r['ticket_id'] != null) {
-      return _ActionResult(type: 'ticket', ticketId: r['ticket_id'] as String?);
-    }
     if (r['request_id'] != null) {
       return _ActionResult(type: 'request', requestId: r['request_id'] as String?);
     }
@@ -332,7 +477,6 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
 
   String? _actionLabel(Map<String, dynamic> r) {
     if (r['doc_id'] != null)     return 'Document genere';
-    if (r['ticket_id'] != null)  return 'Reclamation enregistree';
     if (r['request_id'] != null) return 'Demande creee';
     return null;
   }
@@ -382,7 +526,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
     final year   = _profile['year']?.toString() ?? '';
 
     return Column(children: [
-      // ── Student memory banner
+      // â”€â”€ Student memory banner
       if (_profileLoaded && (name.isNotEmpty || major.isNotEmpty))
         GestureDetector(
           onTap: () => setState(() => _showProfile = !_showProfile),
@@ -398,7 +542,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(name, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                   if (major.isNotEmpty || year.isNotEmpty)
-                    Text('${major.isNotEmpty ? major : ''} ${year.isNotEmpty ? "· Annee $year" : ""}',
+                    Text('${major.isNotEmpty ? major : ''} ${year.isNotEmpty ? "Â· Annee $year" : ""}',
                         style: const TextStyle(color: Colors.white60, fontSize: 11)),
                 ])),
                 Container(
@@ -433,7 +577,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
           ),
         ),
 
-      // ── Active tasks
+      // â”€â”€ Active tasks
       if (_activeTasks.isNotEmpty)
         Container(
           color: Colors.white,
@@ -470,7 +614,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
           ]),
         ),
 
-      // ── Chat messages
+      // â”€â”€ Chat messages
       Expanded(
         child: ListView.builder(
           controller: _scrollCtrl,
@@ -486,7 +630,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
         ),
       ),
 
-      // ── Quick actions chips
+      // â”€â”€ Quick actions chips
       Container(
         color: Colors.white,
         padding: const EdgeInsets.only(left: 12, right: 12, top: 8),
@@ -499,7 +643,15 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
             itemBuilder: (_, i) {
               final (label, icon, color) = _quickActions[i];
               return GestureDetector(
-                onTap: () => _send(label),
+                onTap: () {
+                  if (label == 'Convention de stage') {
+                    _showConventionDialog();
+                  } else if (label == 'Mon attestation de scolarite') {
+                    _triggerAttestationFlow();
+                  } else {
+                    _send(label);
+                  }
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -519,7 +671,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
         ),
       ),
 
-      // ── Text input
+      // â”€â”€ Text input
       Container(
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -530,7 +682,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
               maxLines: 3,
               minLines: 1,
               enabled: !_isThinking,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
               decoration: InputDecoration(
                 hintText: 'Ecrivez votre demande...',
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
@@ -560,7 +712,7 @@ class _AgentTabState extends ConsumerState<_AgentTab> {
   }
 }
 
-// ─── Thinking card with animated steps ───────────────────────────────────────
+// â”€â”€â”€ Thinking card with animated steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ThinkingCard extends StatelessWidget {
   final List<_Step> steps;
   const _ThinkingCard({required this.steps});
@@ -623,7 +775,7 @@ class _ThinkingCard extends StatelessWidget {
   }
 }
 
-// ─── User bubble ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ User bubble â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _UserBubble extends StatelessWidget {
   final _Msg msg;
   const _UserBubble({required this.msg});
@@ -653,7 +805,7 @@ class _UserBubble extends StatelessWidget {
   }
 }
 
-// ─── Agent bubble ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Agent bubble â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _AgentBubble extends StatelessWidget {
   final _Msg msg;
   final Future<void> Function(String?, String?) onOpenPdf;
@@ -704,7 +856,7 @@ class _AgentBubble extends StatelessWidget {
   }
 }
 
-// ─── Action result card ───────────────────────────────────────────────────────
+// â”€â”€â”€ Action result card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ActionCard extends StatelessWidget {
   final _ActionResult action;
   final Future<void> Function(String?, String?) onOpenPdf;
@@ -753,36 +905,429 @@ class _ActionCard extends StatelessWidget {
         ]),
       );
     }
-    if (action.type == 'ticket') {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [_kOrange.withAlpha(20), _kOrange.withAlpha(5)]),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _kOrange.withAlpha(80)),
-        ),
-        child: Row(children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: _kOrange.withAlpha(30), borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.confirmation_number, color: _kOrange, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Reclamation enregistree', style: TextStyle(color: _kOrange, fontWeight: FontWeight.bold, fontSize: 13)),
-            if (action.ticketId != null)
-              Text('Ticket: ${action.ticketId}',
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.grey)),
-            const Text('Traitement sous 48h ouvrables', style: TextStyle(fontSize: 11, color: Colors.grey)),
-          ]),
-        ]),
-      );
-    }
     return const SizedBox.shrink();
   }
 }
 
-// ─── Memory chip ─────────────────────────────────────────────────────────────
+// ─── Attestation: missing fields form sheet ───────────────────────────────────
+class _AttestationMissingFieldsSheet extends StatefulWidget {
+  final Map<String, String> missingFields;
+  const _AttestationMissingFieldsSheet({required this.missingFields});
+  @override
+  State<_AttestationMissingFieldsSheet> createState() =>
+      _AttestationMissingFieldsSheetState();
+}
+
+class _AttestationMissingFieldsSheetState
+    extends State<_AttestationMissingFieldsSheet> {
+  final Map<String, TextEditingController> _ctrl = {};
+  String? _selectedYear;
+
+  static const _filiereSuggestions = [
+    'Intelligence Artificielle',
+    'Genie Informatique',
+    'Robotique et Objets Connectes',
+    'Reseaux et Systemes',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    for (final key in widget.missingFields.keys) {
+      if (key != 'year') _ctrl[key] = TextEditingController();
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _ctrl.values) c.dispose();
+    super.dispose();
+  }
+
+  String _hint(String key) {
+    switch (key) {
+      case 'cne':            return 'Ex : R137526890';
+      case 'cin':            return 'Ex : AB123456';
+      case 'date_naissance': return 'JJ/MM/AAAA';
+      case 'major':          return 'Ex : Intelligence Artificielle';
+      default:               return '';
+    }
+  }
+
+  void _submit() {
+    final data = <String, dynamic>{};
+    for (final entry in widget.missingFields.entries) {
+      if (entry.key == 'year') {
+        if (_selectedYear == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Veuillez selectionner votre niveau'),
+            backgroundColor: Colors.orange,
+          ));
+          return;
+        }
+        data['year'] = int.parse(_selectedYear!);
+      } else {
+        final val = _ctrl[entry.key]?.text.trim() ?? '';
+        if (val.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Veuillez remplir : ${entry.value}'),
+            backgroundColor: Colors.orange,
+          ));
+          return;
+        }
+        data[entry.key] = val;
+      }
+    }
+    Navigator.pop(context, data);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(24, 24, 24, bottom + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _kPrimary.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.school_outlined, color: _kPrimary, size: 22),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Completer votre profil',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                Text('Informations manquantes pour l\'attestation',
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            )),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.grey),
+              onPressed: () => Navigator.pop(context, null),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          // Info banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Row(children: [
+              Icon(Icons.info_outline, color: Colors.blue.shade700, size: 16),
+              const SizedBox(width: 8),
+              const Expanded(child: Text(
+                'Ces informations seront sauvegardees dans votre profil pour vos prochaines demandes.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF1565C0)),
+              )),
+            ]),
+          ),
+          const SizedBox(height: 20),
+
+          // Dynamic fields
+          ...widget.missingFields.entries.map((entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(entry.value,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 8),
+                if (entry.key == 'year')
+                  DropdownButtonFormField<String>(
+                    value: _selectedYear,
+                    decoration: InputDecoration(
+                      hintText: 'Selectionnez votre annee',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: '1', child: Text('1ere annee')),
+                      DropdownMenuItem(value: '2', child: Text('2eme annee')),
+                      DropdownMenuItem(value: '3', child: Text('3eme annee')),
+                    ],
+                    onChanged: (v) => setState(() => _selectedYear = v),
+                  )
+                else if (entry.key == 'major')
+                  DropdownButtonFormField<String>(
+                    value: null,
+                    decoration: InputDecoration(
+                      hintText: _hint('major'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    ),
+                    items: _filiereSuggestions
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
+                    onChanged: (v) { if (v != null) _ctrl['major']?.text = v; },
+                  )
+                else
+                  TextField(
+                    controller: _ctrl[entry.key],
+                    keyboardType: entry.key == 'date_naissance'
+                        ? TextInputType.datetime : TextInputType.text,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: _hint(entry.key),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    ),
+                  ),
+              ],
+            ),
+          )),
+
+          // Submit button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _submit,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text('Generer mon attestation',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kPrimary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Convention de Stage modal sheet ─────────────────────────────────────────
+// Owns all TextEditingControllers; Flutter disposes them after the close
+// animation completes (when the widget is fully unmounted from the tree).
+class _ConventionFormSheet extends StatefulWidget {
+  const _ConventionFormSheet();
+
+  @override
+  State<_ConventionFormSheet> createState() => _ConventionFormSheetState();
+}
+
+class _ConventionFormSheetState extends State<_ConventionFormSheet> {
+  final _entrepriseCtrl = TextEditingController();
+  final _adresseCtrl    = TextEditingController();
+  final _telephoneCtrl  = TextEditingController();
+  final _faxCtrl        = TextEditingController();
+  final _tuteurCtrl     = TextEditingController();
+  final _posteCtrl      = TextEditingController();
+  final _debutCtrl      = TextEditingController();
+  final _finCtrl        = TextEditingController();
+
+  @override
+  void dispose() {
+    _entrepriseCtrl.dispose();
+    _adresseCtrl.dispose();
+    _telephoneCtrl.dispose();
+    _faxCtrl.dispose();
+    _tuteurCtrl.dispose();
+    _posteCtrl.dispose();
+    _debutCtrl.dispose();
+    _finCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        left: 20, right: 20, top: 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: _kPurple.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.business_center_outlined,
+                    color: _kPurple, size: 20),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Convention de Stage',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text('Informations du stage',
+                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ]),
+              ),
+              IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () => Navigator.pop(context)),
+            ]),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            // Fields
+            _ConvFormField(
+                ctrl: _entrepriseCtrl,
+                label: 'Entreprise / Organisme *',
+                hint: 'Ex: TechCorp Maroc',
+                icon: Icons.business_outlined),
+            const SizedBox(height: 10),
+            _ConvFormField(
+                ctrl: _adresseCtrl,
+                label: "Adresse de l'entreprise",
+                hint: 'Ex: 23 Rue Hassan II, Casablanca',
+                icon: Icons.location_on_outlined),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _ConvFormField(
+                  ctrl: _telephoneCtrl,
+                  label: 'TÃ©lÃ©phone',
+                  hint: 'Ex: +212 5XX XX XX XX',
+                  icon: Icons.phone_outlined)),
+              const SizedBox(width: 10),
+              Expanded(child: _ConvFormField(
+                  ctrl: _faxCtrl,
+                  label: 'Fax',
+                  hint: 'Ex: +212 5XX XX XX XX',
+                  icon: Icons.fax_outlined)),
+            ]),
+            const SizedBox(height: 10),
+            _ConvFormField(
+                ctrl: _tuteurCtrl,
+                label: 'Tuteur de stage',
+                hint: 'Ex: M. Karim Alaoui',
+                icon: Icons.person_outline),
+            const SizedBox(height: 10),
+            _ConvFormField(
+                ctrl: _posteCtrl,
+                label: 'Sujet / Poste',
+                hint: "Ex: Developpement d'une API IA",
+                icon: Icons.work_outline),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _ConvFormField(
+                  ctrl: _debutCtrl,
+                  label: 'Date de debut',
+                  hint: 'JJ/MM/AAAA',
+                  icon: Icons.calendar_today_outlined)),
+              const SizedBox(width: 10),
+              Expanded(child: _ConvFormField(
+                  ctrl: _finCtrl,
+                  label: 'Date de fin',
+                  hint: 'JJ/MM/AAAA',
+                  icon: Icons.event_outlined)),
+            ]),
+            const SizedBox(height: 8),
+            Text('(*) Requis pour un document complet',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
+                    fontStyle: FontStyle.italic)),
+            const SizedBox(height: 16),
+
+            // Buttons
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.grey)),
+                  child: const Text('Annuler',
+                      style: TextStyle(color: Colors.grey)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: _kPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 12)),
+                  icon: const Icon(Icons.picture_as_pdf,
+                      color: Colors.white, size: 16),
+                  label: const Text('Generer le PDF',
+                      style: TextStyle(color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    final entreprise = _entrepriseCtrl.text.trim();
+                    if (entreprise.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Veuillez saisir le nom de l'entreprise"),
+                        backgroundColor: _kOrange,
+                        duration: Duration(seconds: 2),
+                      ));
+                      return;
+                    }
+                    Navigator.pop(context, {
+                      'entreprise': entreprise,
+                      'adresse':    _adresseCtrl.text.trim(),
+                      'telephone':  _telephoneCtrl.text.trim(),
+                      'fax':        _faxCtrl.text.trim(),
+                      'tuteur':     _tuteurCtrl.text.trim(),
+                      'poste':      _posteCtrl.text.trim(),
+                      'debut':      _debutCtrl.text.trim(),
+                      'fin':        _finCtrl.text.trim(),
+                    });
+                  },
+                ),
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€â”€ Convention de Stage form field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class _ConvFormField extends StatelessWidget {
+  final TextEditingController ctrl;
+  final String label;
+  final String hint;
+  final IconData icon;
+  const _ConvFormField(
+      {required this.ctrl,
+      required this.label,
+      required this.hint,
+      required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: ctrl,
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+        prefixIcon: Icon(icon, size: 18, color: _kPrimary),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+    );
+  }
+}
+
+// â”€â”€â”€ Memory chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _MemoryChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -811,7 +1356,7 @@ class _MemoryChip extends StatelessWidget {
   }
 }
 
-// ─── Documents Tab ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Documents Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _DocumentsTab extends ConsumerStatefulWidget {
   const _DocumentsTab();
   @override
@@ -898,7 +1443,7 @@ class _DocumentsTabState extends ConsumerState<_DocumentsTab> {
   }
 }
 
-// ─── Demandes Tab ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Demandes Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _DemandesTab extends ConsumerStatefulWidget {
   const _DemandesTab();
   @override
@@ -992,101 +1537,6 @@ class _DemandesTabState extends ConsumerState<_DemandesTab> {
                         color: idx > j ? _kGreen : Colors.grey.shade200)),
                   ]));
                 })),
-            ])),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ─── Reclamations Tab ─────────────────────────────────────────────────────────
-class _ReclamationsTab extends ConsumerStatefulWidget {
-  const _ReclamationsTab();
-  @override
-  ConsumerState<_ReclamationsTab> createState() => _ReclamationsTabState();
-}
-
-class _ReclamationsTabState extends ConsumerState<_ReclamationsTab> {
-  List<dynamic> _items = [];
-  bool _loading = true;
-
-  @override
-  void initState() { super.initState(); _load(); }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final data = await ref.read(apiServiceProvider).getComplaints();
-      if (mounted) setState(() => _items = data);
-    } catch (_) {}
-    finally { if (mounted) setState(() => _loading = false); }
-  }
-
-  Color _color(String s) {
-    switch (s) {
-      case 'resolved': return _kGreen;
-      case 'in_progress': return const Color(0xFF1565C0);
-      case 'closed': return Colors.grey;
-      default: return _kOrange;
-    }
-  }
-
-  String _label(String s) {
-    const m = {'open': 'Ouverte', 'in_progress': 'En cours', 'resolved': 'Resolue', 'closed': 'Fermee'};
-    return m[s] ?? s;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_items.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Icon(Icons.report_outlined, size: 60, color: Colors.grey.shade300),
-      const SizedBox(height: 12),
-      const Text('Aucune reclamation', style: TextStyle(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 4),
-      const Text('Dites a l\'Agent "je veux deposer une reclamation"', style: TextStyle(color: Colors.grey, fontSize: 13)),
-    ]));
-
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _items.length,
-        itemBuilder: (_, i) {
-          final c      = _items[i];
-          final status = c['status'] as String? ?? 'open';
-          final color  = _color(status);
-          return Card(
-            margin: const EdgeInsets.only(bottom: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: const Color(0xFF0052A5).withAlpha(15), borderRadius: BorderRadius.circular(6)),
-                  child: Text(c['id'] as String? ?? '',
-                      style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 12, color: _kPrimary)),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: color.withAlpha(30), borderRadius: BorderRadius.circular(10)),
-                  child: Text(_label(status), style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold)),
-                ),
-              ]),
-              const SizedBox(height: 8),
-              Text(c['category'] as String? ?? '', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
-              const SizedBox(height: 4),
-              Text(
-                (c['description'] as String? ?? '').length > 120
-                    ? '${(c['description'] as String).substring(0, 120)}...'
-                    : (c['description'] as String? ?? ''),
-                style: const TextStyle(fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 6),
-              Text('Cree le: ${(c['created_at'] as String? ?? '').length >= 10 ? (c['created_at'] as String).substring(0, 10) : ''}',
-                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
             ])),
           );
         },

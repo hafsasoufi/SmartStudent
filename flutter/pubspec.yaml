@@ -43,9 +43,10 @@ dependencies:
   # Networking
   connectivity_plus: ^5.0.0
 
-  # File handling (for PDF download & open)
+  # File handling (for PDF download, open & pick)
   path_provider: ^2.1.1
   open_file: ^3.3.2
+  file_picker: ^8.1.2
 
 dev_dependencies:
   flutter_test:

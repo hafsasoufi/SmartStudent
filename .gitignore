@@ -14,3 +14,21 @@ backend/.env
 node_modules
 .next/
 .DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database (runtime)
+smartstudent.db
+
+# Generated documents (runtime PDFs)
+backend/generated_docs/*.pdf
+
+# Logs
+*.log
+pip_install.log
+
+# Flutter build
+flutter/build/

@@ -26,6 +26,7 @@ class UserResponse(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     is_active: bool
+    is_admin: bool = False
     created_at: datetime
 
     class Config:
@@ -49,6 +50,9 @@ class UserProfileUpdate(BaseModel):
     language: Optional[str] = None
     preferences: Optional[dict] = {}
     student_card_id: Optional[str] = None
+    cne: Optional[str] = None
+    cin: Optional[str] = None
+    date_naissance: Optional[str] = None  # DD/MM/YYYY
 
 class UserProfileResponse(BaseModel):
     id: int
@@ -59,6 +63,9 @@ class UserProfileResponse(BaseModel):
     major: Optional[str]
     year: Optional[int]
     student_card_id: Optional[str] = None
+    cne: Optional[str] = None
+    cin: Optional[str] = None
+    date_naissance: Optional[str] = None
     language: str
     timezone: str
     created_at: datetime

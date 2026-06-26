@@ -21,32 +21,33 @@ class ApiService {
   static List<String> _determineApiBaseUrls() {
     if (kIsWeb) {
       return [
-        AppConfig.apiBaseUrls[3], // localhost:8000 for web (same machine)
-        AppConfig.apiBaseUrls[4], // 127.0.0.1:8000 fallback
+        AppConfig.apiBaseUrls[5], // localhost for web
+        AppConfig.apiBaseUrls[6], // 127.0.0.1 fallback
       ];
     }
 
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return [
-          AppConfig.apiBaseUrls[0], // PC WiFi IP (current network)
-          AppConfig.apiBaseUrls[1], // PC hotspot IP (Windows Mobile Hotspot)
-          AppConfig.apiBaseUrls[2], // localhost via USB (adb reverse)
-          AppConfig.apiBaseUrls[3], // 127.0.0.1 via USB (adb reverse)
+          AppConfig.apiBaseUrls[0], // PC WiFi IP — physical device on same WiFi
+          AppConfig.apiBaseUrls[1], // Android emulator (10.0.2.2)
+          AppConfig.apiBaseUrls[2], // USB adb reverse (localhost)
+          AppConfig.apiBaseUrls[3], // USB adb reverse (127.0.0.1)
+          AppConfig.apiBaseUrls[4], // Windows hotspot
         ];
       case TargetPlatform.iOS:
         return [
-          AppConfig.apiBaseUrls[0], // localhost
-          AppConfig.apiBaseUrls[1], // 127.0.0.1
-          AppConfig.apiBaseUrls[4], // PC IP
+          AppConfig.apiBaseUrls[0], // PC WiFi IP
+          AppConfig.apiBaseUrls[2], // localhost
+          AppConfig.apiBaseUrls[3], // 127.0.0.1
         ];
       case TargetPlatform.windows:
       case TargetPlatform.linux:
       case TargetPlatform.macOS:
         return [
-          AppConfig.apiBaseUrls[0], // localhost
-          AppConfig.apiBaseUrls[1], // 127.0.0.1
-          AppConfig.apiBaseUrls[4], // PC IP
+          AppConfig.apiBaseUrls[5], // localhost
+          AppConfig.apiBaseUrls[6], // 127.0.0.1
+          AppConfig.apiBaseUrls[0], // PC WiFi IP fallback
         ];
       default:
         return AppConfig.apiBaseUrls;
@@ -388,6 +389,25 @@ class ApiService {
     } on DioException catch (e) { throw _handleError(e); }
   }
 
+  Future<Map<String, dynamic>> getAttestationPrefill() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/admin/attestation/prefill'));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> generateAttestation({
+    Map<String, dynamic> extraFields = const {},
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post(
+        '/admin/attestation/generate',
+        data: {'extra_fields': extraFields},
+      ));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
   Future<Map<String, dynamic>> createAdminRequest({
     required String requestType,
     String? description,
@@ -408,23 +428,78 @@ class ApiService {
     } on DioException catch (e) { throw _handleError(e); }
   }
 
-  Future<Map<String, dynamic>> createComplaint({
-    required String category,
-    required String description,
-  }) async {
+  // ── Modules & Course PDF endpoints ───────────────────────────────────────
+
+  Future<Map<String, dynamic>> getModules({String? semestre}) async {
     try {
-      final r = await _performRequestWithFallback(() => dio.post('/admin/complaints', data: {
-        'category': category,
-        'description': description,
-      }));
+      final params = semestre != null ? {'semestre': semestre} : null;
+      final r = await _performRequestWithFallback(
+        () => dio.get('/user/modules', queryParameters: params),
+      );
       return r.data as Map<String, dynamic>;
     } on DioException catch (e) { throw _handleError(e); }
   }
 
-  Future<List<dynamic>> getComplaints() async {
+  Future<Map<String, dynamic>> uploadCoursePdf({
+    required String matiere,
+    required String titre,
+    required List<int> bytes,
+    required String filename,
+  }) async {
     try {
-      final r = await _performRequestWithFallback(() => dio.get('/admin/complaints'));
+      final formData = FormData.fromMap({
+        'matiere': matiere,
+        'titre': titre,
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
+      });
+      final r = await _performRequestWithFallback(
+        () => dio.post('/exams/courses/upload', data: formData,
+            options: Options(
+              contentType: 'multipart/form-data',
+              receiveTimeout: const Duration(seconds: 60),
+            )),
+      );
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<dynamic>> getCourses() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/exams/courses'));
       return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<void> deleteCourse(int docId) async {
+    try {
+      await _performRequestWithFallback(() => dio.delete('/exams/courses/$docId'));
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> askCoursePdf({
+    required int docId,
+    required String question,
+    String type = 'question',
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(
+        () => dio.post('/exams/courses/$docId/ask',
+            data: {'question': question, 'type': type},
+            options: Options(receiveTimeout: const Duration(seconds: 90))),
+      );
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> getOfficialSchedule({String? filiere, String? semestre}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (filiere != null && filiere.isNotEmpty) queryParams['filiere'] = filiere;
+      if (semestre != null && semestre.isNotEmpty) queryParams['semestre'] = semestre;
+      final r = await _performRequestWithFallback(
+        () => dio.get('/exams/official-schedule', queryParameters: queryParams),
+      );
+      return r.data as Map<String, dynamic>;
     } on DioException catch (e) { throw _handleError(e); }
   }
 
@@ -442,6 +517,33 @@ class ApiService {
     } on DioException catch (e) { throw _handleError(e); }
   }
 
+  Future<Map<String, dynamic>> generateRecommendations({
+    required String prenom,
+    required String nom,
+    String? cne,
+    required String filiere,
+    required String annee,
+    required String typeDemande,
+    required String description,
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post(
+        '/recommendations/generate',
+        data: {
+          'prenom': prenom,
+          'nom': nom,
+          if (cne != null && cne.isNotEmpty) 'cne': cne,
+          'filiere': filiere,
+          'annee': annee,
+          'type_demande': typeDemande,
+          'description': description,
+        },
+        options: Options(receiveTimeout: const Duration(seconds: 60)),
+      ));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
   Future<List<int>> downloadDocumentBytes(String docId) async {
     try {
       final r = await _performRequestWithFallback(() => dio.get(
@@ -449,6 +551,65 @@ class ApiService {
         options: Options(responseType: ResponseType.bytes),
       ));
       return (r.data as List).cast<int>();
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  // ── Orientation endpoints ─────────────────────────────────────────────────
+  Future<Map<String, dynamic>> analyzeCv({
+    required List<int> fileBytes,
+    required String filename,
+    String? posteCible,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'cv_file': MultipartFile.fromBytes(fileBytes, filename: filename),
+        if (posteCible != null && posteCible.isNotEmpty) 'poste_cible': posteCible,
+      });
+      final r = await _performRequestWithFallback(() => dio.post(
+        '/orientation/analyze-cv',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          receiveTimeout: const Duration(seconds: 90),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+      ));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> generateLm({
+    required String poste,
+    required String entreprise,
+    String typeLm = 'startup',
+    String? competences,
+    String? projets,
+  }) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post(
+        '/orientation/generate-lm',
+        data: {
+          'poste': poste,
+          'entreprise': entreprise,
+          'type_lm': typeLm,
+          if (competences != null && competences.isNotEmpty) 'competences': competences,
+          if (projets != null && projets.isNotEmpty) 'projets': projets,
+        },
+        options: Options(receiveTimeout: const Duration(seconds: 90)),
+      ));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> getStages({String? filiere, String? typeStage}) async {
+    try {
+      final params = <String, dynamic>{};
+      if (filiere != null && filiere.isNotEmpty) params['filiere'] = filiere;
+      if (typeStage != null && typeStage.isNotEmpty) params['type_stage'] = typeStage;
+      final r = await _performRequestWithFallback(
+        () => dio.get('/orientation/stages', queryParameters: params),
+      );
+      return r.data as Map<String, dynamic>;
     } on DioException catch (e) { throw _handleError(e); }
   }
 

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm 2cm 2.5cm 2cm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      color: #000;
+      line-height: 1.5;
+    }
+
+    /* ── Header (embedded banner image) ─────────────────────────────── */
+    .header-banner {
+      width: 100%;
+      display: block;
+      margin-bottom: 12pt;
+    }
+
+    /* ── Title ──────────────────────────────────────────────────────── */
+    .title-block {
+      text-align: center;
+      margin: 18pt 0 14pt 0;
+      border: 2pt solid #000;
+      padding: 10pt 20pt;
+    }
+    .title-block h1 {
+      font-size: 20pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+    }
+
+    /* ── Intro line ─────────────────────────────────────────────────── */
+    .intro {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      margin-bottom: 10pt;
+    }
+
+    /* ── Generic 2-column field table ───────────────────────────────── */
+    /*
+       Every data row uses this pattern:
+         <table class="ft"><tr>
+           <td class="fl">Label :</td>
+           <td class="fv">Value</td>
+         </tr></table>
+    */
+    .ft {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 7pt;
+      table-layout: fixed;
+    }
+    .ft td {
+      vertical-align: bottom;
+      padding: 0;
+    }
+    .fl {
+      font-weight: bold;
+      white-space: nowrap;
+      width: 170pt;        /* fixed label column — all rows align */
+      padding-right: 6pt;
+    }
+    .fv {
+      border-bottom: 1pt solid #000;
+      padding-bottom: 1pt;
+    }
+
+    /* Two-value row: Tel + Fax on the same line */
+    .fl-narrow {
+      font-weight: bold;
+      white-space: nowrap;
+      width: 40pt;
+      padding-right: 4pt;
+    }
+    .fv-half {
+      border-bottom: 1pt solid #000;
+      padding-bottom: 1pt;
+      width: 160pt;
+      padding-right: 20pt;
+    }
+
+    /* ── "Avec" separator ───────────────────────────────────────────── */
+    .avec {
+      text-align: center;
+      font-weight: bold;
+      font-size: 12pt;
+      margin: 12pt 0;
+    }
+
+    /* ── Section header (IL A ETE CONVENU…) ─────────────────────────── */
+    .section-header {
+      font-weight: bold;
+      font-size: 11pt;
+      text-decoration: underline;
+      margin: 12pt 0 8pt 0;
+    }
+
+    /* ── Preamble text (purpose sentence) ───────────────────────────── */
+    .convention-text {
+      font-size: 11pt;
+      text-align: justify;
+      margin: 8pt 0 10pt 0;
+    }
+
+    /* ── Lead sentence before student table ─────────────────────────── */
+    .lead {
+      font-size: 11pt;
+      margin-bottom: 8pt;
+    }
+
+    /* ── Remark paragraph ───────────────────────────────────────────── */
+    .remark {
+      font-size: 11pt;
+      text-align: justify;
+      margin-top: 8pt;
+      margin-bottom: 6pt;
+    }
+
+    /* ── Article ────────────────────────────────────────────────────── */
+    .article {
+      margin-top: 10pt;
+      font-size: 11pt;
+    }
+    .article-title {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 4pt;
+    }
+    .article-body {
+      text-align: justify;
+    }
+    .article-body ul {
+      margin: 4pt 0 0 20pt;
+      list-style-type: disc;
+    }
+    .article-body ul li {
+      margin-bottom: 3pt;
+    }
+
+    /* ── Page break ─────────────────────────────────────────────────── */
+    .page-break { page-break-before: always; }
+
+    /* ── Signature block ─────────────────────────────────────────────── */
+    .signature-date {
+      text-align: center;
+      margin: 30pt 0 20pt 0;
+      font-size: 11pt;
+    }
+    .sig-date-value {
+      display: inline-block;
+      border-bottom: 1pt solid #000;
+      min-width: 130pt;
+    }
+    .sig-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10pt;
+    }
+    .sig-table td {
+      width: 50%;
+      text-align: center;
+      vertical-align: top;
+      padding: 0 10pt;
+      font-size: 11pt;
+    }
+    .sig-label {
+      font-weight: bold;
+      margin-bottom: 40pt;
+    }
+    .sig-center {
+      text-align: center;
+      margin-top: 20pt;
+    }
+    .sig-center .sig-label {
+      margin-bottom: 50pt;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header — official ENIAD logo ─────────────────────────────── -->
+  <div style="text-align:center; margin-bottom:12pt;">
+    <img src="{{ header_url }}" style="width:9cm; height:auto;" alt="ENIAD Header"/>
+  </div>
+
+  <!-- ── Title ──────────────────────────────────────────────────────── -->
+  <div class="title-block">
+    <h1>CONVENTION DE STAGE</h1>
+  </div>
+
+  <!-- ── Intro ──────────────────────────────────────────────────────── -->
+  <p class="intro">
+    La présente convention règle les rapports de l'Organisme ou l'Entreprise d'accueil
+  </p>
+
+  <!-- ── Company fields (strict 2-column table) ─────────────────────── -->
+  <table class="ft">
+    <tr>
+      <td class="fl">L'Entreprise&nbsp;:</td>
+      <td class="fv">{{ entreprise }}</td>
+    </tr>
+  </table>
+
+  <table class="ft">
+    <tr>
+      <td class="fl">Adresse&nbsp;:</td>
+      <td class="fv">{{ adresse_entreprise }}</td>
+    </tr>
+  </table>
+
+  <!-- Tel + Fax on same row, each with its own label/value pair -->
+  <table class="ft">
+    <tr>
+      <td class="fl-narrow">Tél&nbsp;:</td>
+      <td class="fv-half">{{ telephone }}</td>
+      <td class="fl-narrow">Fax&nbsp;:</td>
+      <td class="fv">{{ fax }}</td>
+    </tr>
+  </table>
+
+  <!-- ── "Avec" separator ───────────────────────────────────────────── -->
+  <p class="avec">Avec</p>
+
+  <!-- ── School info (strict 2-column table) ────────────────────────── -->
+  <table class="ft">
+    <tr>
+      <td class="fl">L'école&nbsp;:</td>
+      <td class="fv" style="font-weight:bold;">
+        École Nationale de l'Intelligence Artificielle et du Digital de Berkane
+      </td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:5pt;">Adresse&nbsp;:</td>
+      <td class="fv" style="padding-top:5pt;">
+        Km 1, P6008, Sidi Slimane Echcharaa, 63300 Berkane
+      </td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:5pt;">Site Web&nbsp;:</td>
+      <td class="fv" style="padding-top:5pt;">
+        <span style="text-decoration:underline;">www.eniad.ump.ma</span>
+        &nbsp;&nbsp;&nbsp;
+        <strong>E-mail&nbsp;:</strong>
+        <span style="text-decoration:underline;">eniad@ump.ac.ma</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:5pt;">Représentée par&nbsp;:</td>
+      <td class="fv" style="padding-top:5pt;"><strong>M. KHALID JAAFAR</strong></td>
+    </tr>
+  </table>
+
+  <!-- ── Purpose sentence ───────────────────────────────────────────── -->
+  <p class="convention-text">
+    L'objectif final étant de permettre à l'étudiant d'entrer en contact direct avec le milieu
+    professionnel, de mettre en application des connaissances théoriques acquises au cours de son cursus.
+  </p>
+
+  <!-- ── "IL A ETE CONVENU" ─────────────────────────────────────────── -->
+  <div class="section-header">IL A ETE CONVENU CE QUI SUIT :</div>
+
+  <p class="lead">
+    Pour ce qui concerne le stage en vue de l'obtention du diplôme d'<strong>Ingénieur d'État</strong>.
+  </p>
+
+  <!-- ── Student info (strict 2-column table) ───────────────────────── -->
+  <table class="ft">
+    <tr>
+      <td class="fl">Spécialité&nbsp;:</td>
+      <td class="fv">{{ specialite }}</td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:6pt;">Élève-ingénieur(e)&nbsp;:</td>
+      <td class="fv" style="padding-top:6pt;">{{ nom_etudiant }}</td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:6pt;">Année du cycle&nbsp;:</td>
+      <td class="fv" style="padding-top:6pt;">{{ annee_label }}<sup>ème</sup> année du cycle ingénieur</td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:6pt;">Encadrant / Tuteur&nbsp;:</td>
+      <td class="fv" style="padding-top:6pt;">{{ tuteur }}</td>
+    </tr>
+    <tr>
+      <td class="fl" style="padding-top:6pt;">Sujet / Poste&nbsp;:</td>
+      <td class="fv" style="padding-top:6pt;">{{ poste }}</td>
+    </tr>
+  </table>
+
+  <p class="remark">
+    Ce stage étant prévu par le règlement de l'ENIADB, l'élève ingénieur est considéré comme
+    ayant donné son consentement aux clauses de la présente convention.
+  </p>
+
+  <!-- ── ARTICLE 1 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 1 :</div>
+    <div class="article-body">
+      <strong>La durée du stage est fixée à :</strong>
+      <table class="ft" style="margin-top:6pt; margin-bottom:6pt;">
+        <tr>
+          <td class="fl-narrow" style="width:30pt;">Du&nbsp;:</td>
+          <td class="fv-half">{{ date_debut }}</td>
+          <td class="fl-narrow" style="width:30pt;">Au&nbsp;:</td>
+          <td class="fv">{{ date_fin }}</td>
+        </tr>
+      </table>
+      Les horaires sont ceux de l'administration. Toutefois, l'élève stagiaire peut être autorisé
+      à retourner à son établissement pendant la durée du stage, pour y suivre certains cours, ou
+      assister à certaines conférences dont la date est portée à la connaissance du directeur de
+      l'ENIADB, avant le commencement du stage.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 2 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 2 :</div>
+    <div class="article-body">
+      Le stage a pour but :
+      <ul>
+        <li>De permettre à l'élève de rentrer en contact avec le milieu professionnel</li>
+        <li>De tester ses possibilités d'adaptation personnelle</li>
+        <li>
+          De mettre en pratique les connaissances acquises à l'école, de lui donner l'opportunité
+          de se préparer à l'une des épreuves du diplôme préparé par son établissement
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── Page 2 ──────────────────────────────────────────────────────── -->
+  <div class="page-break"></div>
+
+  <!-- ── ARTICLE 3 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 3 :</div>
+    <div class="article-body">
+      Le programme du stage est établi par la (les) personne(s) chargée(s) de l'encadrement de
+      l'élève stagiaire, en tenant compte du programme et de la spécialité, ainsi que de la
+      disponibilité des moyens humains et matériels de l'établissement d'accueil. Ce (s)
+      dernier(s) se réserve (ent) le droit de réorienter l'apprentissage en fonction des
+      qualifications du stagiaire et du rythme de ses activités professionnelles.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 4 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 4 :</div>
+    <div class="article-body">
+      L'étudiant certifie qu'il souscrira à une assurance responsabilité civile personnelle afin
+      de couvrir tous les risques pouvant survenir pendant la durée de son stage.<br/>
+      L'établissement ne pourra être tenu responsable des dommages causés à des tiers ou des
+      dommages subis par l'étudiant durant son stage.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 5 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 5 :</div>
+    <div class="article-body">
+      Le stagiaire demeure élève ingénieur pendant la durée de son séjour dans l'entreprise.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 6 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 6 :</div>
+    <div class="article-body">
+      Le stagiaire sera soumis à la discipline de l'entreprise, notamment en ce qui concerne
+      les visites médicales et les horaires de travail. En cas de manquement, elle peut mettre
+      fin au stage, après en avoir prévenu le service des stages de l'établissement de formation.
+      Il devra s'assurer, avant le départ du stagiaire, que l'avertissement est bien parvenu à
+      son destinataire.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 7 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 7 :</div>
+    <div class="article-body">
+      Le stagiaire ne peut interrompre son stage, sous peine d'en perdre le bénéfice.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 8 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 8 :</div>
+    <div class="article-body">
+      En cas d'absence, le stagiaire doit aviser dans les vingt-quatre heures ouvrables les
+      responsables de stage, respectifs de l'entreprise de stage et de l'établissement de
+      formation. En cas de difficulté ou d'accident, le responsable de stage est tenu de prendre
+      contact le plus rapidement possible avec le service des stages de l'ENIADB.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 9 ───────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 9 :</div>
+    <div class="article-body">
+      L'élève ingénieur de l'ENIADB ne pourra, en cours du stage, prétendre à aucun salaire.
+      Toutefois une indemnité de stage et éventuellement une gratification en fin de stage pourront
+      lui être versées par le chef d'entreprise qui en fixera librement le montant.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 10 ──────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 10 :</div>
+    <div class="article-body">
+      Le stagiaire n'est lié par aucun contrat de travail avec l'entreprise d'accueil.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 11 ──────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 11 :</div>
+    <div class="article-body">
+      À la fin du stage, l'entreprise délivre au stagiaire une attestation précisant la nature
+      et la durée du stage.
+    </div>
+  </div>
+
+  <!-- ── ARTICLE 12 ──────────────────────────────────────────────────── -->
+  <div class="article">
+    <div class="article-title">ARTICLE 12 :</div>
+    <div class="article-body">
+      À son retour à l'établissement de sa formation, l'élève est tenu de remettre un rapport
+      de stage.
+    </div>
+  </div>
+
+  <!-- ── Signature date ──────────────────────────────────────────────── -->
+  <div class="signature-date">
+    Fait à Berkane, le&nbsp;:
+    <span class="sig-date-value">{{ date_signature }}</span>
+  </div>
+
+  <!-- ── Three-party signatures ─────────────────────────────────────── -->
+  <table class="sig-table">
+    <tr>
+      <td>
+        <div class="sig-label">Lu et approuvé&nbsp;:<br/>Le Chef d'Entreprise</div>
+        <br/><br/><br/><br/>
+      </td>
+      <td>
+        <div class="sig-label">Pour l'Établissement de Formation</div>
+        <br/><br/><br/><br/>
+      </td>
+    </tr>
+  </table>
+
+  <div class="sig-center">
+    <div class="sig-label">Lu et approuvé&nbsp;:<br/>L'élève stagiaire</div>
+    <br/><br/><br/><br/>
+  </div>
+
+</body>
+</html>

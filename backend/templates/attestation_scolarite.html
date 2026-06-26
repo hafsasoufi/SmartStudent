@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    @page {
+      size: A4;
+      margin: 1.5cm 2cm 2.8cm 2cm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      color: #000;
+      line-height: 1.5;
+    }
+
+    /* ── Institutional header (embedded banner image) ────────────────── */
+    .header-banner {
+      width: 100%;
+      display: block;
+      margin-bottom: 18pt;
+    }
+
+    /* ── Title ────────────────────────────────────── */
+    .title {
+      text-align: center;
+      font-size: 18pt;
+      font-weight: bold;
+      margin-bottom: 3pt;
+    }
+    .title-line {
+      width: 75%;
+      margin: 0 auto 22pt auto;
+      border-bottom: 1.5pt solid #000;
+    }
+
+    /* ── Intro sentence ───────────────────────────── */
+    .intro {
+      font-size: 11pt;
+      margin-bottom: 16pt;
+    }
+
+    /* ── Student info table ───────────────────────── */
+    .info-table {
+      width: 94%;
+      border-collapse: collapse;
+      margin: 0 0 22pt 10pt;
+    }
+    .info-table td {
+      padding: 5pt 0;
+      font-size: 11pt;
+      vertical-align: bottom;
+    }
+    .info-table .lbl {
+      width: 30%;
+      font-weight: bold;
+      white-space: nowrap;
+      padding-right: 10pt;
+    }
+    .info-table .val {
+      width: 70%;
+      border-bottom: 0.8pt solid #000;
+      padding-bottom: 1pt;
+    }
+
+    /* ── Body paragraph ───────────────────────────── */
+    .body-para {
+      font-size: 11pt;
+      text-align: justify;
+      line-height: 1.65;
+      margin-bottom: 18pt;
+    }
+
+    /* ── Closing ──────────────────────────────────── */
+    .closing {
+      font-size: 11pt;
+      text-align: justify;
+      margin-bottom: 36pt;
+    }
+
+    /* ── Signature row ────────────────────────────── */
+    .sig-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .sig-date {
+      width: 50%;
+      font-size: 11pt;
+      vertical-align: top;
+    }
+    .sig-right {
+      width: 50%;
+      text-align: center;
+      font-size: 11pt;
+      vertical-align: top;
+    }
+    .sig-right .sig-label {
+      font-weight: bold;
+    }
+    .sig-right .sig-note {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 48pt;
+      display: block;
+    }
+
+    /* ── Footer (fixed at bottom) ─────────────────── */
+    .footer {
+      position: fixed;
+      bottom: 0.6cm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 7.5pt;
+      border-top: 0.8pt solid #000;
+      padding-top: 4pt;
+      color: #222;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INSTITUTIONAL HEADER — official ENIAD banner image -->
+  <img src="{{ header_url }}" style="width:17cm; height:auto; display:block; margin-bottom:18pt;" alt="ENIAD Header"/>
+
+  <!-- TITLE -->
+  <p class="title">Attestation poursuite d'études</p>
+  <div class="title-line"></div>
+
+  <!-- INTRO -->
+  <p class="intro">
+    Le Directeur de l'École Nationale de l'Intelligence Artificielle et du Digital de Berkane
+    atteste que&nbsp;:
+  </p>
+
+  <!-- STUDENT IDENTITY TABLE -->
+  <table class="info-table">
+    <tr>
+      <td class="lbl">M. (Melle)</td>
+      <td class="val">{{ nom }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Né(e) le</td>
+      <td class="val">{{ date_naissance }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Code Massar</td>
+      <td class="val">{{ cne }}</td>
+    </tr>
+  </table>
+
+  <!-- BODY PARAGRAPH (mixed bold / normal) -->
+  <p class="body-para">
+    Poursuit ses études en <strong>{{ niveau }}</strong> du <strong>Cycle Ingénieur</strong>,
+    filière&nbsp;: <strong>{{ major }}</strong>,
+    de l'École Nationale de l'Intelligence Artificielle et du Digital de Berkane,
+    pour l'année universitaire <strong>{{ annee_universitaire }}</strong>.
+  </p>
+
+  <!-- CLOSING SENTENCE -->
+  <p class="closing">
+    Cette attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.
+  </p>
+
+  <!-- SIGNATURE -->
+  <table class="sig-table">
+    <tr>
+      <td class="sig-date">
+        <strong>Berkane le&nbsp;:</strong> {{ issuance_date }}
+      </td>
+      <td class="sig-right">
+        <span class="sig-label">Le Directeur</span>
+        <span class="sig-note">(Signature et cachet officiels)</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    École Nationale de l'Intelligence Artificielle et du Digital de Berkane —
+    Km 1, BP 6008, Sidi Slimane, 63300 Berkane<br/>
+    http://eniad.ump.ma
+  </div>
+
+</body>
+</html>

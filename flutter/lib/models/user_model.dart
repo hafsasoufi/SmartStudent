@@ -6,6 +6,7 @@ class User {
   final String? firstName;
   final String? lastName;
   final bool isActive;
+  final bool isAdmin;
   final DateTime createdAt;
 
   User({
@@ -16,6 +17,7 @@ class User {
     this.firstName,
     this.lastName,
     required this.isActive,
+    this.isAdmin = false,
     required this.createdAt,
   });
 
@@ -28,6 +30,7 @@ class User {
       firstName: json['first_name'] as String?,
       lastName: json['last_name'] as String?,
       isActive: json['is_active'] as bool? ?? true,
+      isAdmin: json['is_admin'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -41,6 +44,7 @@ class User {
       'first_name': firstName,
       'last_name': lastName,
       'is_active': isActive,
+      'is_admin': isAdmin,
       'created_at': createdAt.toIso8601String(),
     };
   }

@@ -100,16 +100,31 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "admin": {
         "name": "Agent Administratif",
         "keywords": [
-            "faq", "document", "procedure", "regle", "formulaire", "attestation",
-            "inscription", "administratif", "emploi du temps", "horaire", "eniad",
-            "filiere", "convention", "stage admin", "bourse", "scolarite", "semestre",
-            "calendrier examen", "campus",
+            # Documents & scolarité
+            "attestation", "releve", "releve de notes", "certificat", "diplome",
+            "carte etudiant", "carte perdue", "duplicata", "inscription", "reinscription",
+            "scolarite", "document", "formulaire", "procedure", "administratif",
+            # Changements & problèmes académiques
+            "changement filiere", "filiere", "changer filiere", "probleme note",
+            "erreur note", "contestation", "absence examen", "justificatif",
+            # Stages & PFE
+            "stage", "pfa", "pfe", "convention", "convention de stage", "encadrant",
+            # IT & Numérique
+            "wifi", "wi-fi", "reseau", "connexion", "mot de passe", "mdp",
+            "plateforme", "moodle", "acces plateforme", "compte bloque", "support it",
+            # Financier & social
+            "bourse", "aide sociale", "aide financiere",
+            # Vie étudiante
+            "evenement", "club", "participer", "conference", "hackathon",
+            # Général ENIAD
+            "faq", "regle", "reglement", "eniad", "bourse", "scolarite",
         ],
         "prompt": (
-            "Tu es l'Agent Administratif de SmartStudent a l'ENIAD.\n"
-            "Tu aides les etudiants avec : FAQ institutionnelles, procedures "
-            "administratives, generation de documents, reglement interieur.\n"
-            "Sois precis, clair et oriente l'etudiant vers les bons services."
+            "Tu es l'Assistant Administratif de SmartStudent a l'ENIAD Berkane.\n"
+            "Ton role est de GUIDER les etudiants : expliquer les demarches etape par etape,\n"
+            "lister les documents requis, indiquer le bon service et la personne responsable.\n"
+            "Tu n'agis pas a la place de l'etudiant : tu informes et tu orientes.\n"
+            "Sois precis, clair et bienveillant."
         ),
     },
     "planning": {
@@ -325,6 +340,11 @@ async def agir(state: SmartStudentState) -> dict:
         elif agent_id == "exams":
             from backend.agents.exams_agent import ExamsAgent
             result = await ExamsAgent().process(user_msg, user_id, uc, conv_id)
+            response = result.get("response", "")
+
+        elif agent_id == "orientation":
+            from backend.agents.orientation_agent import OrientationAgent
+            result = await OrientationAgent().process(user_msg, user_id, uc, conv_id)
             response = result.get("response", "")
 
         # ── Agents LLM enrichis (RAG + memoire) ─────────────────────────────
