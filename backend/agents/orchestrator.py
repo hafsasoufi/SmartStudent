@@ -96,11 +96,11 @@ def get_llm():
         try:
             _llm = ChatGroq(
                 api_key=groq_key,
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant",
                 temperature=0.7,
             )
             _llm_api_key = groq_key
-            logger.info("LLM: Groq llama-3.3-70b-versatile (key: ...%s)", groq_key[-6:])
+            logger.info("LLM: Groq llama-3.1-8b-instant (key: ...%s)", groq_key[-6:])
             return _llm
         except Exception as e:
             logger.warning(f"Groq init failed: {e}")
@@ -551,7 +551,7 @@ def repondre(state: SmartStudentState) -> dict:
     cfg = AGENTS_CONFIG.get(agent_id, AGENTS_CONFIG["admin"])
     groq_key = getattr(settings, "GROQ_API_KEY", "")
     model = (
-        "llama-3.3-70b-versatile"
+        "llama-3.1-8b-instant"
         if groq_key and groq_key not in ("", "your-groq-api-key")
         else getattr(settings, "OPENAI_MODEL", "gpt-4o-mini")
     )

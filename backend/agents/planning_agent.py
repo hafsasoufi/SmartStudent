@@ -83,21 +83,24 @@ def lister_taches(user_id: int) -> str:
             if not plans:
                 return "Aucune tâche trouvée pour cet étudiant."
 
+            # Limit to 10 most urgent pending/in_progress tasks to avoid context overflow
+            active = [p for p in plans if p.status != "completed"][:10]
+            if not active:
+                active = plans[:10]
+
             STATUS_FR = {"pending": "En attente", "in_progress": "En cours", "completed": "Terminé"}
             CAT_FR = {"study": "Révision", "project": "Projet", "personal": "Personnel"}
             result = [
                 {
                     "id": p.id,
                     "titre": p.title,
-                    "description": p.description or "",
-                    "categorie": CAT_FR.get(p.category, p.category),
                     "echeance": p.due_date.strftime("%d/%m/%Y") if p.due_date else "?",
                     "priorite": p.priority,
                     "statut": STATUS_FR.get(p.status, p.status),
                 }
-                for p in plans
+                for p in active
             ]
-            return json.dumps({"taches": result, "total": len(result)}, ensure_ascii=False)
+            return json.dumps({"taches": result, "total": len(plans), "affichees": len(result)}, ensure_ascii=False)
         finally:
             db.close()
     except Exception as e:
@@ -272,14 +275,19 @@ def generer_plan_etude(
         finally:
             db.close()
 
+        sessions_display = "\n".join(
+            f"• Jour {s.get('jour', i+1)} — {s.get('titre', '')} : {s.get('description', '')}"
+            for i, s in enumerate(sessions[:10])
+        )
         return json.dumps({
             "success": True,
             "titre_plan": plan_data.get("titre_plan", "Plan de révision"),
             "sessions_creees": len(created),
+            "sessions": sessions[:10],
             "message": (
-                f"Plan de révision créé avec {len(created)} sessions.\n"
-                f"Matières: {matieres} | Examen dans: {days_left} jours.\n"
-                "Retrouve les sessions dans ton planning."
+                f"Plan '{plan_data.get('titre_plan', 'Plan de révision')}' créé avec {len(created)} sessions sur {days_left} jours.\n\n"
+                + sessions_display
+                + "\n\nLes sessions ont été sauvegardées dans ton planning (onglet Tâches)."
             ),
         }, ensure_ascii=False)
 
@@ -323,11 +331,13 @@ async def agent_node(state: PlanningAgentState) -> dict:
         "- Suggerer des blocs de travail focus de 2h maximum\n"
         "- Inclure au moins une periode de repos complet par semaine\n\n"
         "COMPORTEMENT :\n"
-        "- Commence TOUJOURS par lister les taches existantes avant d'en creer.\n"
-        "- Pour un plan de revision : demande les matieres et la date d'examen si non fournis.\n"
-        "- Affiche les resultats jour par jour avec creneaux horaires, matiere et type de travail.\n"
-        "- Sois motivant et bienveillant dans ton ton.\n"
-        "- Reponds dans la langue de l'etudiant (francais ou arabe)."
+        f"- Quand l'etudiant demande un plan de revision ou d'organiser ses revisions : appelle DIRECTEMENT generer_plan_etude(user_id={user_id}, matieres='Machine Learning, Algorithmique, BDD, Reseaux', date_examen='dans 2 semaines', heures_par_jour=3). Si l'etudiant mentionne des matieres specifiques, utilise-les a la place.\n"
+        "- Apres l'appel, affiche le champ 'message' du resultat tel quel, en ajoutant juste une phrase d'encouragement.\n"
+        "- Ne jamais lister les taches brutes. Ne jamais poser de question pour un plan de revision.\n"
+        "- Pour voir ses taches: utilise lister_taches et affiche un resume court (pas la liste complete).\n"
+        "- Pour creer/modifier/supprimer une tache: utilise l'outil correspondant et confirme l'action.\n"
+        "- Sois motivant et bienveillant.\n"
+        "- Reponds TOUJOURS en francais."
     )
 
     try:
@@ -369,6 +379,41 @@ class PlanningAgent:
     def __init__(self):
         self._graph = get_compiled_planning_graph()
 
+    _PLAN_TRIGGERS = [
+        "organiser", "organisation", "plan de revision", "plan d'etude", "plan d'étude",
+        "revision", "révision", "planifier mes", "generer un plan", "générer un plan",
+        "programme de revision", "programme de révision", "planning de revision",
+        "planning de révision", "préparer mes examens", "preparer mes examens",
+        "aide moi a reviser", "aide moi à réviser",
+    ]
+
+    @staticmethod
+    def _extract_matieres(message: str, filiere: str) -> str:
+        """Extract subjects from message or return defaults based on filière."""
+        msg_lower = message.lower()
+        found = []
+        candidates = [
+            "machine learning", "algorithmique", "algorithme", "bdd", "base de données",
+            "réseaux", "reseaux", "mathématiques", "mathematiques", "analyse",
+            "physique", "chimie", "programmation", "python", "java", "c++",
+            "systèmes", "systemes", "intelligence artificielle", "ia", "ai",
+            "traitement du signal", "électronique", "electronique",
+            "thermodynamique", "mécanique", "mecanique",
+        ]
+        for c in candidates:
+            if c in msg_lower:
+                found.append(c.title())
+        if found:
+            return ", ".join(found)
+        filiere_lower = (filiere or "").lower()
+        if "info" in filiere_lower or "genie logiciel" in filiere_lower:
+            return "Algorithmique, Bases de Données, Réseaux, Machine Learning, Mathématiques"
+        if "elec" in filiere_lower or "électr" in filiere_lower:
+            return "Électronique, Traitement du Signal, Mathématiques, Physique, Systèmes"
+        if "meca" in filiere_lower or "méca" in filiere_lower:
+            return "Mécanique, Thermodynamique, Mathématiques, Physique, Résistance des Matériaux"
+        return "Algorithmique, Bases de Données, Réseaux, Machine Learning, Mathématiques"
+
     async def process(
         self,
         user_message: str,
@@ -376,6 +421,28 @@ class PlanningAgent:
         user_context: dict,
         conversation_id: str = "default",
     ) -> dict:
+        msg_lower = user_message.lower()
+
+        if any(t in msg_lower for t in self._PLAN_TRIGGERS):
+            filiere = (user_context or {}).get("major", "")
+            matieres = self._extract_matieres(user_message, filiere)
+            try:
+                result_str = generer_plan_etude.invoke({
+                    "user_id": user_id,
+                    "matieres": matieres,
+                    "date_examen": "dans 2 semaines",
+                    "heures_par_jour": 3,
+                })
+                result = json.loads(result_str)
+                if result.get("success"):
+                    nom = (user_context or {}).get("full_name") or (user_context or {}).get("username") or ""
+                    encouragement = f"\n\nBonne chance {nom} ! Tu vas y arriver 💪" if nom else "\n\nBonne chance ! Tu vas y arriver 💪"
+                    return {"response": result["message"] + encouragement}
+                return {"response": result.get("message", "Erreur lors de la génération du plan.")}
+            except Exception as e:
+                logger.error("PlanningAgent direct plan error: %s", e)
+                return {"response": "Erreur lors de la génération du plan de révision. Veuillez réessayer."}
+
         thread_id = f"planning_{conversation_id}"
         initial: PlanningAgentState = {
             "messages": [HumanMessage(content=user_message)],
