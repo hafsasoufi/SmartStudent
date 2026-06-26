@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Annotated, Optional, TypedDict
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
@@ -216,6 +216,33 @@ def supprimer_tache(tache_id: int) -> str:
         return f"Erreur lors de la suppression: {e}"
 
 
+def _fallback_plan(matieres_list: list, days_left: int) -> dict:
+    """Template plan when LLM is unavailable (rate limit, etc.)."""
+    descriptions = {
+        "machine learning": "Revoir les algorithmes supervisés/non supervisés, régression, classification, clustering. Faire les exercices types.",
+        "algorithmique": "Revoir la complexité, les algorithmes de tri (quicksort, mergesort), les structures de données (arbres, graphes). Résoudre des problèmes.",
+        "bdd": "Revoir le modèle relationnel, les requêtes SQL (jointures, agrégations), la normalisation. Pratiquer avec des exemples.",
+        "réseaux": "Revoir le modèle OSI, TCP/IP, les protocoles HTTP/DNS/DHCP, la sécurité réseau. Faire les exercices de routage.",
+        "mathématiques": "Revoir l'analyse (dérivées, intégrales), l'algèbre linéaire (matrices, vecteurs), les probabilités. Résoudre des exercices.",
+        "physique": "Revoir la mécanique, l'électricité, la thermodynamique. Résoudre des problèmes types.",
+        "électronique": "Revoir les circuits électroniques, les amplificateurs, les filtres. Faire les exercices de dimensionnement.",
+    }
+    sessions = []
+    subjects_cycle = matieres_list * 3
+    for i in range(min(10, days_left)):
+        mat = subjects_cycle[i % len(matieres_list)].strip()
+        desc_key = mat.lower().replace("é", "e").replace("è", "e").replace("ê", "e").replace("â", "a")
+        desc = next((v for k, v in descriptions.items() if k in desc_key), f"Revoir le cours de {mat} et faire les exercices types.")
+        sessions.append({
+            "jour": i + 1,
+            "titre": f"Révision — {mat}",
+            "description": desc,
+            "matiere": mat,
+        })
+    titre = f"Plan de révision — {', '.join(matieres_list[:2])}"
+    return {"titre_plan": titre, "sessions": sessions}
+
+
 @tool
 def generer_plan_etude(
     user_id: int,
@@ -233,25 +260,33 @@ def generer_plan_etude(
 
         exam_date = _parse_date(date_examen) or (datetime.utcnow() + timedelta(days=14))
         days_left = max(1, (exam_date - datetime.utcnow()).days)
+        matieres_list = [m.strip() for m in matieres.split(",") if m.strip()]
 
-        prompt = (
-            f"Génère un plan de révision structuré en JSON pour un étudiant ingénieur.\n"
-            f"Matières: {matieres}\n"
-            f"Jours jusqu'à l'examen: {days_left}\n"
-            f"Heures par jour: {heures_par_jour}h\n\n"
-            "Réponds UNIQUEMENT avec ce JSON (max 10 sessions):\n"
-            '{"titre_plan": "...", "sessions": [{"jour": 1, "titre": "Révision — [matière]", '
-            '"description": "Détail de ce qu\'il faut réviser", "matiere": "[matière]"}]}'
-        )
+        plan_data = None
+        try:
+            prompt = (
+                f"Generate a JSON study plan for an engineering student.\n"
+                f"Subjects: {matieres}\n"
+                f"Days until exam: {days_left}\n"
+                f"Hours per day: {heures_par_jour}h\n\n"
+                "Reply ONLY with this JSON (max 10 sessions, no accents in JSON keys):\n"
+                '{"titre_plan": "Plan de revision", "sessions": [{"jour": 1, "titre": "Revision - [subject]", '
+                '"description": "What to study", "matiere": "[subject]"}]}'
+            )
+            resp = _get_llm().invoke([HM(content=prompt)])
+            text = resp.content.strip() if resp.content else ""
+            if "```json" in text:
+                text = text.split("```json", 1)[1].split("```", 1)[0].strip()
+            elif "```" in text:
+                text = text.split("```", 1)[1].split("```", 1)[0].strip()
+            if text:
+                plan_data = json.loads(text)
+        except Exception as llm_err:
+            logger.warning("generer_plan_etude LLM failed (%s), using fallback template", llm_err)
 
-        resp = _get_llm().invoke([HM(content=prompt)])
-        text = resp.content.strip()
-        if "```json" in text:
-            text = text.split("```json", 1)[1].split("```", 1)[0].strip()
-        elif "```" in text:
-            text = text.split("```", 1)[1].split("```", 1)[0].strip()
+        if not plan_data or not plan_data.get("sessions"):
+            plan_data = _fallback_plan(matieres_list, days_left)
 
-        plan_data = json.loads(text)
         sessions = plan_data.get("sessions", [])
 
         db = _db()
@@ -291,11 +326,9 @@ def generer_plan_etude(
             ),
         }, ensure_ascii=False)
 
-    except json.JSONDecodeError:
-        return "Erreur: impossible de parser le plan généré. Réessaie."
     except Exception as e:
         logger.error("generer_plan_etude error: %s", e)
-        return f"Erreur lors de la génération du plan: {e}"
+        return json.dumps({"success": False, "message": f"Erreur lors de la génération du plan: {e}"}, ensure_ascii=False)
 
 
 _TOOLS = [lister_taches, creer_tache, modifier_statut_tache, supprimer_tache, generer_plan_etude]
@@ -303,47 +336,102 @@ _TOOLS = [lister_taches, creer_tache, modifier_statut_tache, supprimer_tache, ge
 
 # ── Agent Node ───────────────────────────────────────────────────────────────
 
+_PLAN_KEYWORDS = [
+    "organiser", "organisation", "plan de revision", "plan d'etude", "plan d'étude",
+    "revision", "révision", "planifier", "generer un plan", "générer un plan",
+    "programme de revision", "planning de revision", "preparer mes examens",
+    "préparer mes examens", "aide moi a reviser", "aide moi à réviser",
+]
+
+
+def _is_human(msg) -> bool:
+    return isinstance(msg, HumanMessage) or (isinstance(msg, dict) and msg.get("role") == "user")
+
+
+def _msg_text(msg) -> str:
+    if isinstance(msg, dict):
+        return msg.get("content", "")
+    return getattr(msg, "content", "") or ""
+
+
+def _detect_plan_request(messages: list) -> tuple[bool, str]:
+    """Returns (is_plan_request, user_message_text). Handles both LangChain objects and raw dicts."""
+    last_human = next((m for m in reversed(messages) if _is_human(m)), None)
+    if not last_human:
+        return False, ""
+    content = _msg_text(last_human)
+    return any(k in content.lower() for k in _PLAN_KEYWORDS), content
+
+
 async def agent_node(state: PlanningAgentState) -> dict:
     user_id = state.get("user_id", 0)
     ctx = state.get("user_context") or {}
     nom = ctx.get("full_name") or ctx.get("username") or "l'étudiant"
-    filiere = ctx.get("major") or "filière non renseignée"
+    filiere = ctx.get("major") or ""
     annee = ctx.get("year") or "?"
+    messages = list(state.get("messages", []))
 
+    # ── Path 1: tool result → format directly, no LLM ──
+    last_msg = messages[-1] if messages else None
+    is_tool_msg = isinstance(last_msg, ToolMessage) or (isinstance(last_msg, dict) and last_msg.get("type") == "tool")
+    if is_tool_msg:
+        raw = _msg_text(last_msg)
+        try:
+            result = json.loads(raw)
+            if result.get("success") is True and result.get("message"):
+                encouragement = f"\n\nBonne chance {nom} ! Tu vas y arriver !" if nom != "l'étudiant" else "\n\nBonne chance ! Tu vas y arriver !"
+                return {"messages": [AIMessage(content=result["message"] + encouragement)]}
+            if result.get("message"):
+                return {"messages": [AIMessage(content=result["message"])]}
+        except (json.JSONDecodeError, AttributeError):
+            pass
+        # Non-JSON tool result (lister_taches, creer_tache, etc.) → fall through to LLM
+        if not raw or "Erreur" in raw:
+            return {"messages": [AIMessage(content=raw or "Erreur lors de l'exécution de l'outil.")]}
+        # Otherwise fall through to Path 3 (LLM formats the result)
+
+    # ── Path 2: plan/revision request → inject tool call directly, no LLM ──
+    is_plan, _ = _detect_plan_request(messages)
+    if is_plan:
+        matieres_map = {
+            "info": "Algorithmique, Bases de Donnees, Machine Learning, Reseaux, Mathematiques",
+            "elec": "Electronique, Traitement du Signal, Mathematiques, Physique, Systemes",
+            "meca": "Mecanique, Thermodynamique, Mathematiques, Physique, Resistance des Materiaux",
+        }
+        filiere_lower = filiere.lower()
+        matieres = next(
+            (v for k, v in matieres_map.items() if k in filiere_lower),
+            "Algorithmique, Bases de Donnees, Machine Learning, Reseaux, Mathematiques",
+        )
+        tool_call = {
+            "name": "generer_plan_etude",
+            "args": {
+                "user_id": user_id,
+                "matieres": matieres,
+                "date_examen": "dans 2 semaines",
+                "heures_par_jour": 3,
+            },
+            "id": "plan_direct_call",
+            "type": "tool_call",
+        }
+        return {"messages": [AIMessage(content="", tool_calls=[tool_call])]}
+
+    # ── Path 3: all other requests → LLM ──
     system_prompt = (
-        f"Tu es l'Agent Planning de l'ENIADB, un assistant de planification intelligent qui aide les etudiants a organiser leur vie academique.\n"
-        f"Tu parles a {nom}, filiere {filiere}, annee {annee}. ID utilisateur: {user_id}.\n\n"
-        "Tes capacites :\n"
-        "- Construire des plannings de revision personnalises semaine par semaine\n"
-        "- Prioriser les taches selon les deadlines et la difficulte\n"
-        "- Equilibrer les sessions de travail avec le repos et les activites\n"
-        "- Suggerer des techniques de productivite adaptees aux ingenieurs (Pomodoro, time-blocking, repetition espacee...)\n\n"
-        "OUTILS DISPONIBLES - TU DOIS LES UTILISER :\n"
-        f"1. Voir les taches existantes -> lister_taches(user_id={user_id})\n"
-        f"2. Creer une tache/deadline -> creer_tache(user_id={user_id}, titre=..., description=..., categorie=..., date_echeance=..., priorite=...)\n"
-        f"3. Changer le statut d'une tache -> modifier_statut_tache(tache_id=..., nouveau_statut=...)\n"
-        f"4. Supprimer une tache -> supprimer_tache(tache_id=...)\n"
-        f"5. Generer un plan de revision -> generer_plan_etude(user_id={user_id}, matieres=..., date_examen=..., heures_par_jour=...)\n\n"
-        "REGLES DE PLANIFICATION :\n"
-        "- Ne jamais surcharger une seule journee - respecter les limites cognitives\n"
-        "- Toujours inclure des pauses et du temps libre\n"
-        "- Prioritiser les modules avec mauvaises notes ou deadlines proches\n"
-        "- Suggerer des blocs de travail focus de 2h maximum\n"
-        "- Inclure au moins une periode de repos complet par semaine\n\n"
-        "COMPORTEMENT :\n"
-        f"- Quand l'etudiant demande un plan de revision ou d'organiser ses revisions : appelle DIRECTEMENT generer_plan_etude(user_id={user_id}, matieres='Machine Learning, Algorithmique, BDD, Reseaux', date_examen='dans 2 semaines', heures_par_jour=3). Si l'etudiant mentionne des matieres specifiques, utilise-les a la place.\n"
-        "- Apres l'appel, affiche le champ 'message' du resultat tel quel, en ajoutant juste une phrase d'encouragement.\n"
-        "- Ne jamais lister les taches brutes. Ne jamais poser de question pour un plan de revision.\n"
-        "- Pour voir ses taches: utilise lister_taches et affiche un resume court (pas la liste complete).\n"
-        "- Pour creer/modifier/supprimer une tache: utilise l'outil correspondant et confirme l'action.\n"
-        "- Sois motivant et bienveillant.\n"
-        "- Reponds TOUJOURS en francais."
+        f"Tu es l'Agent Planning de l'ENIADB, un assistant de planification intelligent.\n"
+        f"Tu parles a {nom}, filiere {filiere or 'non renseignee'}, annee {annee}. ID utilisateur: {user_id}.\n\n"
+        "OUTILS DISPONIBLES :\n"
+        f"1. Voir les taches -> lister_taches(user_id={user_id})\n"
+        f"2. Creer une tache -> creer_tache(user_id={user_id}, titre=..., description=..., categorie=..., date_echeance=..., priorite=...)\n"
+        f"3. Changer statut -> modifier_statut_tache(tache_id=..., nouveau_statut=...)\n"
+        f"4. Supprimer -> supprimer_tache(tache_id=...)\n\n"
+        "COMPORTEMENT : Sois concis, motivant. Reponds TOUJOURS en francais.\n"
+        "- Pour voir les taches: utilise lister_taches et affiche un resume court.\n"
+        "- Pour creer/modifier/supprimer: utilise l'outil et confirme l'action."
     )
-
     try:
         llm = _get_llm().bind_tools(_TOOLS)
-        messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
-        resp = await llm.ainvoke(messages)
+        resp = await llm.ainvoke([SystemMessage(content=system_prompt)] + messages)
         return {"messages": [resp]}
     except Exception as e:
         logger.error("planning agent_node error: %s", e)
@@ -433,12 +521,14 @@ class PlanningAgent:
                     "date_examen": "dans 2 semaines",
                     "heures_par_jour": 3,
                 })
-                result = json.loads(result_str)
-                if result.get("success"):
-                    nom = (user_context or {}).get("full_name") or (user_context or {}).get("username") or ""
-                    encouragement = f"\n\nBonne chance {nom} ! Tu vas y arriver 💪" if nom else "\n\nBonne chance ! Tu vas y arriver 💪"
-                    return {"response": result["message"] + encouragement}
-                return {"response": result.get("message", "Erreur lors de la génération du plan.")}
+                try:
+                    result = json.loads(result_str)
+                except json.JSONDecodeError:
+                    result = {"success": False, "message": result_str}
+                nom = (user_context or {}).get("full_name") or (user_context or {}).get("username") or ""
+                encouragement = f"\n\nBonne chance {nom} ! Tu vas y arriver 💪" if nom else "\n\nBonne chance ! Tu vas y arriver 💪"
+                msg = result.get("message", "Plan de révision créé.")
+                return {"response": msg + encouragement}
             except Exception as e:
                 logger.error("PlanningAgent direct plan error: %s", e)
                 return {"response": "Erreur lors de la génération du plan de révision. Veuillez réessayer."}

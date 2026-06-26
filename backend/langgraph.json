@@ -1,7 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "smartstudent": "./agents/orchestrator.py:get_compiled_graph"
+    "orchestrator": "./agents/orchestrator.py:get_compiled_graph",
+    "planning": "./agents/planning_agent.py:get_compiled_planning_graph"
   },
   "env": ".env"
 }
