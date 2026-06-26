@@ -294,15 +294,20 @@ class ExamsNotifier extends StateNotifier<ExamsState> {
       final modules = (data['modules'] as List? ?? [])
           .map((j) => ModuleItem.fromJson(j as Map<String, dynamic>))
           .toList();
+      final resolvedSemestre = data['semestre'] as String? ?? '';
       state = state.copyWith(
         modules: modules,
         filiere: data['filiere'] as String? ?? '',
-        semestre: data['semestre'] as String? ?? '',
+        semestre: resolvedSemestre,
         session: data['session'] as String? ?? '',
         niveau: (data['niveau'] as int?) ?? 1,
         totalExamens: (data['total_examens'] as int?) ?? 0,
         isLoadingModules: false,
       );
+      // Sync the Planning tab to the same semester automatically
+      if (resolvedSemestre.isNotEmpty) {
+        loadOfficialSchedule(semestre: resolvedSemestre);
+      }
     } catch (e) {
       state = state.copyWith(isLoadingModules: false, error: e.toString());
     }

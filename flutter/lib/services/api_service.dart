@@ -260,7 +260,10 @@ class ApiService {
   Future<Map<String, dynamic>> sendMessage({
     required String message,
     String? conversationId,
+    String? semestre,
   }) async {
+    // LLM agents (campus, wellbeing, planning) need up to 90s
+    const agentTimeout = Duration(seconds: 90);
     try {
       final response = await _performRequestWithFallback(
         () => dio.post(
@@ -268,7 +271,12 @@ class ApiService {
           data: {
             'message': message,
             'conversation_id': conversationId,
+            if (semestre != null && semestre.isNotEmpty) 'semestre': semestre,
           },
+          options: Options(
+            receiveTimeout: agentTimeout,
+            sendTimeout: agentTimeout,
+          ),
         ),
       );
       return response.data;
@@ -324,6 +332,38 @@ class ApiService {
     try {
       final r = await _performRequestWithFallback(() => dio.get('/campus/events'));
       return r.data;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<List<dynamic>> getClubs() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/campus/clubs'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> toggleClubMembership(String clubId) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/campus/clubs/$clubId/toggle'));
+      return r.data as Map<String, dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  // ── Wellbeing endpoints ───────────────────────────────────────────────────
+  Future<List<dynamic>> getMoods() async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.get('/wellbeing/moods'));
+      return r.data as List<dynamic>;
+    } on DioException catch (e) { throw _handleError(e); }
+  }
+
+  Future<Map<String, dynamic>> saveMood({required int rating, String? note}) async {
+    try {
+      final r = await _performRequestWithFallback(() => dio.post('/wellbeing/mood', data: {
+        'rating': rating,
+        if (note != null && note.isNotEmpty) 'note': note,
+      }));
+      return r.data as Map<String, dynamic>;
     } on DioException catch (e) { throw _handleError(e); }
   }
 

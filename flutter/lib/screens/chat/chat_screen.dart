@@ -1,36 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/exams_provider.dart';
 import '../../theme/app_theme.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  final String? forceAgent;
+  const ChatScreen({Key? key, this.forceAgent}) : super(key: key);
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
-}
-
-// ─── Quick suggestion chip ───────────────────────────────────────────────────
-class _QuickChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _QuickChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF0052A5).withOpacity(0.25)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)],
-      ),
-      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-    ),
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +17,16 @@ class _QuickChip extends StatelessWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.forceAgent != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(chatProvider.notifier).setForceAgent(widget.forceAgent!);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -50,8 +39,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (_messageController.text.isNotEmpty) {
       final message = _messageController.text;
       _messageController.clear();
-      
-      ref.read(chatProvider.notifier).sendMessage(message);
+
+      // Pass the semester selected in the Modules tab so the exams agent uses it
+      final examsState = ref.read(examsProvider);
+      final semestre = examsState.semestre.isNotEmpty ? examsState.semestre : null;
+
+      ref.read(chatProvider.notifier).sendMessage(message, semestre: semestre);
       
       // Scroll to bottom
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -72,15 +65,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Assistant'),
+        title: Text(widget.forceAgent == 'home' ? 'Guide de l\'application' : 'AI Assistant'),
         elevation: 0,
         actions: [
-          // Recommendations shortcut
-          IconButton(
-            icon: const Icon(Icons.auto_awesome),
-            tooltip: 'Recommandations',
-            onPressed: () => context.push('/recommendations'),
-          ),
           if (chatState.currentAgent != null)
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -106,54 +93,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     Text('Démarrez une conversation', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 6),
                     Text(
-                      'Posez une question ou utilisez les raccourcis ci-dessous',
+                      'Posez votre question pour être guidé vers le bon agent',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Recommendations highlight card
-                    GestureDetector(
-                      onTap: () => context.push('/recommendations'),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0052A5), Color(0xFF1565C0)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(color: const Color(0xFF0052A5).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
-                        ),
-                        child: Row(children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26),
-                          ),
-                          const SizedBox(width: 14),
-                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Recommandations IA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                            SizedBox(height: 4),
-                            Text('Obtenez des conseils personnalisés avec les démarches administratives complètes', style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.4)),
-                          ])),
-                          const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 15),
-                        ]),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Quick suggestions
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _QuickChip(label: '📄 Attestation', onTap: () => ref.read(chatProvider.notifier).sendMessage('Je veux une attestation de scolarité')),
-                        _QuickChip(label: '📋 Convention de stage', onTap: () => ref.read(chatProvider.notifier).sendMessage('Je veux une convention de stage')),
-                        _QuickChip(label: '📅 Emploi du temps', onTap: () => ref.read(chatProvider.notifier).sendMessage("Qui contacter pour l'emploi du temps ?")),
-                      ],
                     ),
                   ]),
                 )

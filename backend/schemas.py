@@ -94,6 +94,7 @@ class MessageResponse(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
+    semestre: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str

@@ -79,6 +79,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ChatScreen(),
       ),
       GoRoute(
+        path: '/home-chat',
+        name: 'home-chat',
+        builder: (context, state) => const ChatScreen(forceAgent: 'home'),
+      ),
+      GoRoute(
         path: '/recommendations',
         name: 'recommendations',
         builder: (context, state) => const RecommendationsScreen(),

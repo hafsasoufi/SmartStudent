@@ -6,7 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/module_agent_chat.dart';
 
 class CampusModule extends ConsumerStatefulWidget {
-  const CampusModule({Key? key}) : super(key: key);
+  const CampusModule({super.key});
 
   @override
   ConsumerState<CampusModule> createState() => _CampusModuleState();
@@ -38,7 +38,7 @@ class _CampusModuleState extends ConsumerState<CampusModule> {
             ),
             Expanded(
               child: TabBarView(children: [
-                ModuleAgentChat(
+                const ModuleAgentChat(
                   module: 'campus',
                   agentLabel: 'Agent Campus',
                   placeholder: 'Quels événements cette semaine à l\'ENIAD ?',
@@ -50,8 +50,8 @@ class _CampusModuleState extends ConsumerState<CampusModule> {
                     'Conférences à venir',
                   ],
                 ),
-                _EventsTab(),
-                _ClubsTab(),
+                const _EventsTab(),
+                const _ClubsTab(),
                 _StudyGroupsTab(),
               ]),
             ),
@@ -62,10 +62,19 @@ class _CampusModuleState extends ConsumerState<CampusModule> {
   }
 }
 
-// ── Onglet Événements (données réelles) ──────────────────────────────────────
-class _EventsTab extends ConsumerWidget {
+// ── Onglet Événements (données réelles — passés + à venir) ───────────────────
+class _EventsTab extends ConsumerStatefulWidget {
+  const _EventsTab();
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EventsTab> createState() => _EventsTabState();
+}
+
+class _EventsTabState extends ConsumerState<_EventsTab> {
+  // 0 = Tous, 1 = À venir, 2 = Passés
+  int _filter = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(campusProvider);
 
     if (state.isLoading) return const Center(child: CircularProgressIndicator());
@@ -86,25 +95,92 @@ class _EventsTab extends ConsumerWidget {
       );
     }
 
-    final events = state.upcoming;
+    final all = state.all;
+    final upcoming = state.upcoming;
+    final past = state.past;
 
-    if (events.isEmpty) {
-      return const Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.event_busy, size: 64, color: Colors.grey),
-          SizedBox(height: 12),
-          Text('Aucun événement à venir.',
-              style: TextStyle(fontSize: 16, color: Colors.grey)),
-        ]),
-      );
-    }
+    final events = _filter == 1 ? upcoming : _filter == 2 ? past : all;
 
-    return RefreshIndicator(
-      onRefresh: () => ref.read(campusProvider.notifier).loadEvents(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: events.length,
-        itemBuilder: (_, i) => _EventCard(event: events[i]),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              _FilterChip(label: 'Tous (${all.length})', selected: _filter == 0,
+                  onTap: () => setState(() => _filter = 0)),
+              const SizedBox(width: 8),
+              _FilterChip(label: 'À venir (${upcoming.length})', selected: _filter == 1,
+                  color: Colors.green, onTap: () => setState(() => _filter = 1)),
+              const SizedBox(width: 8),
+              _FilterChip(label: 'Passés (${past.length})', selected: _filter == 2,
+                  color: Colors.grey, onTap: () => setState(() => _filter = 2)),
+            ],
+          ),
+        ),
+        if (events.isEmpty)
+          Expanded(
+            child: Center(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.event_busy, size: 64, color: Colors.grey),
+                const SizedBox(height: 12),
+                Text(
+                  _filter == 1 ? 'Aucun événement à venir.' : 'Aucun événement.',
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ]),
+            ),
+          )
+        else
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => ref.read(campusProvider.notifier).loadEvents(),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                itemCount: events.length,
+                itemBuilder: (_, i) => _EventCard(event: events[i]),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppTheme.primaryColor;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? c.withOpacity(0.15) : Colors.transparent,
+          border: Border.all(color: selected ? c : Colors.grey[400]!),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: selected ? c : Colors.grey[600],
+          ),
+        ),
       ),
     );
   }
@@ -140,98 +216,211 @@ class _EventCard extends StatelessWidget {
     final timeStr =
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(6),
+    final isPast = event.startDate.isBefore(DateTime.now());
+    final effectiveColor = isPast ? Colors.grey : color;
+
+    return Opacity(
+      opacity: isPast ? 0.72 : 1.0,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: effectiveColor.withOpacity(0.3)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: effectiveColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(typeLabel,
+                    style: TextStyle(
+                        fontSize: 11, color: effectiveColor, fontWeight: FontWeight.bold)),
               ),
-              child: Text(typeLabel,
-                  style: TextStyle(
-                      fontSize: 11, color: color, fontWeight: FontWeight.bold)),
-            ),
-            const Spacer(),
-            Text(dateStr,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          ]),
-          const SizedBox(height: 8),
-          Text(event.title,
-              style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.bold)),
-          if (event.description != null && event.description!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(event.description!,
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis),
-          ],
-          const SizedBox(height: 8),
-          Row(children: [
-            if (event.location != null) ...[
-              Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
-              const SizedBox(width: 4),
-              Text(event.location!,
+              const SizedBox(width: 6),
+              if (isPast)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('Passé',
+                      style: TextStyle(fontSize: 10, color: Colors.grey)),
+                ),
+              const Spacer(),
+              Text(dateStr,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              const SizedBox(width: 12),
+            ]),
+            const SizedBox(height: 8),
+            Text(event.title,
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isPast ? Colors.grey[600] : null)),
+            if (event.description != null && event.description!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(event.description!,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             ],
-            Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-            const SizedBox(width: 4),
-            Text(timeStr,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            const SizedBox(height: 8),
+            Row(children: [
+              if (event.location != null) ...[
+                Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(event.location!,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                const SizedBox(width: 12),
+              ],
+              Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(timeStr,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            ]),
           ]),
-        ]),
+        ),
       ),
     );
   }
 }
 
-// ── Onglet Clubs (statique pour l'instant) ───────────────────────────────────
-class _ClubsTab extends StatelessWidget {
-  static const _clubs = [
-    {'name': 'Club IA & Data Science', 'members': 85, 'category': 'Technologie'},
-    {'name': 'Club Entrepreneuriat', 'members': 120, 'category': 'Business'},
-    {'name': 'Club Robotique', 'members': 60, 'category': 'Ingénierie'},
-    {'name': 'Club Débat', 'members': 45, 'category': 'Communication'},
-    {'name': 'Club Sport & Bien-être', 'members': 200, 'category': 'Sport'},
-  ];
+// ── Onglet Clubs (données réelles depuis l'API) ──────────────────────────────
+class _ClubsTab extends ConsumerStatefulWidget {
+  const _ClubsTab();
+
+  @override
+  ConsumerState<_ClubsTab> createState() => _ClubsTabState();
+}
+
+class _ClubsTabState extends ConsumerState<_ClubsTab> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(campusProvider.notifier).loadClubs());
+  }
+
+  static const _domainIcons = {
+    'Cybersécurité': Icons.security,
+    'Génie Informatique': Icons.code,
+    'Intelligence Artificielle': Icons.psychology,
+    'Robotique': Icons.precision_manufacturing,
+    'Social et humanitaire': Icons.volunteer_activism,
+    'Entrepreneuriat social': Icons.lightbulb,
+  };
+
+  static const _domainColors = {
+    'Cybersécurité': Colors.red,
+    'Génie Informatique': Colors.blue,
+    'Intelligence Artificielle': Colors.deepPurple,
+    'Robotique': Colors.teal,
+    'Social et humanitaire': Colors.orange,
+    'Entrepreneuriat social': Colors.green,
+  };
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _clubs.length,
-      itemBuilder: (_, i) {
-        final club = _clubs[i];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
-              child: Icon(Icons.group, color: AppTheme.primaryColor),
-            ),
-            title: Text(club['name'] as String,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(
-                '${club['category']} • ${club['members']} membres'),
-            trailing: OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Rejoint : ${club['name']}')),
-              ),
-              child: const Text('Rejoindre'),
-            ),
+    final state = ref.watch(campusProvider);
+
+    if (state.isLoadingClubs && state.clubs.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.clubs.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text('Impossible de charger les clubs',
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () => ref.read(campusProvider.notifier).loadClubs(),
+            child: const Text('Réessayer'),
           ),
-        );
-      },
+        ]),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(campusProvider.notifier).loadClubs(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: state.clubs.length,
+        itemBuilder: (_, i) {
+          final club = state.clubs[i];
+          final color = _domainColors[club.domain] ?? AppTheme.primaryColor;
+          final icon = _domainIcons[club.domain] ?? Icons.group;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: color.withOpacity(0.25)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  CircleAvatar(
+                    backgroundColor: color.withOpacity(0.12),
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(club.name,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(club.domain,
+                          style: TextStyle(fontSize: 12, color: color)),
+                    ]),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('${club.members} membres',
+                        style: TextStyle(
+                            fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                  ),
+                ]),
+                const SizedBox(height: 10),
+                Text(club.description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: club.isMember
+                      ? OutlinedButton.icon(
+                          onPressed: () =>
+                              ref.read(campusProvider.notifier).toggleClub(club.id),
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('Membre • Quitter'),
+                          style: OutlinedButton.styleFrom(foregroundColor: Colors.grey),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: () =>
+                              ref.read(campusProvider.notifier).toggleClub(club.id),
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Rejoindre le club'),
+                          style: ElevatedButton.styleFrom(backgroundColor: color),
+                        ),
+                ),
+              ]),
+            ),
+          );
+        },
+      ),
     );
   }
 }

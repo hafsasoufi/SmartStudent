@@ -21,11 +21,11 @@ class _ExamsModuleState extends ConsumerState<ExamsModule>
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     Future.microtask(() {
+      // loadModules automatically syncs the Planning tab via loadOfficialSchedule
       ref.read(examsProvider.notifier).loadModules();
       ref.read(examsProvider.notifier).loadCourses();
       ref.read(examsProvider.notifier).loadHistory();
       ref.read(examsProvider.notifier).loadStats();
-      ref.read(examsProvider.notifier).loadOfficialSchedule();
     });
   }
 
@@ -66,6 +66,14 @@ class _ExamsModuleState extends ConsumerState<ExamsModule>
       ),
     );
   }
+}
+
+/// Returns the pair [Sn, Sn+1] for a given semester string, e.g. 'S7' → ['S7','S8'].
+List<String> _semesterPair(String semestre) {
+  final n = int.tryParse(semestre.replaceAll('S', ''));
+  if (n == null || n <= 0) return semestre.isEmpty ? [] : [semestre];
+  final impair = n.isOdd ? n : n - 1;
+  return ['S$impair', 'S${impair + 1}'];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -159,7 +167,7 @@ class _ModulesEmpty extends StatelessWidget {
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
-          children: ['S2', 'S6', 'S8'].map((s) => OutlinedButton(
+          children: _semesterPair(semestre).map((s) => OutlinedButton(
             onPressed: () => onChangeSemestre(s),
             style: OutlinedButton.styleFrom(
               side: BorderSide(
@@ -302,10 +310,7 @@ class _FiliereHeader extends StatelessWidget {
     );
   }
 
-  List<String> _semestres(String current) {
-    if (current == 'S2') return ['S2'];
-    return ['S6', 'S8'];
-  }
+  List<String> _semestres(String current) => _semesterPair(current);
 }
 
 class _ModuleCard extends ConsumerWidget {
@@ -1189,10 +1194,12 @@ class _OfficialScheduleTabState extends ConsumerState<_OfficialScheduleTab> {
       return _buildEmpty(state);
     }
 
-    // Group entries by day, in canonical day order
+    // Group entries by day, handling both "Lundi" and "Lundi 12/01" formats
     final Map<String, List<OfficialExamEntry>> byDay = {};
     for (final d in _days) {
-      byDay[d] = state.officialSchedule.where((e) => e.jour == d).toList();
+      byDay[d] = state.officialSchedule
+          .where((e) => e.jour == d || e.jour.startsWith('$d '))
+          .toList();
     }
 
     return RefreshIndicator(
@@ -1221,7 +1228,8 @@ class _OfficialScheduleTabState extends ConsumerState<_OfficialScheduleTab> {
                         color: AppTheme.primaryColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(day,
+                      child: Text(
+                          byDay[day]!.first.jour,
                           style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,

@@ -45,7 +45,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   ChatNotifier({required this.apiService})
       : super(ChatState(conversationId: DateTime.now().millisecondsSinceEpoch.toString()));
 
-  Future<void> sendMessage(String message) async {
+  Future<void> sendMessage(String message, {String? semestre}) async {
     // Add user message to state immediately
     final userMessage = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -64,6 +64,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final response = await apiService.sendMessage(
         message: message,
         conversationId: state.conversationId,
+        semestre: semestre,
       );
 
       final assistantMessage = ChatMessage(
@@ -86,6 +87,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
         error: e.toString(),
       );
     }
+  }
+
+  void setForceAgent(String agent) {
+    state = ChatState(
+      conversationId: '${agent}_${DateTime.now().millisecondsSinceEpoch}',
+    );
   }
 
   void clearMessages() {

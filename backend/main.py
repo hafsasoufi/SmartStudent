@@ -8,7 +8,7 @@ import asyncio
 
 from backend.config import get_settings
 from backend.database import get_db, init_db, close_db
-from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory, AdminRequest, ExamSchedule, CourseDocument
+from backend.models import User, UserProfile, Message, Plan, Event, Exam, Memory, AdminRequest, ExamSchedule, CourseDocument, MoodEntry
 from backend.schemas import (
     UserRegister, UserLogin, UserResponse, TokenResponse,
     UserProfileUpdate, UserProfileResponse, ChatRequest, ChatResponse,
@@ -117,6 +117,17 @@ async def health_check():
         "version": settings.APP_VERSION,
         "timestamp": datetime.utcnow().isoformat()
     }
+
+@app.post("/api/admin/reset-llm", tags=["Admin"])
+async def reset_llm_singleton():
+    """Force re-initialization of LLM singleton (use after changing API key)."""
+    from backend.agents.orchestrator import reset_llm, get_llm
+    reset_llm()
+    try:
+        get_llm()
+        return {"status": "ok", "message": "LLM reinitialized with current API key"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # ==================== AUTHENTICATION ROUTES ====================
 
@@ -438,10 +449,19 @@ async def chat(
         (Memory.expires_at == None) | (Memory.expires_at > datetime.utcnow())
     ).order_by(Memory.importance.desc(), Memory.updated_at.desc()).limit(10).all()
 
+    # Extract force_agent from conversation_id prefix (e.g. "campus_123" -> "campus")
+    conv_id = request.conversation_id or f"user_{user.id}"
+    _KNOWN_AGENTS = {"admin", "planning", "exams", "orientation", "campus", "wellbeing", "home"}
+    force_agent = None
+    for _agent in _KNOWN_AGENTS:
+        if conv_id.startswith(f"{_agent}_"):
+            force_agent = _agent
+            break
+
     # Build rich user context
     user_context = {
         "user_id": user.id,
-        "conversation_id": request.conversation_id or f"user_{user.id}",
+        "conversation_id": conv_id,
         "username": user.username,
         "full_name": user.full_name,
         "email": user.email,
@@ -455,6 +475,10 @@ async def chat(
             for m in user_memories
         ],
     }
+    if force_agent:
+        user_context["force_agent"] = force_agent
+    if request.semestre:
+        user_context["semestre"] = request.semestre
 
     # Process through orchestrator
     orchestrator_response = await orchestrator.process_message(
@@ -768,12 +792,20 @@ def _module_code_from_name(nom: str) -> str:
 
 
 def _extract_modules_from_result(result: dict, has_exam: bool = True) -> list[dict]:
-    """Flatten a planning result dict into a list of module dicts ordered by day."""
+    """Flatten a planning result dict into a list of module dicts ordered by day.
+    Handles both 'Lundi' and 'Lundi 12/01' key formats."""
     planning_data = result.get("planning", {})
     modules: list[dict] = []
     seen: set[str] = set()
-    for jour in _DAY_ORDER:
-        for creneau, info in (planning_data.get(jour) or {}).items():
+
+    def _day_index(j: str) -> int:
+        for i, d in enumerate(_DAY_ORDER):
+            if j == d or j.startswith(d + " "):
+                return i
+        return len(_DAY_ORDER)
+
+    for full_jour in sorted(planning_data.keys(), key=_day_index):
+        for creneau, info in (planning_data[full_jour] or {}).items():
             nom = info["module"]
             if nom not in seen:
                 seen.add(nom)
@@ -782,7 +814,7 @@ def _extract_modules_from_result(result: dict, has_exam: bool = True) -> list[di
                     "code": _module_code_from_name(nom),
                     "coefficient": 1.0,
                     "has_exam": has_exam,
-                    "exam_jour": jour if has_exam else None,
+                    "exam_jour": full_jour if has_exam else None,
                     "exam_creneau": creneau if has_exam else None,
                     "exam_salle": info.get("salle") if has_exam else None,
                     "exam_coordonnateur": info.get("coordonnateur") if has_exam else None,
@@ -792,28 +824,30 @@ def _extract_modules_from_result(result: dict, has_exam: bool = True) -> list[di
 
 def _get_modules_for_student(major: str, year: int, semestre_override: str | None = None) -> dict:
     """Return the module list for a student, sourced from the official exam planning."""
-    from backend.data.planning_examens import get_planning_for_filiere, SESSION
+    from backend.data.planning_examens import get_planning_for_filiere, YEAR_TO_SEMESTERS
 
     major_lower = (major or "").lower()
 
     # Determine the semestre
     if semestre_override:
         sem = semestre_override.upper()
+        result = get_planning_for_filiere(major, sem)
     elif any(k in major_lower for k in ["epsi", "préparatoire", "preparatoire"]):
         sem = "S2"
+        result = get_planning_for_filiere(major, sem)
     else:
-        # In ENIAD Berkane's post-EPSI engineering cycle:
-        # year 1-2  → S6  (spring semester of 2nd engineering year)
-        # year 3+   → S8  (spring semester of 3rd/final engineering year)
-        sem = "S8" if year >= 3 else "S6"
+        sems = YEAR_TO_SEMESTERS.get(year, [])
+        result = None
+        sem = sems[-1] if sems else "S6"  # default to spring (last in pair)
+        for s in reversed(sems):  # spring semester first
+            r = get_planning_for_filiere(major, s)
+            if r:
+                result = r
+                sem = s
+                break
 
-    result = get_planning_for_filiere(major, sem)
-    if not result and not semestre_override:
-        # Try the other semestre as fallback
-        alt = "S6" if sem == "S8" else "S8"
-        result = get_planning_for_filiere(major, alt)
-        if result:
-            sem = alt
+    if semestre_override and not result:
+        result = None  # explicit semestre, no fallback
 
     if result:
         modules = _extract_modules_from_result(result, has_exam=True)
@@ -821,7 +855,7 @@ def _get_modules_for_student(major: str, year: int, semestre_override: str | Non
             "filiere": result["filiere"],
             "semestre": result["semestre"],
             "planning_key": result.get("key", ""),
-            "session": SESSION,
+            "session": result.get("session", ""),
             "niveau": year,
             "modules": modules,
             "total_examens": len(modules),
@@ -1026,11 +1060,25 @@ async def get_official_exam_schedule(
 ):
     """Retourner le planning officiel des examens (PDF extrait) pour la filière de l'étudiant."""
     user = await get_current_user(authorization, db)
-    from backend.data.planning_examens import get_planning_for_filiere, search_module_in_planning, SESSION
+    from backend.data.planning_examens import get_planning_for_filiere, search_module_in_planning, SESSION, YEAR_TO_SEMESTERS
 
     profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
     major = filiere or getattr(profile, "major", None) or ""
-    result = get_planning_for_filiere(major, semestre)
+    year = int(getattr(profile, "year", 1) or 1)
+
+    result = None
+    if semestre:
+        result = get_planning_for_filiere(major, semestre)
+    else:
+        # Auto-detect best semester for this student's year
+        sems = YEAR_TO_SEMESTERS.get(year, [])
+        for s in reversed(sems):  # Try spring (even) semester first
+            result = get_planning_for_filiere(major, s)
+            if result:
+                break
+        if not result:
+            result = get_planning_for_filiere(major, None)
+
     if not result:
         # Return all filieres list so frontend can show a picker
         from backend.data.planning_examens import FILIERES_INFO
@@ -1978,6 +2026,136 @@ async def generate_recommendations(
         "recommendations": [support_card],
         "generated_at": datetime.utcnow().isoformat(),
     }
+
+
+# ==================== WELLBEING ROUTES ====================
+
+@app.post("/api/wellbeing/mood", tags=["Wellbeing"])
+async def save_mood(
+    body: dict,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Enregistre une entree d'humeur pour l'etudiant."""
+    user = await get_current_user(authorization, db)
+    rating = int(body.get("rating", 3))
+    note = body.get("note", "")
+
+    if rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="rating must be between 1 and 5")
+
+    mood = MoodEntry(user_id=user.id, rating=rating, note=note or None)
+    db.add(mood)
+    db.commit()
+    db.refresh(mood)
+
+    return {
+        "id": mood.id,
+        "rating": mood.rating,
+        "note": mood.note,
+        "created_at": mood.created_at.isoformat(),
+    }
+
+
+@app.get("/api/wellbeing/moods", tags=["Wellbeing"])
+async def get_moods(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Retourne les 7 dernieres entrees d'humeur."""
+    user = await get_current_user(authorization, db)
+    moods = (
+        db.query(MoodEntry)
+        .filter(MoodEntry.user_id == user.id)
+        .order_by(MoodEntry.created_at.desc())
+        .limit(7)
+        .all()
+    )
+    return [
+        {
+            "id": m.id,
+            "rating": m.rating,
+            "note": m.note,
+            "created_at": m.created_at.isoformat(),
+        }
+        for m in reversed(moods)
+    ]
+
+
+# ==================== CLUBS ROUTES ====================
+
+@app.get("/api/campus/clubs", tags=["Campus"])
+async def get_clubs(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Retourne la liste des clubs ENIADB avec statut d'adhesion."""
+    user = await get_current_user(authorization, db)
+    from backend.data.events_clubs_data import CLUBS
+
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    prefs = dict(profile.preferences or {}) if profile and profile.preferences else {}
+    joined_clubs = prefs.get("joined_clubs", [])
+
+    member_counts = {
+        "club_001": 38, "club_002": 52, "club_003": 67,
+        "club_004": 29, "club_005": 41, "club_006": 35,
+    }
+    icons = {
+        "club_001": "security", "club_002": "code", "club_003": "psychology",
+        "club_004": "precision_manufacturing", "club_005": "volunteer_activism", "club_006": "lightbulb",
+    }
+
+    result = []
+    for c in CLUBS:
+        if c["id"] == "club_007":
+            continue
+        parts = c["title"].split(" - ", 1)
+        name = parts[0].replace("Club ", "").strip()
+        domain = parts[1].strip() if len(parts) > 1 else "General"
+        desc = c["content"].strip().replace("\n", " ")
+        if len(desc) > 220:
+            desc = desc[:220].rsplit(" ", 1)[0] + "..."
+        result.append({
+            "id": c["id"],
+            "name": name,
+            "full_name": c["title"],
+            "domain": domain,
+            "description": desc,
+            "members": member_counts.get(c["id"], 30) + len([j for j in joined_clubs if j == c["id"]]),
+            "is_member": c["id"] in joined_clubs,
+            "icon": icons.get(c["id"], "group"),
+        })
+    return result
+
+
+@app.post("/api/campus/clubs/{club_id}/toggle", tags=["Campus"])
+async def toggle_club_membership(
+    club_id: str,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Rejoindre ou quitter un club."""
+    user = await get_current_user(authorization, db)
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    prefs = dict(profile.preferences or {})
+    joined = list(prefs.get("joined_clubs", []))
+
+    if club_id in joined:
+        joined.remove(club_id)
+        is_member = False
+    else:
+        joined.append(club_id)
+        is_member = True
+
+    prefs["joined_clubs"] = joined
+    profile.preferences = prefs
+    db.commit()
+
+    return {"club_id": club_id, "is_member": is_member}
 
 
 # ==================== DOCUMENTS ROUTES ====================

@@ -59,14 +59,39 @@ settings = get_settings()
 # ── LLM singleton ──────────────────────────────────────────────────────────────
 
 _llm = None
+_llm_api_key = None  # track which key the singleton was built with
+
+
+def reset_llm():
+    """Force re-initialization of the LLM singleton (e.g. after key change)."""
+    global _llm, _llm_api_key
+    _llm = None
+    _llm_api_key = None
+
+
+def _read_groq_key() -> str:
+    """Read GROQ_API_KEY fresh from env file each time (bypasses lru_cache)."""
+    import os
+    from pathlib import Path
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("GROQ_API_KEY="):
+                return line.split("=", 1)[1].strip()
+    return os.getenv("GROQ_API_KEY", "")
 
 
 def get_llm():
-    global _llm
-    if _llm is not None:
+    global _llm, _llm_api_key
+
+    # Always read key fresh from .env to detect changes without restart
+    groq_key = _read_groq_key()
+
+    # Re-init only if key changed since last init
+    if _llm is not None and _llm_api_key == groq_key:
         return _llm
 
-    groq_key = getattr(settings, "GROQ_API_KEY", None)
     if _GROQ_AVAILABLE and groq_key and groq_key not in ("", "your-groq-api-key"):
         try:
             _llm = ChatGroq(
@@ -74,7 +99,8 @@ def get_llm():
                 model="llama-3.3-70b-versatile",
                 temperature=0.7,
             )
-            logger.info("LLM: Groq llama-3.3-70b-versatile")
+            _llm_api_key = groq_key
+            logger.info("LLM: Groq llama-3.3-70b-versatile (key: ...%s)", groq_key[-6:])
             return _llm
         except Exception as e:
             logger.warning(f"Groq init failed: {e}")
@@ -86,6 +112,7 @@ def get_llm():
             model=getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
             temperature=0.7,
         )
+        _llm_api_key = openai_key
         logger.info("LLM: OpenAI")
         return _llm
 
@@ -97,6 +124,30 @@ def get_llm():
 # ── Configuration des 6 agents ─────────────────────────────────────────────────
 
 AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
+    "home": {
+        "name": "Assistant Navigation",
+        "keywords": [
+            # Questions sur les agents
+            "quoi sert", "a quoi sert", "à quoi sert", "que fait l'agent",
+            "agent admin", "agent exams", "agent campus", "agent planning",
+            "agent orientation", "agent bien", "agent wellbeing",
+            # Navigation dans l'app
+            "comment acceder", "comment accéder", "ou trouver", "où trouver",
+            "ou puis-je", "où puis-je", "ou faire", "où faire",
+            "comment utiliser", "comment naviguer",
+            "comment faire une reclamation", "comment faire une réclamation",
+            "faire une reclamation", "faire une réclamation",
+            "ou reclamation", "où reclamation",
+            "comment generer", "comment générer", "trouver mes examens",
+            "trouver mes modules", "trouver le planning",
+            "consulter le reglement", "reglement interieur", "règlement intérieur",
+            "ou est", "où est", "comment fonctionne",
+            # Guide général
+            "guide", "aide application", "aide app", "fonctionnalite", "fonctionnalité",
+            "smartstudent", "application smartstudent",
+        ],
+        "prompt": "",  # handled by NavigationAgent
+    },
     "admin": {
         "name": "Agent Administratif",
         "keywords": [
@@ -169,27 +220,37 @@ AGENTS_CONFIG: Dict[str, Dict[str, Any]] = {
     "campus": {
         "name": "Agent Campus",
         "keywords": [
-            "evenement", "club", "association", "campus", "activite",
-            "groupe", "sport", "sortie", "conference", "workshop",
+            "evenement", "club", "association", "activite", "parascolaire",
+            "groupe", "sport", "sortie", "conference", "workshop", "atelier",
+            "bibliotheque", "cafeteria", "salle", "vie etudiante",
+            "absence", "exclusion", "reglement", "discipline", "tenue",
+            "dress code", "comportement", "interdit", "sanction", "notation",
+            "livre", "ouvrage", "emprunter", "reference", "nurlia", "secora",
+            "ennovers", "riot", "al ataa", "enactus", "aei", "campus eniad",
+            "gala", "forum entreprise", "hackathon", "portes ouvertes",
         ],
         "prompt": (
-            "Tu es l'Agent Campus de SmartStudent.\n"
-            "Tu informes sur : evenements campus, clubs, associations, "
-            "activites parascolaires, formation de groupes de travail.\n"
-            "Sois enthousiaste et cree du lien social."
+            "Tu es l'Agent Campus de l'ENIADB (Ecole Nationale de l'Intelligence Artificielle et du Digital de Berkane).\n"
+            "Tu couvres : le reglement interieur (absences, examens, discipline), les clubs etudiants (SECORA, ENNOVERS, NURLIA, RIOT, AL ATAA, Enactus), "
+            "les evenements, la bibliotheque (livres avec numeros de reference), et toutes les infos sur la vie a l'ENIADB.\n"
+            "Reponds dans la langue de l'etudiant (francais ou arabe). Cite les articles du reglement quand pertinent. Ne jamais inventer d'informations."
         ),
     },
     "wellbeing": {
         "name": "Agent Bien-etre",
         "keywords": [
-            "stress", "anxiete", "sante", "bien-etre", "fatigue",
-            "motivation", "aide", "soutien", "depression", "mental",
+            "stress", "stresse", "anxiete", "anxieux", "sante", "bien-etre",
+            "fatigue", "epuise", "burnout", "motivation", "demotive",
+            "aide psychologique", "soutien", "depression", "mental",
+            "panique", "surcharge", "difficile", "souffre", "detresse",
+            "sommeil", "dors", "concentrer", "peur", "seul", "isole",
+            "pleure", "triste", "perdu", "depassé", "depasse", "imposteur",
         ],
         "prompt": (
-            "Tu es l'Agent Bien-etre de SmartStudent.\n"
-            "Tu soutiens avec : gestion du stress, sante mentale, motivation, "
-            "equilibre vie etudiante, ressources d'aide psychologique.\n"
-            "Sois empathique, bienveillant et oriente vers des professionnels si necessaire."
+            "Tu es l'Agent Bien-etre de l'ENIADB, un assistant bienveillant et empathique.\n"
+            "Tu ecoutes sans jugement, detects les signes de stress/burnout/anxiete, proposes des strategies concretes.\n"
+            "Utilise 'tu', valide les emotions avant de conseiller. Pour les crises, oriente vers le 080 100 47 47 (gratuit, 24h/24).\n"
+            "Ne jamais diagnostiquer ni prescrire. Reponds dans la langue de l'etudiant."
         ),
     },
 }
@@ -326,8 +387,15 @@ async def agir(state: SmartStudentState) -> dict:
     user_msg = _last_human_message(state)
 
     try:
+        # ── Agent Navigation (home) ───────────────────────────────────────────
+        if agent_id == "home":
+            from backend.agents.navigation_agent import NavigationAgent
+            history = _extract_conversation_history(state)
+            result = await NavigationAgent().process(user_msg, history, uc)
+            response = result.get("response", "")
+
         # ── Agents avec sous-graphes ReAct complets ──────────────────────────
-        if agent_id == "admin":
+        elif agent_id == "admin":
             from backend.agents.admin_agent import AdminAgent
             result = await AdminAgent().process(user_msg, user_id, uc, conv_id)
             response = result.get("response", "")
@@ -342,12 +410,19 @@ async def agir(state: SmartStudentState) -> dict:
             result = await ExamsAgent().process(user_msg, user_id, uc, conv_id)
             response = result.get("response", "")
 
-        elif agent_id == "orientation":
-            from backend.agents.orientation_agent import OrientationAgent
-            result = await OrientationAgent().process(user_msg, user_id, uc, conv_id)
+        elif agent_id == "campus":
+            from backend.agents.campus_agent import CampusAgent
+            history = _extract_conversation_history(state)
+            result = await CampusAgent().process(user_msg, history, uc)
             response = result.get("response", "")
 
-        # ── Agents LLM enrichis (RAG + memoire) ─────────────────────────────
+        elif agent_id == "wellbeing":
+            from backend.agents.wellbeing_agent import WellbeingAgent
+            history = _extract_conversation_history(state)
+            result = await WellbeingAgent().process(user_msg, history, uc)
+            response = result.get("response", "")
+
+        # ── Autres agents LLM enrichis (orientation) ─────────────────────────
         else:
             response = await _call_llm_agent(agent_id, cfg, state, uc, user_msg)
 
@@ -372,6 +447,17 @@ async def agir(state: SmartStudentState) -> dict:
             "iteration_count": iteration + 1,
             "error": err,
         }
+
+
+def _extract_conversation_history(state: SmartStudentState) -> List[Dict[str, str]]:
+    """Extrait l'historique de conversation depuis l'etat LangGraph."""
+    history = []
+    for msg in (state.get("messages") or [])[-8:]:
+        if isinstance(msg, HumanMessage):
+            history.append({"role": "user", "content": msg.content})
+        elif isinstance(msg, AIMessage):
+            history.append({"role": "assistant", "content": msg.content})
+    return history
 
 
 async def _call_llm_agent(

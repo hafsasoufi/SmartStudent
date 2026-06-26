@@ -229,3 +229,16 @@ class Complaint(Base):
 
     user = relationship("User", back_populates="complaints", foreign_keys=[user_id])
     admin = relationship("User", foreign_keys=[admin_id])
+
+
+class MoodEntry(Base):
+    """Suivi quotidien de l'humeur de l'etudiant"""
+    __tablename__ = "mood_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating = Column(Integer, nullable=False)  # 1-5
+    note = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

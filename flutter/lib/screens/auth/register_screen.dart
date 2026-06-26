@@ -226,20 +226,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ]),
 
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.network_check, size: 16),
-                  label: const Text('Tester la connexion reseau'),
-                  onPressed: () async {
-                    await ref.read(apiServiceProvider).diagnoseConnectivity();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Test reseau complete. Consultez les logs.'),
-                        duration: Duration(seconds: 3),
-                      ));
-                    }
-                  },
-                ),
               ],
             ),
           ),

@@ -15,7 +15,7 @@ from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt.tool_node import ToolNode, tools_condition
+from langgraph.prebuilt import ToolNode, tools_condition
 
 logger = logging.getLogger(__name__)
 
@@ -881,47 +881,117 @@ def generer_examen_blanc(
 
 
 @tool
-def chercher_planning_officiel(module_query: str = "", filiere: str = "", semestre: str = "") -> str:
-    """Consulte le planning officiel des examens (Session Printemps 2025/2026 — ENIAD Berkane).
-    Utilise module_query pour chercher un module précis, ou filiere+semestre pour tout le planning d'une filière.
-    filiere: ex. 'Génie Informatique', 'Intelligence Artificielle', 'IRSI', 'ROC', 'EPSI' ...
-    semestre: ex. 'S6', 'S8', 'S2' (optionnel)."""
+def chercher_planning_officiel(
+    module_query: str = "",
+    filiere: str = "",
+    semestre: str = "",
+    annee: int = 0,
+) -> str:
+    """Consulte le planning officiel des examens (ENIAD Berkane).
+    IMPORTANT : fournir TOUJOURS annee = année d'étude de l'étudiant (1-4).
+    L'outil filtre automatiquement pour ne retourner QUE le planning de cette année.
+    Ne jamais afficher de plannings d'autres années.
+    module_query: rechercher un module précis par nom.
+    filiere: 'Génie Informatique', 'Intelligence Artificielle', 'IRSI', 'ROC', 'EPSI'...
+    semestre: 'S1','S2','S5','S6','S7','S8' (optionnel si annee fourni).
+    annee: 1=S1/S2, 2=S3/S4, 3=S5/S6, 4=S7/S8."""
     try:
-        from backend.data.planning_examens import get_planning_for_filiere, search_module_in_planning, SESSION
+        from backend.data.planning_examens import (
+            get_planning_for_filiere, get_planning_for_year,
+            search_module_in_planning, FILIERES_INFO,
+            SESSION_HIVER, SESSION_PRINTEMPS, YEAR_TO_SEMESTERS,
+        )
 
+        target_sems: set[str] = set(YEAR_TO_SEMESTERS.get(annee, [])) if annee > 0 else set()
+
+        # ── Search by module name ─────────────────────────────────────────────
         if module_query:
             results = search_module_in_planning(module_query)
+            if annee > 0:
+                results = [r for r in results if r.get("semestre") in target_sems]
             if not results:
-                return json.dumps({
-                    "found": False,
-                    "query": module_query,
-                    "message": f"Aucun module correspondant à '{module_query}' dans le planning officiel.",
-                }, ensure_ascii=False)
+                msg = f"Aucun module correspondant à '{module_query}'"
+                if annee > 0:
+                    sems = YEAR_TO_SEMESTERS.get(annee, [])
+                    msg += f" pour la {annee}ème année ({'/'.join(sems)})"
+                msg += " dans le planning officiel."
+                return json.dumps({"found": False, "query": module_query, "message": msg}, ensure_ascii=False)
             return json.dumps({
                 "found": True,
-                "session": SESSION,
                 "query": module_query,
+                "annee_filtre": annee if annee > 0 else "toutes",
                 "results": results,
             }, ensure_ascii=False)
 
+        # ── Year + filière (+ optional semestre) → filtered planning ────────
+        if annee > 0 and filiere:
+            if semestre:
+                # Show only the specified semester
+                result = get_planning_for_filiere(filiere, semestre)
+                if not result:
+                    return json.dumps({
+                        "found": False,
+                        "annee": annee,
+                        "filiere": filiere,
+                        "semestre": semestre,
+                        "message": f"Aucun planning disponible pour {filiere} en {semestre}.",
+                    }, ensure_ascii=False)
+                return json.dumps({"found": True, "annee": annee, "semestre": semestre, "plannings": [result]}, ensure_ascii=False)
+            else:
+                plans = get_planning_for_year(annee, filiere)
+                if not plans:
+                    sems = YEAR_TO_SEMESTERS.get(annee, [])
+                    return json.dumps({
+                        "found": False,
+                        "annee": annee,
+                        "filiere": filiere,
+                        "semesters_attendus": sems,
+                        "message": (
+                            f"Aucun planning disponible pour {filiere} "
+                            f"en {annee}ème année ({'/'.join(sems)}). "
+                            "Vérifie l'orthographe de la filière."
+                        ),
+                    }, ensure_ascii=False)
+                return json.dumps({"found": True, "annee": annee, "plannings": plans}, ensure_ascii=False)
+
+        # ── Year only → list available plannings for that year ────────────────
+        if annee > 0:
+            sems = YEAR_TO_SEMESTERS.get(annee, [])
+            available = [
+                {"cle": k, "nom": v[0], "semestre": v[1], "session": v[2]}
+                for k, v in FILIERES_INFO.items() if v[1] in target_sems
+            ]
+            return json.dumps({
+                "annee": annee,
+                "semesters": sems,
+                "plannings_disponibles": available,
+                "message": f"Pour la {annee}ème année ({'/'.join(sems)}), précise ta filière.",
+            }, ensure_ascii=False)
+
+        # ── Filière without year ──────────────────────────────────────────────
         if filiere:
             result = get_planning_for_filiere(filiere, semestre or None)
             if not result:
-                from backend.data.planning_examens import FILIERES_INFO
                 return json.dumps({
                     "found": False,
                     "filiere": filiere,
-                    "available": [{"cle": k, "nom": v[0], "semestre": v[1]} for k, v in FILIERES_INFO.items()],
-                    "message": "Filière non trouvée dans le planning officiel.",
+                    "available": [
+                        {"cle": k, "nom": v[0], "semestre": v[1], "session": v[2]}
+                        for k, v in FILIERES_INFO.items()
+                    ],
+                    "message": "Filière non trouvée. Précise aussi ton année d'étude.",
                 }, ensure_ascii=False)
-            return json.dumps({"found": True, "session": SESSION, **result}, ensure_ascii=False)
+            return json.dumps({"found": True, **result}, ensure_ascii=False)
 
-        from backend.data.planning_examens import FILIERES_INFO
+        # ── No params → list all ──────────────────────────────────────────────
         return json.dumps({
-            "session": SESSION,
-            "message": "Précise une filière ou un module pour consulter le planning.",
-            "filieres_disponibles": [{"cle": k, "nom": v[0], "semestre": v[1]} for k, v in FILIERES_INFO.items()],
+            "message": "Précise ton année d'étude et ta filière pour consulter le planning.",
+            "filieres_disponibles": [
+                {"cle": k, "nom": v[0], "semestre": v[1], "session": v[2]}
+                for k, v in FILIERES_INFO.items()
+            ],
         }, ensure_ascii=False)
+
     except Exception as e:
         logger.error("chercher_planning_officiel error: %s", e)
         return f"Erreur planning officiel: {e}"
@@ -1049,10 +1119,21 @@ async def agent_node(state: ExamsAgentState) -> dict:
     nom = ctx.get("full_name") or ctx.get("username") or "l'étudiant"
     filiere = ctx.get("major") or "filière non renseignée"
     annee = ctx.get("year") or "?"
+    semestre_selectionne = ctx.get("semestre") or ""
+
+    # Build planning tool call based on selected semester
+    if semestre_selectionne:
+        planning_call = f"chercher_planning_officiel(annee={annee}, filiere='{filiere}', semestre='{semestre_selectionne}')"
+        module_call   = f"chercher_planning_officiel(annee={annee}, module_query='X', semestre='{semestre_selectionne}')"
+        sem_info      = f"Semestre sélectionné dans Modules : **{semestre_selectionne}**"
+    else:
+        planning_call = f"chercher_planning_officiel(annee={annee}, filiere='{filiere}')"
+        module_call   = f"chercher_planning_officiel(annee={annee}, module_query='X')"
+        sem_info      = f"Année: {annee}"
 
     system_prompt = (
         f"Tu es l'Agent Examens de SmartStudent — ENIAD Berkane.\n"
-        f"Tu parles à {nom} | Filière: {filiere} | Année: {annee} | ID: {user_id}.\n\n"
+        f"Tu parles à {nom} | Filière: {filiere} | {sem_info} | ID: {user_id}.\n\n"
 
         "══════════════════════════════════════════════════════════\n"
         "CAPACITÉS PRINCIPALES\n"
@@ -1069,8 +1150,8 @@ async def agent_node(state: ExamsAgentState) -> dict:
         "3. PLANNING DES EXAMENS\n"
         f"   • enregistrer_planning_examen(user_id={user_id}, matiere=..., date_examen='JJ/MM/AAAA', semestre=..., coefficient=...)\n"
         f"   • obtenir_planning_examens(user_id={user_id})\n"
-        f"   • chercher_planning_officiel(module_query=...) → planning officiel Session Printemps 2025/2026\n"
-        f"     ou chercher_planning_officiel(filiere='Génie Informatique', semestre='S6')\n\n"
+        f"   • {planning_call} → planning officiel du semestre actuel\n"
+        f"     ou {module_call.replace('X', 'nom du module')}\n\n"
 
         "4. ANALYSE DE COURS PDF\n"
         f"   • analyser_document_cours(user_id={user_id}, matiere=..., contenu_texte=..., titre=...)\n"
@@ -1089,10 +1170,19 @@ async def agent_node(state: ExamsAgentState) -> dict:
         "══════════════════════════════════════════════════════════\n"
         "COMPORTEMENT\n"
         "══════════════════════════════════════════════════════════\n"
-        "• Si l'étudiant demande 'quand est mon examen de X' → chercher_planning_officiel(module_query='X')\n"
-        "• Si l'étudiant demande le planning de sa filière → chercher_planning_officiel(filiere=..., semestre=...)\n"
-        f"• Quand l'étudiant demande un quiz → utilise d'abord chercher_planning_officiel pour savoir quels modules ont un examen\n"
-        f"  puis génère le quiz uniquement sur un de ces modules. Précise toujours 'Cet examen est prévu [jour] [créneau] salle [salle]'.\n"
+        + (
+            f"• RÈGLE ABSOLUE : l'étudiant a sélectionné le semestre {semestre_selectionne}.\n"
+            f"  Utilise TOUJOURS semestre='{semestre_selectionne}' dans chercher_planning_officiel.\n"
+            f"  N'affiche JAMAIS le planning d'un autre semestre.\n"
+            if semestre_selectionne else
+            f"• RÈGLE ABSOLUE : chercher_planning_officiel doit TOUJOURS inclure annee={annee}.\n"
+            f"  Ne jamais omettre ce paramètre. Ne jamais afficher de planning d'une autre année.\n"
+        ) +
+        f"• Quand l'étudiant demande 'quand est mon examen de X' → {module_call.replace('X', 'X')}\n"
+        f"• Quand l'étudiant demande son planning → {planning_call}\n"
+        f"• Quand l'étudiant demande un quiz → utilise d'abord {planning_call}\n"
+        f"  pour identifier les modules, puis génère le quiz sur l'un de ces modules.\n"
+        f"  Précise toujours 'Cet examen est prévu [jour] [créneau] salle [salle]'.\n"
         "• Si l'étudiant envoie du texte de cours → analyser_document_cours automatiquement\n"
         "• Après un quiz → attendre les réponses avant de corriger\n"
         "• Adapter la difficulté : consulte analyser_lacunes pour les matières faibles\n"

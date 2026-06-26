@@ -17,7 +17,7 @@ from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt.tool_node import ToolNode, tools_condition
+from langgraph.prebuilt import ToolNode, tools_condition
 
 logger = logging.getLogger(__name__)
 
